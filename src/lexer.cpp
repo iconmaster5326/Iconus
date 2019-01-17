@@ -23,18 +23,18 @@ namespace iconus {
 		
 		char c = ' ';
 		while (!done() && isspace(c)) *input >> c;
-		if (done()) return Token{Token::Type::NONE};
+		if (done()) return Token{Token::Type::NONE, ""};
 		
 		switch (c) {
-		case '|': return Token{Token::Type::PIPE};
-		case '&': return Token{Token::Type::AND};
-		case ';': return Token{Token::Type::SEMICOLON};
-		case '(': return Token{Token::Type::LPAREN};
-		case ')': return Token{Token::Type::RPAREN};
-		case '{': return Token{Token::Type::LBRACE};
-		case '}': return Token{Token::Type::RBRACE};
-		case '[': return Token{Token::Type::LBRACKET};
-		case ']': return Token{Token::Type::RBRACKET};
+		case '|': return Token{Token::Type::PIPE, "|"};
+		case '&': return Token{Token::Type::AND, "&"};
+		case ';': return Token{Token::Type::SEMICOLON, ";"};
+		case '(': return Token{Token::Type::LPAREN, "("};
+		case ')': return Token{Token::Type::RPAREN, ")"};
+		case '{': return Token{Token::Type::LBRACE, "{"};
+		case '}': return Token{Token::Type::RBRACE, "}"};
+		case '[': return Token{Token::Type::LBRACKET, "["};
+		case ']': return Token{Token::Type::RBRACKET, "]"};
 		case '-': {
 			ostringstream word;
 			char c = input->peek();

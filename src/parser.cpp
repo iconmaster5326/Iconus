@@ -9,43 +9,102 @@
 #include "classes.hpp"
 
 #include <stdexcept>
+#include <list>
 
 using namespace std;
 using namespace iconus;
 
 namespace iconus {
-	Op* parse(Lexer& input) {
-		OpCall* call = nullptr;
-		OpBinary* bin = nullptr;
+	// TODO: an algorithm that does this without consuming all the input first
+	// That was the point of having Lexer act like a stream! So this didn't have to happen!!
+
+	static Op* parse(list<Token>& tokens) {
+		if (tokens.empty()) {
+			return new OpBinary(nullptr,OpBinary::Type::PIPE,nullptr);
+		}
 		
-		for (Token t = input.next(); t.type != Token::Type::NONE; t = input.next()) {
-			switch (t.type) {
-			case Token::Type::WORD: {
-				if (call) {
-					call->args.emplace_back(new OpConst(new Object(&ClassString::INSTANCE, new string(t.value))));
-				} else {
-					call = new OpCall(t.value);
+		switch (tokens.front().type) {
+		case Token::Type::WORD: {
+			OpCall* call = new OpCall(tokens.front().value);
+			tokens.pop_front();
+			
+			while (true) {
+				if (tokens.empty()) return call;
+				
+				switch (tokens.front().type) {
+				case Token::Type::WORD: {
+					call->args.emplace_back(new OpConst(new Object(&ClassString::INSTANCE, new string(tokens.front().value))));
+					tokens.pop_front();
+				} break;
+				case Token::Type::PIPE: {
+					tokens.pop_front();
+					return new OpBinary(call,OpBinary::Type::PIPE,parse(tokens));
+				} break;
+				case Token::Type::LPAREN: {
+					tokens.pop_front();
+					list<Token> subTokens;
+					int parenLevel = 0;
+					
+					while (parenLevel >= 0) {
+						if (tokens.empty()) throw runtime_error("expected ')'; not found");
+						if (tokens.front().type == Token::Type::LPAREN) {
+							parenLevel++;
+						} else if (tokens.front().type == Token::Type::RPAREN) {
+							parenLevel--;
+						}
+						
+						subTokens.push_back(tokens.front());
+						tokens.pop_front();
+					}
+					
+					subTokens.pop_back();
+					call->args.emplace_back(parse(subTokens));
+				} break;
+				default: throw runtime_error("Token invalid in function call: "+tokens.front().value);
 				}
-			} break;
-			case Token::Type::PIPE: {
-				if (bin) {
-					bin->rhs = call;
-					bin = new OpBinary(bin, OpBinary::Type::PIPE, nullptr);
-					call = nullptr;
-				} else {
-					bin = new OpBinary(call, OpBinary::Type::PIPE, nullptr);
-					call = nullptr;
-				}
-			} break;
-			default: throw runtime_error("parse error: unknown token type");
 			}
+		} break;
+		case Token::Type::PIPE: {
+			tokens.pop_front();
+			return new OpBinary(nullptr,OpBinary::Type::PIPE,parse(tokens));
+		} break;
+		case Token::Type::LPAREN: {
+			tokens.pop_front();
+			list<Token> subTokens;
+			int parenLevel = 0;
+			
+			while (parenLevel >= 0) {
+				if (tokens.empty()) throw runtime_error("expected ')'; not found");
+				if (tokens.front().type == Token::Type::LPAREN) {
+					parenLevel++;
+				} else if (tokens.front().type == Token::Type::RPAREN) {
+					parenLevel--;
+				}
+				
+				subTokens.push_back(tokens.front());
+				tokens.pop_front();
+			}
+			
+			subTokens.pop_back();
+			if (tokens.empty()) return parse(subTokens);
+			switch (tokens.front().type) {
+			case Token::Type::PIPE: {
+				tokens.pop_front();
+				return new OpBinary(parse(subTokens),OpBinary::Type::PIPE,parse(tokens));
+			} break;
+			default: throw runtime_error("Token invalid after (): "+tokens.front().value);
+			}
+		} break;
+		default: throw runtime_error("Token invalid: "+tokens.front().value);
+		}
+	}
+	
+	Op* parse(Lexer& input) {
+		list<Token> tokens;
+		for (Token t = input.next(); t.type != Token::Type::NONE; t = input.next()) {
+			tokens.push_back(t);
 		}
 		
-		if (bin) {
-			bin->rhs = call;
-			return bin;
-		} else {
-			return call;
-		}
+		return parse(tokens);
 	}
 }

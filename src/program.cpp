@@ -67,7 +67,7 @@ iconus::OpCall::operator std::string() {
 }
 
 iconus::OpBinary::operator std::string() {
-	ostringstream sb;
+	ostringstream sb; sb << "[";
 	
 	if (lhs) {
 		sb << lhs->operator string() << " ";
@@ -83,6 +83,7 @@ iconus::OpBinary::operator std::string() {
 		sb << " " << rhs->operator string();
 	}
 	
+	sb << "]";
 	return sb.str();
 }
 
