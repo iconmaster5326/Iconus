@@ -17,8 +17,11 @@ namespace iconus {
 	
 	class Session {
 	public:
-		Scope globalScope;
+		Session();
+		
 		std::string evaluate(const std::string& input);
+		
+		Scope globalScope;
 	};
 }
 

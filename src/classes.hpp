@@ -10,12 +10,24 @@
 
 #include "program.hpp"
 
+#include <functional>
+
 namespace iconus {
 	class ClassString : public Class {
 	public:
 		static ClassString INSTANCE;
 		std::string name() override;
 		std::string toString(Object* self) override;
+	};
+	
+	class ClassSystemFunction : public Class {
+	public:
+		using Handler = std::function<Object*(Scope&, Object*, const std::vector<Object*>&, const std::unordered_map<std::string,Object*>&)>;
+		
+		static ClassSystemFunction INSTANCE;
+		std::string name() override;
+		bool executable() override;
+		Object* execute(Object* self, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) override;
 	};
 }
 

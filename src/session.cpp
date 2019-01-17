@@ -12,6 +12,10 @@
 using namespace std;
 using namespace iconus;
 
+iconus::Session::Session() {
+	// TODO
+}
+
 std::string iconus::Session::evaluate(const std::string& input) {
 	Lexer lexer(input);
 	Op* op = parse(lexer);

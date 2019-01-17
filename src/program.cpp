@@ -104,7 +104,12 @@ std::string iconus::Class::toString(Object* self) {
 	return sb.str();
 }
 
-iconus::Object::operator std::string() {
-	return clazz->toString(this);
+bool iconus::Class::executable() {
+	return false;
 }
 
+Object* iconus::Class::execute(Object* self, Scope& scope, Object* input,
+		const std::vector<Object*>& args,
+		const std::unordered_map<std::string, Object*>& flags) {
+	throw runtime_error("cannot execute an object of class "+name());
+}

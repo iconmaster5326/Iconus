@@ -13,20 +13,30 @@
 #include <unordered_map>
 
 namespace iconus {
-	class Object;
+	class Object; class Scope;
 	
 	class Class {
 	public:
 		virtual ~Class();
 		virtual std::string name();
 		virtual std::string toString(Object* self);
+		virtual bool executable();
+		virtual Object* execute(Object* self, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags);
 	};
 	
 	class Object {
 	public:
 		inline Object(Class* clazz, void* value) : clazz(clazz), value{.asPtr = value} {}
 		
-		operator std::string();
+		inline operator std::string() {
+			return clazz->toString(this);
+		}
+		inline bool executable() {
+			return clazz->executable();
+		}
+		inline Object* execute(Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) {
+			return clazz->execute(this, scope, input, args, flags);
+		}
 		
 		Class* clazz;
 		union {
