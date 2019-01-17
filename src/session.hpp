@@ -8,14 +8,17 @@
 #ifndef SRC_SESSION_HPP_
 #define SRC_SESSION_HPP_
 
+#include "program.hpp"
+
 #include <string>
 
 namespace iconus {
+	class Scope;
+	
 	class Session {
 	public:
+		Scope globalScope;
 		std::string evaluate(const std::string& input);
-	private:
-		char dummy;
 	};
 }
 

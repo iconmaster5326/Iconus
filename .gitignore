@@ -17,6 +17,7 @@
 *.exe
 /iconus
 /test/test_lexer
+/test/test_parser
 
 # Core dumps
 *.stacktrace

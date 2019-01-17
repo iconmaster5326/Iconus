@@ -40,7 +40,7 @@ namespace iconus {
 	class Lexer {
 	public:
 		inline Lexer(std::istream& input) : inputOwned(false), input(&input) {}
-		inline Lexer(std::string input) : inputOwned(true), input(new std::istringstream(input)) {}
+		inline Lexer(const std::string& input) : inputOwned(true), input(new std::istringstream(input)) {}
 		~Lexer();
 		
 		Token next();

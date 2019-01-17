@@ -7,7 +7,7 @@ CXX_FILES := $(wildcard src/*.cpp)
 HXX_FILES := $(wildcard src/*.hpp)
 O_FILES := $(patsubst src/%.cpp,build/%.o,$(CXX_FILES))
 D_FILES := $(patsubst src/%.cpp,build/%.d,$(CXX_FILES))
-EXE_FILES := iconus test/test_lexer
+EXE_FILES := iconus test/test_parser
 
 CXXFLAGS := -g -std=c++11 -I. -Isrc -ISimple-Web-Server -ISimple-WebSocket-Server
 LINKFLAGS := -lcrypto -lpthread -lboost_system -lboost_thread
@@ -34,8 +34,13 @@ build:
 	mkdir build
 
 # tests
-test/test_lexer$(EXE_SUFFIX): test/test_lexer.cpp src/lexer.o
-	$(CXX) $(CXXFLAGS) -o test/test_lexer test/test_lexer.cpp src/lexer.o $(LINKFLAGS)
+TEST_O_FILES := $(filter-out build/main.o, $(O_FILES))
+
+test/test_lexer$(EXE_SUFFIX): test/test_lexer.cpp $(TEST_O_FILES)
+	$(CXX) $(CXXFLAGS) -o test/test_lexer test/test_lexer.cpp $(TEST_O_FILES) $(LINKFLAGS)
+
+test/test_parser$(EXE_SUFFIX): test/test_parser.cpp $(TEST_O_FILES)
+	$(CXX) $(CXXFLAGS) -o test/test_parser test/test_parser.cpp $(TEST_O_FILES) $(LINKFLAGS)
 
 # embedded files
 build/index.cxx: src/index.html | build
