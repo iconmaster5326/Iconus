@@ -6,6 +6,7 @@
  */
 
 #include "server.hpp"
+#include "session.hpp"
 
 #include <iostream>
 #include "server_http.hpp"
@@ -40,17 +41,21 @@ namespace iconus {
 		server.on_upgrade = [](unique_ptr<HTTP>& socket, shared_ptr<HttpServer::Request> request) {
 			cout << "Upgrade request obtained!" << endl;
 			WsServer* wsServer = new WsServer();
+			Session* session = new Session();
 			
 			// specify
 			auto& endpoint = wsServer->endpoint[".*"];
 			
-			endpoint.on_message = [](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
-				cout << "GOT: " << in_message->string() << endl;
-				connection->send("Done.");
+			endpoint.on_message = [session](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
+				string input = in_message->string();
+				cout << "GOT: " << input << endl;
+				string result = session->evaluate(input);
+				connection->send(result);
 			};
 			
-			endpoint.on_close = [wsServer](shared_ptr<WsServer::Connection> connection, int code, const string& reason) {
+			endpoint.on_close = [wsServer,session](shared_ptr<WsServer::Connection> connection, int code, const string& reason) {
 				cout << "WebSocket closed. Reason: " << reason << endl;
+				delete session;
 				delete wsServer;
 			};
 			
