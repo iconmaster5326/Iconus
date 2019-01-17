@@ -7,6 +7,7 @@
 
 #include "server.hpp"
 #include "session.hpp"
+#include "iif.hpp"
 
 #include <iostream>
 #include "server_http.hpp"
@@ -49,8 +50,16 @@ namespace iconus {
 			endpoint.on_message = [session](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
 				string input = in_message->string();
 				cout << "GOT: " << input << endl;
-				string result = session->evaluate(input);
-				connection->send(result);
+				IIFMessage iif(input);
+				switch (iif.type) {
+				case IIFType::EVAL: {
+					string result = session->evaluate(iif.getContent());
+					connection->send((string) IIFMessage::makeResult(iif.getTag(), result));
+				} break;
+				case IIFType::RESULT: {
+					// error condition; ignore
+				} break;
+				}
 			};
 			
 			endpoint.on_close = [wsServer,session](shared_ptr<WsServer::Connection> connection, int code, const string& reason) {

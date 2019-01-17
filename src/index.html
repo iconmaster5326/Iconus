@@ -30,16 +30,18 @@
 			input.addEventListener("keyup", function(event) {
 				event.preventDefault();
 				if (event.keyCode === 13) {
-					conn.send(input.value);
+					var iif = "eval "+newUUID()+" "+window.btoa(input.value)+"\n";
+					console.log("SENDING: "+iif)
+					conn.send(iif);
+					
 					input.replaceWith(input.value);
-
 					content.appendChild(document.createElement("br"));
 
 					var result = document.createTextNode("...");
 					content.appendChild(result);
 					conn.onmessage = function(event2) {
 						console.log("GOT: " + event2.data);
-						result.replaceWith(event2.data);
+						result.replaceWith(window.atob(event2.data.split(" ")[2]));
 
 						content.appendChild(document.createElement("br"));
 						content.appendChild(document.createTextNode("> "));
