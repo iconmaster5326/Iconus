@@ -16,6 +16,7 @@
 # Executables
 *.exe
 /iconus
+/test/test_lexer
 
 # Core dumps
 *.stacktrace
