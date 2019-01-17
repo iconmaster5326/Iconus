@@ -54,7 +54,7 @@ iconus::OpConst::operator std::string() {
 
 iconus::OpCall::operator std::string() {
 	ostringstream sb;
-	sb << cmd << ' ';
+	sb << '(' << cmd << ' ';
 	for (const Arg& arg : args) {
 		if (arg.isFlag) {
 			sb << '-' << arg.key << ' ' << arg.value->operator string() << ' ';
@@ -62,6 +62,7 @@ iconus::OpCall::operator std::string() {
 			sb << arg.value->operator string() << ' ';
 		}
 	}
+	sb << ')';
 	return sb.str();
 }
 

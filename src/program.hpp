@@ -70,6 +70,7 @@ namespace iconus {
 			Op* value;
 		};
 		
+		inline OpCall(const std::string& cmd) : cmd(cmd), args() {}
 		virtual ~OpCall();
 		Object* evaluate(Scope& scope, Object* input) override;
 		operator std::string() override;
@@ -86,6 +87,7 @@ namespace iconus {
 			RESET,
 		};
 		
+		inline OpBinary(Op* lhs, Type type, Op* rhs) : lhs(lhs), type(type), rhs(rhs) {}
 		virtual ~OpBinary();
 		Object* evaluate(Scope& scope, Object* input) override;
 		operator std::string() override;
