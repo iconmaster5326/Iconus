@@ -1,0 +1,34 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+/build/
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+
+# Executables
+*.exe
+/iconus
+
+# Core dumps
+*.stacktrace
+core.*
+vgcore.*
+
+# Eclipse related files
+/.project
+/.cproject
+/.settings/
+/Debug/
+/Release/
+
+# Dependencies
+/Simple-Web-Server*
+/Simple-WebSocket-Server*

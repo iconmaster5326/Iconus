@@ -1,0 +1,54 @@
+<html>
+<head>
+<script>
+	conn = new WebSocket("ws://" + location.host);
+	conn.onopen = function(event) {
+		var input = document.getElementById("consoleInput");
+		input.removeAttribute("disabled");
+		input.focus();
+	};
+</script>
+</head>
+<body>
+
+	<p id="content">
+		&gt; <input id="consoleInput" type="text" disabled/>
+	</p>
+
+	<script>
+		var input = document.getElementById("consoleInput");
+		var content = document.getElementById("content");
+
+		function register() {
+			input.addEventListener("keyup", function(event) {
+				event.preventDefault();
+				if (event.keyCode === 13) {
+					conn.send(input.value);
+					input.replaceWith(input.value);
+
+					content.appendChild(document.createElement("br"));
+
+					var result = document.createTextNode("...");
+					content.appendChild(result);
+					conn.onmessage = function(event2) {
+						console.log("GOT: " + event2.data);
+						result.replaceWith(event2.data);
+
+						content.appendChild(document.createElement("br"));
+						content.appendChild(document.createTextNode("> "));
+
+						input = document.createElement("input");
+						input.setAttribute("id", "consoleInput");
+						input.setAttribute("type", "text");
+						content.appendChild(input);
+
+						input.focus();
+						register();
+					};
+				}
+			});
+		}
+		register();
+	</script>
+</body>
+</html>
