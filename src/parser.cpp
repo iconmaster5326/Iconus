@@ -12,7 +12,7 @@ using namespace std;
 using namespace iconus;
 
 namespace iconus {
-	static Op* parse(Scope& scope, Lexer& input, Token t) {
+	static Op* parse(Lexer& input, Token t) {
 		switch (t.type) {
 		case Token::Type::NONE: return nullptr;
 		case Token::Type::WORD: {
@@ -26,6 +26,13 @@ namespace iconus {
 				case Token::Type::WORD: {
 					result->args.emplace_back(new OpConst(new Object(&ClassString::INSTANCE, new string(t.value))));
 				} break;
+				case Token::Type::PIPE: {
+					OpBinary* binop = new OpBinary();
+					binop->lhs = result;
+					binop->rhs = parse(input);
+					binop->type = OpBinary::Type::PIPE;
+					return binop;
+				} break;
 				}
 			}
 		} break;
@@ -34,7 +41,7 @@ namespace iconus {
 		throw exception();
 	}
 	
-	Op* parse(Scope& scope, Lexer& input) {
-		return parse(scope, input, input.next());
+	Op* parse(Lexer& input) {
+		return parse(input, input.next());
 	}
 }

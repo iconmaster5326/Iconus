@@ -12,7 +12,7 @@
 #include "program.hpp"
 
 namespace iconus {
-	Op* parse(Scope& scope, Lexer& input);
+	Op* parse(Lexer& input);
 }
 
 #endif /* SRC_PARSER_HPP_ */

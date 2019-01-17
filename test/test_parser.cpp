@@ -11,11 +11,9 @@ using namespace std;
 using namespace iconus;
 
 int main() {
-	Scope scope;
-	
 	{
-		Lexer lexer("a b c d");
-		cout << parse(scope, lexer)->operator string() << endl;
+		Lexer lexer("a 1 2 3 | b 4 5 6 | c | d");
+		cout << parse(lexer)->operator string() << endl;
 	}
 	
 	return 0;

@@ -20,7 +20,7 @@ iconus::OpConst::~OpConst() {
 	
 }
 
-Object* iconus::OpConst::evaluate(Scope& scope) {
+Object* iconus::OpConst::evaluate(Scope& scope, Object* input) {
 	return nullptr;
 }
 
@@ -28,7 +28,7 @@ iconus::OpCall::~OpCall() {
 	
 }
 
-Object* iconus::OpCall::evaluate(Scope& scope) {
+Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
 	return nullptr;
 }
 
@@ -36,7 +36,7 @@ iconus::OpBinary::~OpBinary() {
 	
 }
 
-Object* iconus::OpBinary::evaluate(Scope& scope) {
+Object* iconus::OpBinary::evaluate(Scope& scope, Object* input) {
 	return nullptr;
 }
 

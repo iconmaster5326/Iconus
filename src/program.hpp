@@ -44,7 +44,7 @@ namespace iconus {
 	class Op {
 	public:
 		virtual ~Op();
-		virtual Object* evaluate(Scope& scope) = 0;
+		virtual Object* evaluate(Scope& scope, Object* input) = 0;
 		virtual operator std::string() = 0;
 	};
 	
@@ -52,7 +52,7 @@ namespace iconus {
 	public:
 		inline OpConst(Object* value) : value(value) {}
 		virtual ~OpConst();
-		Object* evaluate(Scope& scope) override;
+		Object* evaluate(Scope& scope, Object* input) override;
 		operator std::string() override;
 		
 		Object* value;
@@ -71,7 +71,7 @@ namespace iconus {
 		};
 		
 		virtual ~OpCall();
-		Object* evaluate(Scope& scope) override;
+		Object* evaluate(Scope& scope, Object* input) override;
 		operator std::string() override;
 		
 		std::string cmd;
@@ -87,7 +87,7 @@ namespace iconus {
 		};
 		
 		virtual ~OpBinary();
-		Object* evaluate(Scope& scope) override;
+		Object* evaluate(Scope& scope, Object* input) override;
 		operator std::string() override;
 		
 		Type type;
