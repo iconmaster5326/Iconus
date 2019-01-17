@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include "program.hpp"
+#include "classes.hpp"
 
 using namespace std;
 using namespace iconus;
@@ -21,7 +22,7 @@ iconus::OpConst::~OpConst() {
 }
 
 Object* iconus::OpConst::evaluate(Scope& scope, Object* input) {
-	return nullptr;
+	return value;
 }
 
 iconus::OpCall::~OpCall() {
@@ -29,7 +30,13 @@ iconus::OpCall::~OpCall() {
 }
 
 Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
-	return nullptr;
+	ostringstream sb; sb << cmd << "(" << (input ? input->operator string() : "nil") << "|";
+	for (const Arg& arg : args) {
+		Object* v = arg.value->evaluate(scope, input);
+		sb << v ? v->operator string() : "nil";
+	}
+	sb << ")";
+	return new Object(&ClassString::INSTANCE, new string(sb.str()));
 }
 
 iconus::OpBinary::~OpBinary() {
@@ -37,7 +44,11 @@ iconus::OpBinary::~OpBinary() {
 }
 
 Object* iconus::OpBinary::evaluate(Scope& scope, Object* input) {
-	return nullptr;
+	switch (type) {
+	case Type::PIPE:
+		return rhs->evaluate(scope, lhs->evaluate(scope, input));
+	default: throw exception();
+	}
 }
 
 iconus::Class::~Class() {

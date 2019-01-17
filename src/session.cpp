@@ -6,7 +6,15 @@
  */
 
 #include "session.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
+
+using namespace std;
+using namespace iconus;
 
 std::string iconus::Session::evaluate(const std::string& input) {
-	return "Done.";
+	Lexer lexer(input);
+	Op* op = parse(lexer);
+	Object* result = op->evaluate(globalScope, nullptr);
+	return result->operator string();
 }
