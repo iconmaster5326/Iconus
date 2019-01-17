@@ -33,7 +33,7 @@ Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
 	ostringstream sb; sb << cmd << "(" << (input ? input->operator string() : "nil") << "|";
 	for (const Arg& arg : args) {
 		Object* v = arg.value->evaluate(scope, input);
-		sb << v ? v->operator string() : "nil";
+		sb << (v ? v->operator string() : "nil");
 	}
 	sb << ")";
 	return new Object(&ClassString::INSTANCE, new string(sb.str()));
