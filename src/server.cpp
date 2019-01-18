@@ -55,7 +55,7 @@ namespace iconus {
 				if (type == "eval") {
 					nlohmann::json response = {
 							{"type", "result"},
-							{"result", session->evaluate(message["command"].get<string>())},
+							{"result", session->render(session->evaluate(message["command"].get<string>()))},
 					};
 					connection->send(response.dump());
 				}

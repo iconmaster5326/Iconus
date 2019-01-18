@@ -10,7 +10,6 @@
 #include "parser.hpp"
 #include "classes.hpp"
 #include "error.hpp"
-#include "render.hpp"
 
 #include <deque>
 
@@ -28,15 +27,26 @@ iconus::Session::Session() {
 		deque<Object*>* items = new deque<Object*>(args.begin(), args.end());
 		return new Object(&ClassList::INSTANCE, items);
 	}));
+	
+	addDefaultRenderers();
 }
 
-std::string iconus::Session::evaluate(const std::string& input) {
+Object* iconus::Session::evaluate(const std::string& input) {
+	Lexer lexer(input);
+	Op* op = parse(*this, lexer);
 	try {
-		Lexer lexer(input);
-		Op* op = parse(*this, lexer);
-		Object* result = op->evaluate(*this, globalScope, &ClassNil::NIL);
-		return Renderer::render(result);
+		return op->evaluate(*this, globalScope, &ClassNil::NIL);
 	} catch (const Error& e) {
-		return "<div style=\"color:red\">error: " + string(e.what()) + "</div>";
+		return e.value;
 	}
+}
+
+std::string iconus::Session::render(Object* ob) {
+	for (const Renderer& renderer : renderers) {
+		if (renderer.filter(*this, ob)) {
+			return renderer.handler(*this, ob);
+		}
+	}
+	
+	throw runtime_error("no renderer defined for object!");
 }

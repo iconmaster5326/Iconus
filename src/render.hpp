@@ -16,21 +16,13 @@
 namespace iconus {
 	class Renderer {
 	public:
-		using Handler = std::function<std::string(Object*)>;
+		using Filter = std::function<bool(Session&, Object*)>;
+		using Handler = std::function<std::string(Session&, Object*)>;
 		
-		static void add(std::string name, Class* clazz, Handler handler);
-		static std::deque<const Renderer*> getAll(Object* ob);
-		static const Renderer* get(Object* ob);
-		static void addDefaultRenderers();
-		
-		inline static std::string render(Object* ob) {
-			return Renderer::get(ob)->handler(ob);
-		}
-		
-		inline Renderer(const std::string& name, Class* clazz, Handler handler) : name(name), clazz(clazz), handler(handler) {}
+		inline Renderer(const std::string& name, Filter filter, Handler handler) : name(name), filter(filter), handler(handler) {}
 		
 		std::string name;
-		Class* clazz;
+		Filter filter;
 		Handler handler;
 	};
 }

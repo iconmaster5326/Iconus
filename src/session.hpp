@@ -9,8 +9,10 @@
 #define SRC_SESSION_HPP_
 
 #include "program.hpp"
+#include "render.hpp"
 
 #include <string>
+#include <vector>
 
 namespace iconus {
 	class Scope;
@@ -19,9 +21,13 @@ namespace iconus {
 	public:
 		Session();
 		
-		std::string evaluate(const std::string& input);
+		Object* evaluate(const std::string& input);
+		std::string render(Object* object);
 		
 		Scope globalScope;
+		std::vector<Renderer> renderers;
+	private:
+		void addDefaultRenderers();
 	};
 }
 
