@@ -44,6 +44,13 @@ namespace iconus {
 		std::string name() override;
 		std::string toString(Object* self) override;
 	};
+	
+	class ClassError : public Class {
+	public:
+		static ClassError INSTANCE;
+		std::string name() override;
+		std::string toString(Object* self) override;
+	};
 }
 
 #endif /* SRC_CLASSES_HPP_ */

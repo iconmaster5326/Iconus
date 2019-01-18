@@ -30,6 +30,19 @@ void Session::addDefaultRenderers() {
 		return sb.str();
 	});
 	
+	renderers.emplace_back("error", [](Session& session, Object* ob) {
+		return ob->clazz == &ClassError::INSTANCE;
+	}, [this](Session& session, Object* ob) {
+		ostringstream sb;
+		sb << "<div style=\"color: red;\"><b>error:</b> ";
+		
+		Object* what = (Object*) ob->value.asPtr;
+		sb << session.render(what);
+		
+		sb << "</div>";
+		return sb.str();
+	});
+	
 	renderers.emplace_back("raw string", [](Session& session, Object* ob) {
 		return true;
 	}, [](Session& session, Object* ob) {

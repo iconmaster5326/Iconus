@@ -77,3 +77,14 @@ std::string iconus::ClassList::toString(Object* self) {
 	sb << ']';
 	return sb.str();
 }
+
+iconus::ClassError iconus::ClassError::INSTANCE;
+
+std::string iconus::ClassError::name() {
+	return "error";
+}
+
+std::string iconus::ClassError::toString(Object* self) {
+	Object* what = (Object*) self->value.asPtr;
+	return "error: "+what->operator string();
+}
