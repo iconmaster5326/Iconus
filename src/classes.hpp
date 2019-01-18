@@ -13,6 +13,14 @@
 #include <functional>
 
 namespace iconus {
+	class ClassNil : public Class {
+	public:
+		static ClassNil INSTANCE;
+		static Object NIL;
+		std::string name() override;
+		std::string toString(Object* self) override;
+	};
+	
 	class ClassString : public Class {
 	public:
 		static ClassString INSTANCE;

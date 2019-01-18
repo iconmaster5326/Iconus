@@ -22,6 +22,6 @@ iconus::Session::Session() {
 std::string iconus::Session::evaluate(const std::string& input) {
 	Lexer lexer(input);
 	Op* op = parse(lexer);
-	Object* result = op->evaluate(globalScope, nullptr);
+	Object* result = op->evaluate(globalScope, &ClassNil::NIL);
 	return result->operator string();
 }

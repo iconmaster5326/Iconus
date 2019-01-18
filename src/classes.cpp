@@ -10,6 +10,17 @@
 using namespace std;
 using namespace iconus;
 
+iconus::ClassNil iconus::ClassNil::INSTANCE;
+iconus::Object iconus::ClassNil::NIL(&INSTANCE);
+
+std::string iconus::ClassNil::name() {
+	return "nil";
+}
+
+std::string iconus::ClassNil::toString(Object* self) {
+	return "nil";
+}
+
 iconus::ClassString iconus::ClassString::INSTANCE;
 
 std::string iconus::ClassString::name() {

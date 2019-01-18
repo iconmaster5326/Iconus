@@ -60,8 +60,10 @@ iconus::OpBinary::~OpBinary() {
 
 Object* iconus::OpBinary::evaluate(Scope& scope, Object* input) {
 	switch (type) {
-	case Type::PIPE:
-		return rhs->evaluate(scope, lhs->evaluate(scope, input));
+	case Type::PIPE: {
+		Object* lhsResult = lhs ? lhs->evaluate(scope, input) : input;
+		return rhs ? rhs->evaluate(scope, lhsResult) : lhsResult;
+	} break;
 	default: throw exception();
 	}
 }

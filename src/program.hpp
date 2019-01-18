@@ -26,6 +26,7 @@ namespace iconus {
 	
 	class Object {
 	public:
+		inline Object(Class* clazz) : clazz(clazz) {}
 		inline Object(Class* clazz, void* value) : clazz(clazz), value{.asPtr = value} {}
 		
 		inline operator std::string() {
