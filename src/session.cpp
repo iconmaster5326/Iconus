@@ -33,7 +33,7 @@ iconus::Session::Session() {
 std::string iconus::Session::evaluate(const std::string& input) {
 	try {
 		Lexer lexer(input);
-		Op* op = parse(lexer);
+		Op* op = parse(*this, lexer);
 		Object* result = op->evaluate(*this, globalScope, &ClassNil::NIL);
 		return Renderer::render(result);
 	} catch (const Error& e) {

@@ -18,20 +18,20 @@ namespace iconus {
 	// TODO: an algorithm that does this without consuming all the input first
 	// That was the point of having Lexer act like a stream! So this didn't have to happen!!
 
-	static Op* parse(list<Token>& tokens);
+	static Op* parse(Session& session, list<Token>& tokens);
 
-	static Op* parsePostConst(Op* op, list<Token>& tokens) {
+	static Op* parsePostConst(Session& session, Op* op, list<Token>& tokens) {
 		if (tokens.empty()) return op;
 		switch (tokens.front().type) {
 		case Token::Type::PIPE: {
 			tokens.pop_front();
-			return new OpBinary(op,OpBinary::Type::PIPE,parse(tokens));
+			return new OpBinary(op,OpBinary::Type::PIPE,parse(session, tokens));
 		} break;
 		default: throw Error("Token invalid after constant: "+tokens.front().value);
 		}
 	}
 
-	static Op* parse(list<Token>& tokens) {
+	static Op* parse(Session& session, list<Token>& tokens) {
 		if (tokens.empty()) {
 			return new OpBinary(nullptr,OpBinary::Type::PIPE,nullptr);
 		}
@@ -51,7 +51,7 @@ namespace iconus {
 				} break;
 				case Token::Type::PIPE: {
 					tokens.pop_front();
-					return new OpBinary(call,OpBinary::Type::PIPE,parse(tokens));
+					return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
 				} break;
 				case Token::Type::LPAREN: {
 					tokens.pop_front();
@@ -71,7 +71,7 @@ namespace iconus {
 					}
 					
 					subTokens.pop_back();
-					call->args.emplace_back(parse(subTokens));
+					call->args.emplace_back(parse(session, subTokens));
 				} break;
 				case Token::Type::STRING: {
 					call->args.emplace_back(new OpConst(new Object(&ClassString::INSTANCE, new string(tokens.front().value))));
@@ -83,7 +83,7 @@ namespace iconus {
 		} break;
 		case Token::Type::PIPE: {
 			tokens.pop_front();
-			return new OpBinary(nullptr,OpBinary::Type::PIPE,parse(tokens));
+			return new OpBinary(nullptr,OpBinary::Type::PIPE,parse(session, tokens));
 		} break;
 		case Token::Type::LPAREN: {
 			tokens.pop_front();
@@ -103,23 +103,23 @@ namespace iconus {
 			}
 			
 			subTokens.pop_back();
-			return parsePostConst(parse(subTokens), tokens);
+			return parsePostConst(session, parse(session, subTokens), tokens);
 		} break;
 		case Token::Type::STRING: {
 			Op* op = new OpConst(new Object(&ClassString::INSTANCE, new string(tokens.front().value)));
 			tokens.pop_front();
-			return parsePostConst(op, tokens);
+			return parsePostConst(session, op, tokens);
 		} break;
 		default: throw Error("Token invalid: "+tokens.front().value);
 		}
 	}
 	
-	Op* parse(Lexer& input) {
+	Op* parse(Session& session, Lexer& input) {
 		list<Token> tokens;
 		for (Token t = input.next(); t.type != Token::Type::NONE; t = input.next()) {
 			tokens.push_back(t);
 		}
 		
-		return parse(tokens);
+		return parse(session, tokens);
 	}
 }
