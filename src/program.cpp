@@ -9,6 +9,7 @@
 
 #include "program.hpp"
 #include "classes.hpp"
+#include "error.hpp"
 
 using namespace std;
 using namespace iconus;
@@ -32,11 +33,11 @@ iconus::OpCall::~OpCall() {
 Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
 	auto it = scope.vars.find(cmd);
 	if (it == scope.vars.end()) {
-		throw runtime_error("command not in scope: "+cmd);
+		throw Error("command not in scope: "+cmd);
 	}
 	Object* cmdOb = it->second;
 	if (!cmdOb->executable()) {
-		throw runtime_error("command not executable: "+cmd);
+		throw Error("command not executable: "+cmd);
 	}
 	
 	vector<Object*> argObs;
@@ -128,5 +129,5 @@ bool iconus::Class::executable() {
 Object* iconus::Class::execute(Object* self, Scope& scope, Object* input,
 		const std::vector<Object*>& args,
 		const std::unordered_map<std::string, Object*>& flags) {
-	throw runtime_error("cannot execute an object of class "+name());
+	throw Error("cannot execute an object of class "+name());
 }

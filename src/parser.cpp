@@ -7,8 +7,8 @@
 
 #include "parser.hpp"
 #include "classes.hpp"
+#include "error.hpp"
 
-#include <stdexcept>
 #include <list>
 
 using namespace std;
@@ -27,7 +27,7 @@ namespace iconus {
 			tokens.pop_front();
 			return new OpBinary(op,OpBinary::Type::PIPE,parse(tokens));
 		} break;
-		default: throw runtime_error("Token invalid after constant: "+tokens.front().value);
+		default: throw Error("Token invalid after constant: "+tokens.front().value);
 		}
 	}
 
@@ -59,7 +59,7 @@ namespace iconus {
 					int parenLevel = 0;
 					
 					while (parenLevel >= 0) {
-						if (tokens.empty()) throw runtime_error("expected ')'; not found");
+						if (tokens.empty()) throw Error("expected ')'; not found");
 						if (tokens.front().type == Token::Type::LPAREN) {
 							parenLevel++;
 						} else if (tokens.front().type == Token::Type::RPAREN) {
@@ -77,7 +77,7 @@ namespace iconus {
 					call->args.emplace_back(new OpConst(new Object(&ClassString::INSTANCE, new string(tokens.front().value))));
 					tokens.pop_front();
 				} break;
-				default: throw runtime_error("Token invalid in function call: "+tokens.front().value);
+				default: throw Error("Token invalid in function call: "+tokens.front().value);
 				}
 			}
 		} break;
@@ -91,7 +91,7 @@ namespace iconus {
 			int parenLevel = 0;
 			
 			while (parenLevel >= 0) {
-				if (tokens.empty()) throw runtime_error("expected ')'; not found");
+				if (tokens.empty()) throw Error("expected ')'; not found");
 				if (tokens.front().type == Token::Type::LPAREN) {
 					parenLevel++;
 				} else if (tokens.front().type == Token::Type::RPAREN) {
@@ -110,7 +110,7 @@ namespace iconus {
 			tokens.pop_front();
 			return parsePostConst(op, tokens);
 		} break;
-		default: throw runtime_error("Token invalid: "+tokens.front().value);
+		default: throw Error("Token invalid: "+tokens.front().value);
 		}
 	}
 	

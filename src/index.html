@@ -35,15 +35,16 @@
 					conn.send(iif);
 					
 					input.replaceWith(input.value);
-					content.appendChild(document.createElement("br"));
 
-					var result = document.createTextNode("...");
+					var result = document.createElement("p");
+					result.setAttribute("id","output");
+					result.innerHTML = "...";
 					content.appendChild(result);
+					
 					conn.onmessage = function(event2) {
 						console.log("GOT: " + event2.data);
-						result.replaceWith(window.atob(event2.data.split(" ")[2]));
+						result.innerHTML = window.atob(event2.data.split(" ")[2]);
 
-						content.appendChild(document.createElement("br"));
 						content.appendChild(document.createTextNode("> "));
 
 						input = document.createElement("input");
