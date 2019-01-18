@@ -27,6 +27,7 @@ namespace iconus {
 		Scope globalScope;
 		std::vector<Renderer> renderers;
 	private:
+		void addGlobalScope();
 		void addDefaultRenderers();
 	};
 }
