@@ -21,6 +21,8 @@ std::string iconus::ClassString::toString(Object* self) {
 	return *value;
 }
 
+iconus::ClassSystemFunction iconus::ClassSystemFunction::INSTANCE;
+
 std::string iconus::ClassSystemFunction::name() {
 	return "function";
 }

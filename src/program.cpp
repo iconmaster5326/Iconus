@@ -30,13 +30,28 @@ iconus::OpCall::~OpCall() {
 }
 
 Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
-	ostringstream sb; sb << cmd << "(" << (input ? input->operator string() : "nil") << "|";
-	for (const Arg& arg : args) {
-		Object* v = arg.value->evaluate(scope, input);
-		sb << (v ? v->operator string() : "nil");
+	auto it = scope.vars.find(cmd);
+	if (it == scope.vars.end()) {
+		throw runtime_error("command not in scope: "+cmd);
 	}
-	sb << ")";
-	return new Object(&ClassString::INSTANCE, new string(sb.str()));
+	Object* cmdOb = it->second;
+	if (!cmdOb->executable()) {
+		throw runtime_error("command not executable: "+cmd);
+	}
+	
+	vector<Object*> argObs;
+	unordered_map<string,Object*> flagObs;
+	
+	for (const Arg& arg : args) {
+		Object* value = arg.value->evaluate(scope, input);
+		if (arg.isFlag) {
+			flagObs[arg.key] = value;
+		} else {
+			argObs.push_back(value);
+		}
+	}
+	
+	return cmdOb->execute(scope, input, argObs, flagObs);
 }
 
 iconus::OpBinary::~OpBinary() {

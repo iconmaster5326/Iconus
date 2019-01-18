@@ -9,7 +9,7 @@ O_FILES := $(patsubst src/%.cpp,build/%.o,$(CXX_FILES))
 D_FILES := $(patsubst src/%.cpp,build/%.d,$(CXX_FILES))
 EXE_FILES := iconus test/test_parser
 
-CXXFLAGS := -g -std=c++11 -I. -Isrc -ISimple-Web-Server -ISimple-WebSocket-Server
+CXXFLAGS := -g -std=c++14 -I. -Isrc -ISimple-Web-Server -ISimple-WebSocket-Server
 LINKFLAGS := -lcrypto -lpthread -lboost_system -lboost_thread
 
 CURL := curl

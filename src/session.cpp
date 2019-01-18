@@ -8,12 +8,15 @@
 #include "session.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "classes.hpp"
 
 using namespace std;
 using namespace iconus;
 
 iconus::Session::Session() {
-	// TODO
+	globalScope.vars["echo"] = new Object(&ClassSystemFunction::INSTANCE, new ClassSystemFunction::Handler([](auto scope, auto input, auto args, auto flags) {
+		return input;
+	}));
 }
 
 std::string iconus::Session::evaluate(const std::string& input) {
