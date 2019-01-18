@@ -21,7 +21,7 @@ iconus$(EXE_SUFFIX): $(O_FILES)
 	$(CXX) $(CXXFLAGS) -o iconus $(O_FILES) $(LINKFLAGS)
 
 # source files
-$(D_FILES): | build/index.cxx build Simple-Web-Server Simple-WebSocket-Server
+$(D_FILES): | build/index.cxx build Simple-Web-Server Simple-WebSocket-Server json.hpp
 $(D_FILES): build/%.d: src/%.cpp
 	$(CXX) -MM -MT '$(patsubst %.d,%.o,$@) $@' $(CXXFLAGS) $< > $@
 include $(D_FILES)
@@ -55,6 +55,9 @@ Simple-Web-Server.tar.gz:
 Simple-Web-Server: Simple-Web-Server.tar.gz
 	$(TAR) -xvzf Simple-Web-Server.tar.gz
 	mv Simple-Web-Server-$(SWS_VER) Simple-Web-Server
+
+json.hpp:
+	$(CURL) -L "https://github.com/nlohmann/json/releases/download/v3.5.0/json.hpp" > json.hpp
 
 SWSS_VER := v2.0.0-rc4
 

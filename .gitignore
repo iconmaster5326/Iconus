@@ -34,3 +34,4 @@ vgcore.*
 # Dependencies
 /Simple-Web-Server*
 /Simple-WebSocket-Server*
+/json.hpp
