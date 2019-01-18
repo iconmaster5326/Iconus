@@ -22,7 +22,7 @@ iconus::OpConst::~OpConst() {
 	
 }
 
-Object* iconus::OpConst::evaluate(Scope& scope, Object* input) {
+Object* iconus::OpConst::evaluate(Session& session, Scope& scope, Object* input) {
 	return value;
 }
 
@@ -30,7 +30,7 @@ iconus::OpCall::~OpCall() {
 	
 }
 
-Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
+Object* iconus::OpCall::evaluate(Session& session, Scope& scope, Object* input) {
 	auto it = scope.vars.find(cmd);
 	if (it == scope.vars.end()) {
 		throw Error("command not in scope: "+cmd);
@@ -44,7 +44,7 @@ Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
 	unordered_map<string,Object*> flagObs;
 	
 	for (const Arg& arg : args) {
-		Object* value = arg.value->evaluate(scope, input);
+		Object* value = arg.value->evaluate(session, scope, input);
 		if (arg.isFlag) {
 			flagObs[arg.key] = value;
 		} else {
@@ -52,18 +52,18 @@ Object* iconus::OpCall::evaluate(Scope& scope, Object* input) {
 		}
 	}
 	
-	return cmdOb->execute(scope, input, argObs, flagObs);
+	return cmdOb->execute(session, scope, input, argObs, flagObs);
 }
 
 iconus::OpBinary::~OpBinary() {
 	
 }
 
-Object* iconus::OpBinary::evaluate(Scope& scope, Object* input) {
+Object* iconus::OpBinary::evaluate(Session& session, Scope& scope, Object* input) {
 	switch (type) {
 	case Type::PIPE: {
-		Object* lhsResult = lhs ? lhs->evaluate(scope, input) : input;
-		return rhs ? rhs->evaluate(scope, lhsResult) : lhsResult;
+		Object* lhsResult = lhs ? lhs->evaluate(session, scope, input) : input;
+		return rhs ? rhs->evaluate(session, scope, lhsResult) : lhsResult;
 	} break;
 	default: throw exception();
 	}
@@ -126,7 +126,7 @@ bool iconus::Class::executable() {
 	return false;
 }
 
-Object* iconus::Class::execute(Object* self, Scope& scope, Object* input,
+Object* iconus::Class::execute(Object* self, Session& session, Scope& scope, Object* input,
 		const std::vector<Object*>& args,
 		const std::unordered_map<std::string, Object*>& flags) {
 	throw Error("cannot execute an object of class "+name());

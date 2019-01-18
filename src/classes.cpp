@@ -45,11 +45,11 @@ bool iconus::ClassSystemFunction::executable() {
 	return true;
 }
 
-Object* iconus::ClassSystemFunction::execute(Object* self, Scope& scope, Object* input,
+Object* iconus::ClassSystemFunction::execute(Object* self, Session& session, Scope& scope, Object* input,
 		const std::vector<Object*>& args,
 		const std::unordered_map<std::string, Object*>& flags) {
 	Handler* handler = (Handler*) self->value.asPtr;
-	return handler->operator()(scope, input, args, flags);
+	return handler->operator()(session, scope, input, args, flags);
 }
 
 iconus::ClassList iconus::ClassList::INSTANCE;

@@ -13,7 +13,7 @@
 #include <unordered_map>
 
 namespace iconus {
-	class Object; class Scope;
+	class Object; class Scope; class Session;
 	
 	class Class {
 	public:
@@ -21,7 +21,7 @@ namespace iconus {
 		virtual std::string name();
 		virtual std::string toString(Object* self);
 		virtual bool executable();
-		virtual Object* execute(Object* self, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags);
+		virtual Object* execute(Object* self, Session& session, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags);
 	};
 	
 	class Object {
@@ -35,8 +35,8 @@ namespace iconus {
 		inline bool executable() {
 			return clazz->executable();
 		}
-		inline Object* execute(Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) {
-			return clazz->execute(this, scope, input, args, flags);
+		inline Object* execute(Session& session, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) {
+			return clazz->execute(this, session, scope, input, args, flags);
 		}
 		
 		Class* clazz;
@@ -55,7 +55,7 @@ namespace iconus {
 	class Op {
 	public:
 		virtual ~Op();
-		virtual Object* evaluate(Scope& scope, Object* input) = 0;
+		virtual Object* evaluate(Session& session, Scope& scope, Object* input) = 0;
 		virtual operator std::string() = 0;
 	};
 	
@@ -63,7 +63,7 @@ namespace iconus {
 	public:
 		inline OpConst(Object* value) : value(value) {}
 		virtual ~OpConst();
-		Object* evaluate(Scope& scope, Object* input) override;
+		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		
 		Object* value;
@@ -83,7 +83,7 @@ namespace iconus {
 		
 		inline OpCall(const std::string& cmd) : cmd(cmd), args() {}
 		virtual ~OpCall();
-		Object* evaluate(Scope& scope, Object* input) override;
+		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		
 		std::string cmd;
@@ -100,7 +100,7 @@ namespace iconus {
 		
 		inline OpBinary(Op* lhs, Type type, Op* rhs) : lhs(lhs), type(type), rhs(rhs) {}
 		virtual ~OpBinary();
-		Object* evaluate(Scope& scope, Object* input) override;
+		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		
 		Type type;

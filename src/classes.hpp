@@ -30,12 +30,12 @@ namespace iconus {
 	
 	class ClassSystemFunction : public Class {
 	public:
-		using Handler = std::function<Object*(Scope&, Object*, const std::vector<Object*>&, const std::unordered_map<std::string,Object*>&)>;
+		using Handler = std::function<Object*(Session&, Scope&, Object*, const std::vector<Object*>&, const std::unordered_map<std::string,Object*>&)>;
 		
 		static ClassSystemFunction INSTANCE;
 		std::string name() override;
 		bool executable() override;
-		Object* execute(Object* self, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) override;
+		Object* execute(Object* self, Session& session, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) override;
 	};
 	
 	class ClassList : public Class {
