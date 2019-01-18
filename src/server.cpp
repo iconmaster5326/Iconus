@@ -7,11 +7,11 @@
 
 #include "server.hpp"
 #include "session.hpp"
-#include "iif.hpp"
 
 #include <iostream>
 #include "server_http.hpp"
 #include "server_ws.hpp"
+#include "json.hpp"
 
 using namespace std;
 using namespace SimpleWeb;
@@ -50,15 +50,14 @@ namespace iconus {
 			endpoint.on_message = [session](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::InMessage> in_message) {
 				string input = in_message->string();
 				cout << "GOT: " << input << endl;
-				IIFMessage iif(input);
-				switch (iif.type) {
-				case IIFType::EVAL: {
-					string result = session->evaluate(iif.getContent());
-					connection->send((string) IIFMessage::makeResult(iif.getTag(), result));
-				} break;
-				case IIFType::RESULT: {
-					// error condition; ignore
-				} break;
+				nlohmann::json message = nlohmann::json::parse(input);
+				string type = message["type"].get<string>();
+				if (type == "eval") {
+					nlohmann::json response = {
+							{"type", "result"},
+							{"result", session->evaluate(message["command"].get<string>())},
+					};
+					connection->send(response.dump());
 				}
 			};
 			

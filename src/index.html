@@ -30,7 +30,10 @@
 			input.addEventListener("keyup", function(event) {
 				event.preventDefault();
 				if (event.keyCode === 13) {
-					var iif = "eval "+newUUID()+" "+window.btoa(input.value)+"\n";
+					var iif = JSON.stringify({
+						"type": "eval",
+						"command": input.value
+					});
 					console.log("SENDING: "+iif)
 					conn.send(iif);
 					
@@ -43,10 +46,11 @@
 					
 					conn.onmessage = function(event2) {
 						console.log("GOT: " + event2.data);
-						result.innerHTML = window.atob(event2.data.split(" ")[2]);
-
+						var response = JSON.parse(event2.data);
+						result.innerHTML = response.result;
+						
 						content.appendChild(document.createTextNode("> "));
-
+						
 						input = document.createElement("input");
 						input.setAttribute("id", "consoleInput");
 						input.setAttribute("type", "text");
