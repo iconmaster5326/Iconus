@@ -37,6 +37,13 @@ namespace iconus {
 		bool executable() override;
 		Object* execute(Object* self, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) override;
 	};
+	
+	class ClassList : public Class {
+	public:
+		static ClassList INSTANCE;
+		std::string name() override;
+		std::string toString(Object* self) override;
+	};
 }
 
 #endif /* SRC_CLASSES_HPP_ */

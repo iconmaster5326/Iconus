@@ -11,12 +11,21 @@
 #include "classes.hpp"
 #include "error.hpp"
 
+#include <deque>
+
 using namespace std;
 using namespace iconus;
 
 iconus::Session::Session() {
-	globalScope.vars["echo"] = new Object(&ClassSystemFunction::INSTANCE, new ClassSystemFunction::Handler([](auto scope, auto input, auto args, auto flags) {
+	globalScope.vars["echo"] = new Object(&ClassSystemFunction::INSTANCE, new ClassSystemFunction::Handler([]
+	(Scope& scope, Object* input, const vector<Object*>& args, const unordered_map<string,Object*>& flags) {
 		return input;
+	}));
+	
+	globalScope.vars["list"] = new Object(&ClassSystemFunction::INSTANCE, new ClassSystemFunction::Handler([]
+	(Scope& scope, Object* input, const vector<Object*>& args, const unordered_map<string,Object*>& flags) {
+		deque<Object*>* items = new deque<Object*>(args.begin(), args.end());
+		return new Object(&ClassList::INSTANCE, items);
 	}));
 }
 

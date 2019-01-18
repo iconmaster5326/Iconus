@@ -7,6 +7,9 @@
 
 #include "classes.hpp"
 
+#include <sstream>
+#include <deque>
+
 using namespace std;
 using namespace iconus;
 
@@ -47,4 +50,30 @@ Object* iconus::ClassSystemFunction::execute(Object* self, Scope& scope, Object*
 		const std::unordered_map<std::string, Object*>& flags) {
 	Handler* handler = (Handler*) self->value.asPtr;
 	return handler->operator()(scope, input, args, flags);
+}
+
+iconus::ClassList iconus::ClassList::INSTANCE;
+
+std::string iconus::ClassList::name() {
+	return "list";
+}
+
+std::string iconus::ClassList::toString(Object* self) {
+	ostringstream sb;
+	sb << '[';
+	
+	deque<Object*>& items = *((deque<Object*>*)self->value.asPtr);
+	bool first = true;
+	
+	for (Object* ob : items) {
+		if (first) {
+			first = false;
+		} else {
+			sb << ", ";
+		}
+		sb << ob->operator string();
+	}
+	
+	sb << ']';
+	return sb.str();
 }
