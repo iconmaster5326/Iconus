@@ -9,6 +9,7 @@
 #define SRC_OP_HPP_
 
 #include "program.hpp"
+#include "function.hpp"
 
 #include <string>
 #include <vector>
@@ -78,6 +79,18 @@ namespace iconus {
 		operator std::string() override;
 		
 		std::string name;
+	};
+	
+	class OpLambda : public Op {
+	public:
+		inline OpLambda() : code(nullptr) {}
+		inline OpLambda(Op* code) : code(code) {}
+		virtual ~OpLambda();
+		Object* evaluate(Session& session, Scope& scope, Object* input) override;
+		operator std::string() override;
+		
+		Function fn;
+		Op* code;
 	};
 }
 

@@ -7,6 +7,7 @@
 
 #include "classes.hpp"
 #include "error.hpp"
+#include "session.hpp"
 
 #include <sstream>
 #include <deque>
@@ -64,16 +65,16 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 	std::unordered_map<std::string, Object*> restFlags(flags);
 	
 	bool inputExplicit = false;
-	if (!instance->input.empty()) {
-		auto it = flags.find(instance->input);
+	if (!instance->fn.input.empty()) {
+		auto it = flags.find(instance->fn.input);
 		if (it != flags.end()) {
 			input = it->second;
 			inputExplicit = true;
-			restFlags.erase(instance->input);
+			restFlags.erase(instance->fn.input);
 		}
 	}
 	
-	for (const Instance::Arg& arg : instance->args) {
+	for (const Function::Arg& arg : instance->fn.args) {
 		auto it = flags.find(arg.name);
 		if (it == flags.end()) {
 			if (argAt == args.end()) {
@@ -92,7 +93,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		}
 	}
 	
-	if (instance->vararg.empty()) {
+	if (instance->fn.vararg.empty()) {
 		if (argAt != args.end()) {
 			Object* lastArg = *argAt;
 			argAt++;
@@ -103,12 +104,12 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 			}
 		}
 	} else {
-		auto it = flags.find(instance->vararg);
+		auto it = flags.find(instance->fn.vararg);
 		if (it == flags.end()) {
-			mappedArgs[instance->vararg] = new Object(&ClassList::INSTANCE, new deque<Object*>(argAt, args.end()));
+			mappedArgs[instance->fn.vararg] = new Object(&ClassList::INSTANCE, new deque<Object*>(argAt, args.end()));
 		} else {
-			mappedArgs[instance->vararg] = it->second;
-			restFlags.erase(instance->vararg);
+			mappedArgs[instance->fn.vararg] = it->second;
+			restFlags.erase(instance->fn.vararg);
 			// TODO: unpack list given
 			
 			if (argAt != args.end()) {
@@ -117,17 +118,17 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		}
 	}
 	
-	if (instance->varflag.empty()) {
+	if (instance->fn.varflag.empty()) {
 		if (!restFlags.empty()) {
 			throw Error("Unknown flag '"+restFlags.begin()->first+"'");
 		}
 	} else {
-		auto it = flags.find(instance->varflag);
+		auto it = flags.find(instance->fn.varflag);
 		if (it == flags.end()) {
 			// TODO
 		} else {
-			mappedArgs[instance->varflag] = it->second;
-			restFlags.erase(instance->varflag);
+			mappedArgs[instance->fn.varflag] = it->second;
+			restFlags.erase(instance->fn.varflag);
 			// TODO: unpack list given
 			
 			if (!restFlags.empty()) {
@@ -136,8 +137,8 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		}
 	}
 	
-	if (!instance->input.empty()) {
-		mappedArgs[instance->input] = input;
+	if (!instance->fn.input.empty()) {
+		mappedArgs[instance->fn.input] = input;
 	}
 	
 	vector<Object*> restArgs(argAt, args.end());
@@ -207,4 +208,16 @@ std::string iconus::ClassNumber::name() {
 
 std::string iconus::ClassNumber::toString(Object* self) {
 	return to_string(self->value.asDouble);
+}
+
+iconus::ClassUserFunction iconus::ClassUserFunction::INSTANCE{};
+
+Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& fn) {
+	return new Object(&ClassUserFunction::INSTANCE, new ClassManagedFunction::Instance(fn, [&scope,op](auto session, auto evalScope, auto input, auto args, auto varargs, auto varflags) {
+		Scope newScope(scope);
+		for (const pair<string,Object*>& kv : args) {
+			newScope.setLocal(kv.first, kv.second);
+		}
+		return op->evaluate(session, newScope, input);
+	}));
 }

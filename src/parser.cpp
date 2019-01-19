@@ -19,6 +19,27 @@ namespace iconus {
 	// That was the point of having Lexer act like a stream! So this didn't have to happen!!
 
 	static Op* parse(Session& session, list<Token>& tokens);
+	
+	static OpLambda* parseBraces(Session& session, list<Token>& tokens) {
+		tokens.pop_front();
+		list<Token> subTokens;
+		int parenLevel = 0;
+		
+		while (parenLevel >= 0) {
+			if (tokens.empty()) throw Error("expected '}'; not found");
+			if (tokens.front().type == Token::Type::LBRACE) {
+				parenLevel++;
+			} else if (tokens.front().type == Token::Type::RBRACE) {
+				parenLevel--;
+			}
+			
+			subTokens.push_back(tokens.front());
+			tokens.pop_front();
+		}
+		
+		subTokens.pop_back();
+		return new OpLambda(parse(session, subTokens));
+	}
 
 	static Op* parsePostConst(Session& session, Op* op, list<Token>& tokens) {
 		if (tokens.empty()) return op;
@@ -72,6 +93,9 @@ namespace iconus {
 		case Token::Type::VAR: {
 			tokens.pop_front();
 			return new OpVar(value);
+		} break;
+		case Token::Type::LBRACE: {
+			return parseBraces(session, tokens);
 		} break;
 		}
 		
@@ -172,6 +196,9 @@ namespace iconus {
 			Op* op = new OpVar(tokens.front().value);
 			tokens.pop_front();
 			return parsePostConst(session, op, tokens);
+		} break;
+		case Token::Type::LBRACE: {
+			return parsePostConst(session, parseBraces(session, tokens), tokens);
 		} break;
 		default: throw Error("Token invalid: "+tokens.front().value);
 		}

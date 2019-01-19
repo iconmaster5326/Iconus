@@ -31,11 +31,10 @@ iconus::OpCall::~OpCall() {
 }
 
 Object* iconus::OpCall::evaluate(Session& session, Scope& scope, Object* input) {
-	auto it = scope.vars.find(cmd);
-	if (it == scope.vars.end()) {
+	Object* cmdOb = scope.get(cmd);
+	if (!cmdOb) {
 		throw Error("command not in scope: "+cmd);
 	}
-	Object* cmdOb = it->second;
 	if (!cmdOb->executable()) {
 		throw Error("command not executable: "+cmd);
 	}
@@ -123,4 +122,16 @@ Object* iconus::OpVar::evaluate(Session& session, Scope& scope, Object* input) {
 
 iconus::OpVar::operator std::string() {
 	return "$"+name;
+}
+
+iconus::OpLambda::~OpLambda() {
+	
+}
+
+Object* iconus::OpLambda::evaluate(Session& session, Scope& scope, Object* input) {
+	return ClassUserFunction::create(scope, code, fn);
+}
+
+iconus::OpLambda::operator std::string() {
+	return "{"+code->operator string()+"}";
 }

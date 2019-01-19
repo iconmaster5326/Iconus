@@ -12,8 +12,10 @@ using namespace std;
 using namespace iconus;
 
 void iconus::Session::addGlobalScope() {
+	using Arg = Function::Arg;
+	
 	globalScope.vars["echo"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"in", "", "",
+			"input", "", "",
 			{}, {},
 			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
 		return input;
@@ -26,6 +28,14 @@ void iconus::Session::addGlobalScope() {
 			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
 		deque<Object*>* items = new deque<Object*>(varargs.begin(), varargs.end());
 		return new Object(&ClassList::INSTANCE, items);
+			}
+	));
+	
+	globalScope.vars["apply"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"", "args", "",
+			{Arg("fn")}, {},
+			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+		return ((Object*)args["fn"])->execute(session, scope, input, varargs, varflags);
 			}
 	));
 }
