@@ -79,7 +79,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		if (it == flags.end()) {
 			if (argAt == args.end()) {
 				if (arg.defaultValue) {
-					mappedArgs[arg.name] = arg.defaultValue;
+					mappedArgs[arg.name] = arg.defaultValue->evaluate(session, scope, input);
 				} else {
 					throw Error("Argument '"+arg.name+"' required");
 				}

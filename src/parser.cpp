@@ -20,7 +20,9 @@ namespace iconus {
 
 	static Op* parse(Session& session, list<Token>& tokens);
 	
-	static OpLambda* parseBraces(Session& session, list<Token>& tokens) {
+	static OpLambda* parseBraces(Session& session, list<Token>& tokens, OpLambda* lambda) {
+		if (tokens.front().type != Token::Type::LBRACE) throw Error("expected '{'; not found");
+		
 		tokens.pop_front();
 		list<Token> subTokens;
 		int parenLevel = 0;
@@ -38,7 +40,54 @@ namespace iconus {
 		}
 		
 		subTokens.pop_back();
-		return new OpLambda(parse(session, subTokens));
+		lambda->code = parse(session, subTokens);
+		return lambda;
+	}
+	
+	static OpLambda* parseBrackets(Session& session, list<Token>& tokens) {
+		tokens.pop_front();
+		list<Token> subTokens;
+		int parenLevel = 0;
+		
+		while (parenLevel >= 0) {
+			if (tokens.empty()) throw Error("expected ']'; not found");
+			if (tokens.front().type == Token::Type::LBRACKET) {
+				parenLevel++;
+			} else if (tokens.front().type == Token::Type::RBRACKET) {
+				parenLevel--;
+			}
+			
+			subTokens.push_back(tokens.front());
+			tokens.pop_front();
+		}
+		
+		subTokens.pop_back();
+		
+		list<Token>& restTokens = tokens;
+		{
+			list<Token>& tokens = subTokens;
+			OpLambda* lambda = new OpLambda();
+			
+			while (!tokens.empty()) {
+				switch (tokens.front().type) {
+				case Token::Type::WORD: {
+					lambda->fn.args.emplace_back(tokens.front().value);
+					tokens.pop_front();
+				} break;
+				case Token::Type::PIPE: {
+					tokens.pop_front();
+					if (!lambda->fn.args.empty()) {
+						if (lambda->fn.args.size() > 1) throw Error("can only have 1 variable before the | in argument specification");
+						lambda->fn.input = lambda->fn.args.front().name;
+						lambda->fn.args.pop_back();
+					}
+				} break;
+				default: throw Error("Token invalid in argument specification: "+tokens.front().value);
+				}
+			}
+			
+			return parseBraces(session, restTokens, lambda);
+		}
 	}
 
 	static Op* parsePostConst(Session& session, Op* op, list<Token>& tokens) {
@@ -95,7 +144,10 @@ namespace iconus {
 			return new OpVar(value);
 		} break;
 		case Token::Type::LBRACE: {
-			return parseBraces(session, tokens);
+			return parseBraces(session, tokens, new OpLambda());
+		} break;
+		case Token::Type::LBRACKET: {
+			return parseBrackets(session, tokens);
 		} break;
 		}
 		
@@ -198,7 +250,10 @@ namespace iconus {
 			return parsePostConst(session, op, tokens);
 		} break;
 		case Token::Type::LBRACE: {
-			return parsePostConst(session, parseBraces(session, tokens), tokens);
+			return parsePostConst(session, parseBraces(session, tokens, new OpLambda()), tokens);
+		} break;
+		case Token::Type::LBRACKET: {
+			return parsePostConst(session, parseBrackets(session, tokens), tokens);
 		} break;
 		default: throw Error("Token invalid: "+tokens.front().value);
 		}

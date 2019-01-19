@@ -14,15 +14,17 @@
 #include <initializer_list>
 
 namespace iconus {
+	class Op;
+	
 	class Function {
 	public:
 		class Arg {
 		public:
 			std::string name;
-			Object* defaultValue; // null if required argument
+			Op* defaultValue; // null if required argument
 			
 			inline Arg(std::string name) : name(name), defaultValue(nullptr) {}
-			inline Arg(std::string name, Object* defaultValue) : name(name), defaultValue(defaultValue) {}
+			inline Arg(std::string name, Op* defaultValue) : name(name), defaultValue(defaultValue) {}
 		};
 		
 		std::string input, vararg, varflag;
