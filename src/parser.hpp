@@ -9,8 +9,8 @@
 #define SRC_PARSER_HPP_
 
 #include "lexer.hpp"
-#include "program.hpp"
 #include "session.hpp"
+#include "op.hpp"
 
 namespace iconus {
 	Op* parse(Session& session, Lexer& input);
