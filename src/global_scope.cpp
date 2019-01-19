@@ -20,9 +20,12 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["list"] = new Object(&ClassSystemFunction::INSTANCE, new ClassSystemFunction::Handler([]
-	(auto session, auto scope, auto input, auto args, auto flags) {
-		deque<Object*>* items = new deque<Object*>(args.begin(), args.end());
+	globalScope.vars["list"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"", "args", "",
+			{}, {},
+			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+		deque<Object*>* items = new deque<Object*>(varargs.begin(), varargs.end());
 		return new Object(&ClassList::INSTANCE, items);
-	}));
+			}
+	));
 }

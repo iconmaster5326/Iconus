@@ -61,11 +61,11 @@ namespace iconus {
 			std::vector<Arg> flags;
 			
 			inline Instance(std::string input, std::string vararg, std::string varflag, const std::vector<Arg>& args, const std::vector<Arg>& flags, Handler handler) :
-					input(input), args(args), flags(flags), handler(handler)
+					input(input), vararg(vararg), varflag(varflag), args(args), flags(flags), handler(handler)
 			{}
 			
 			inline Instance(std::string input, std::string vararg, std::string varflag, std::initializer_list<Arg> args, std::initializer_list<Arg> flags, Handler handler) :
-					input(input), args(args), flags(flags), handler(handler)
+					input(input), vararg(vararg), varflag(varflag), args(args), flags(flags), handler(handler)
 			{}
 		};
 		
