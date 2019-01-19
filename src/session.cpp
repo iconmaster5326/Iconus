@@ -23,9 +23,9 @@ iconus::Session::Session() {
 }
 
 Object* iconus::Session::evaluate(const std::string& input) {
-	Lexer lexer(input);
-	Op* op = parse(*this, lexer);
 	try {
+		Lexer lexer(input);
+		Op* op = parse(*this, lexer);
 		return op->evaluate(*this, globalScope, &ClassNil::NIL);
 	} catch (const Error& e) {
 		return e.value;

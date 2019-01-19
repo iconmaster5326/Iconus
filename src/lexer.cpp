@@ -6,6 +6,7 @@
  */
 
 #include "lexer.hpp"
+#include "error.hpp"
 
 #include <cctype>
 
@@ -49,9 +50,17 @@ namespace iconus {
 			string result = word.str();
 			if (result.empty())
 				return Token{Token::Type::WORD, "-"};
-			else
-				return Token{Token::Type::FLAG, result};
-		}
+			else {
+				try {
+					stod(result);
+					return Token{Token::Type::WORD, "-"+result}; // really back hack for negative number constants
+				} catch (const invalid_argument& ex) {
+					return Token{Token::Type::FLAG, result};
+				} catch (const out_of_range& ex) {
+					throw Error("Numeric constant out of range: "+result);
+				}
+			}
+		} break;
 		case '$': {
 			ostringstream word;
 			char c = input->peek();
