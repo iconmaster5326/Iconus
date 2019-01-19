@@ -21,7 +21,7 @@ namespace iconus {
 	static Op* parse(Session& session, list<Token>& tokens);
 	
 	static OpLambda* parseBraces(Session& session, list<Token>& tokens, OpLambda* lambda) {
-		if (tokens.front().type != Token::Type::LBRACE) throw Error("expected '{'; not found");
+		if (tokens.empty() || tokens.front().type != Token::Type::LBRACE) throw Error("expected '{'; not found");
 		
 		tokens.pop_front();
 		list<Token> subTokens;
@@ -81,6 +81,10 @@ namespace iconus {
 						lambda->fn.input = lambda->fn.args.front().name;
 						lambda->fn.args.pop_back();
 					}
+				} break;
+				case Token::Type::FLAG: {
+					lambda->fn.flags.emplace_back(tokens.front().value);
+					tokens.pop_front();
 				} break;
 				default: throw Error("Token invalid in argument specification: "+tokens.front().value);
 				}

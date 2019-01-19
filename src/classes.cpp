@@ -93,11 +93,29 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		}
 	}
 	
+	for (const Function::Arg& arg : instance->fn.flags) {
+		auto it = flags.find(arg.name);
+		if (it == flags.end()) {
+			if (argAt == args.end()) {
+				if (arg.defaultValue) {
+					mappedArgs[arg.name] = arg.defaultValue->evaluate(session, scope, input);
+				} else {
+					throw Error("Flag '"+arg.name+"' required");
+				}
+			} else {
+				throw Error("Flag '"+arg.name+"' required");
+			}
+		} else {
+			mappedArgs[arg.name] = it->second;
+			restFlags.erase(arg.name);
+		}
+	}
+	
 	if (instance->fn.vararg.empty()) {
 		if (argAt != args.end()) {
 			Object* lastArg = *argAt;
 			argAt++;
-			if (!inputExplicit && argAt == args.end()) {
+			if (!instance->fn.input.empty() && !inputExplicit && argAt == args.end()) {
 				input = lastArg;
 			} else {
 				throw Error("Too many positional arguments");
