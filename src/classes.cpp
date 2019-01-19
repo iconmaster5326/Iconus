@@ -239,3 +239,50 @@ Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& 
 		return op->evaluate(session, newScope, input);
 	}));
 }
+
+std::vector<Object*> iconus::ClassList::fieldNames(Object* self) {
+	deque<Object*>& list = *ClassList::value(self);
+	vector<Object*> result;
+	
+	for (int i = 0; i < list.size(); i++) {
+		result.push_back(ClassNumber::create(i));
+	}
+	
+	return result;
+}
+
+bool iconus::ClassList::hasField(Object* self, Object* name) {
+	deque<Object*>& list = *ClassList::value(self);
+	int i = (int) ClassNumber::value(name);
+	
+	return i >= 0 && i < list.size();
+}
+
+Object* iconus::ClassList::getField(Object* self, Object* name) {
+	deque<Object*>& list = *ClassList::value(self);
+	int i = (int) ClassNumber::value(name);
+	
+	if (i >= 0 && i < list.size()) {
+		return list[i];
+	} else {
+		return Class::getField(self, name);
+	}
+}
+
+bool iconus::ClassList::canSetField(Object* self, Object* name) {
+	deque<Object*>& list = *ClassList::value(self);
+	int i = (int) ClassNumber::value(name);
+	
+	return i >= 0 && i < list.size();
+}
+
+void iconus::ClassList::setField(Object* self, Object* name, Object* value) {
+	deque<Object*>& list = *ClassList::value(self);
+	int i = (int) ClassNumber::value(name);
+	
+	if (i >= 0 && i < list.size()) {
+		list[i] = value;
+	} else {
+		Class::setField(self, name, value);
+	}
+}

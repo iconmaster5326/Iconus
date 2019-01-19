@@ -70,3 +70,31 @@ void iconus::Scope::set(const std::string& name, Object* value) {
 void iconus::Scope::setLocal(const std::string& name, Object* value) {
 	vars[name] = value;
 }
+
+std::vector<Object*> iconus::Class::fieldNames(Object* self) {
+	return vector<Object*>();
+}
+
+bool iconus::Class::hasField(Object* self, Object* name) {
+	return false;
+}
+
+Object* iconus::Class::getField(Object* self, Object* name) {
+	return &ClassNil::NIL;
+}
+
+bool iconus::Class::canSetField(Object* self, Object* name) {
+	return false;
+}
+
+void iconus::Class::setField(Object* self, Object* name, Object* value) {
+	throw Error("Cannot set field '"+name->operator string()+"' on object of class "+self->clazz->name());
+}
+
+Object* iconus::Object::castTo(Object* ob, Class* clazz) {
+	if (ob->clazz == clazz) {
+		return ob;
+	} else {
+		throw Error("Cannot cast object of class "+ob->clazz->name()+" to class "+clazz->name());
+	}
+}

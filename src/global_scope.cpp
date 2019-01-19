@@ -35,7 +35,24 @@ void iconus::Session::addGlobalScope() {
 			"", "args", "flags",
 			{Arg("fn")}, {},
 			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
-		return ((Object*)args["fn"])->execute(session, scope, input, varargs, varflags);
+		return args["fn"]->execute(session, scope, input, varargs, varflags);
+			}
+	));
+	
+	globalScope.vars["get"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"i", "", "",
+			{Arg("k")}, {},
+			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+		return input->getField(args["k"]);
+			}
+	));
+	
+	globalScope.vars["set"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"i", "", "",
+			{Arg("k"), Arg("v")}, {},
+			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+		input->setField(args["k"], args["v"]);
+		return input;
 			}
 	));
 }

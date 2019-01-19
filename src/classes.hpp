@@ -15,6 +15,7 @@
 #include <functional>
 #include <vector>
 #include <initializer_list>
+#include <deque>
 
 namespace iconus {
 	class ClassNil : public Class {
@@ -36,6 +37,13 @@ namespace iconus {
 	class ClassNumber : public Class {
 	public:
 		static ClassNumber INSTANCE;
+		static inline Object* create(double n) {
+			return new Object(&INSTANCE, n);
+		}
+		static inline double value(Object* ob) {
+			return Object::castTo(ob, &INSTANCE)->value.asDouble;
+		}
+		
 		std::string name() override;
 		std::string toString(Object* self) override;
 	};
@@ -90,8 +98,27 @@ namespace iconus {
 	class ClassList : public Class {
 	public:
 		static ClassList INSTANCE;
+		static inline Object* create(std::deque<Object*>* args) {
+			return new Object(&INSTANCE, args);
+		}
+		template<typename T> static Object* create(T args) {
+			return create(new std::deque<Object*>(args));
+		}
+		template<typename T> static Object* create(T begin, T end) {
+			return create(new std::deque<Object*>(begin, end));
+		}
+		static inline std::deque<Object*>* value(Object* ob) {
+			return (std::deque<Object*>*) Object::castTo(ob, &INSTANCE)->value.asPtr;
+		}
+		
 		std::string name() override;
 		std::string toString(Object* self) override;
+		
+		std::vector<Object*> fieldNames(Object* self) override;
+		bool hasField(Object* self, Object* name) override;
+		Object* getField(Object* self, Object* name) override;
+		bool canSetField(Object* self, Object* name) override;
+		void setField(Object* self, Object* name, Object* value) override;
 	};
 	
 	class ClassError : public Class {
