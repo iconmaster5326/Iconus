@@ -96,7 +96,7 @@ namespace iconus {
 						tokens.pop_front();
 						
 						if (tokens.empty()) {
-							call->args.emplace_back(value, new OpConst(&ClassNil::NIL)); // TODO: true should be the default when value not specified
+							call->args.emplace_back(value, new OpConst(&ClassBool::TRUE));
 							return call;
 						}
 						
@@ -104,7 +104,7 @@ namespace iconus {
 						if (arg) {
 							call->args.emplace_back(value, arg);
 						} else {
-							call->args.emplace_back(value, new OpConst(&ClassNil::NIL)); // TODO: true should be the default when value not specified
+							call->args.emplace_back(value, new OpConst(&ClassBool::TRUE));
 							
 							switch (tokens.front().type) {
 							case Token::Type::PIPE: {

@@ -180,3 +180,31 @@ std::string iconus::ClassError::toString(Object* self) {
 	Object* what = (Object*) self->value.asPtr;
 	return "error: "+what->operator string();
 }
+
+iconus::ClassBool iconus::ClassBool::INSTANCE{};
+iconus::Object iconus::ClassBool::TRUE(&ClassBool::INSTANCE);
+iconus::Object iconus::ClassBool::FALSE(&ClassBool::INSTANCE);
+
+std::string iconus::ClassBool::name() {
+	return "bool";
+}
+
+std::string iconus::ClassBool::toString(Object* self) {
+	if (self == &TRUE) {
+		return "true";
+	} else if (self == &FALSE) {
+		return "false";
+	} else {
+		throw runtime_error("bool wansn't TRUE or FALSE");
+	}
+}
+
+iconus::ClassNumber iconus::ClassNumber::INSTANCE{};
+
+std::string iconus::ClassNumber::name() {
+	return "number";
+}
+
+std::string iconus::ClassNumber::toString(Object* self) {
+	return to_string(self->value.asDouble);
+}

@@ -23,6 +23,21 @@ namespace iconus {
 		std::string toString(Object* self) override;
 	};
 	
+	class ClassBool : public Class {
+	public:
+		static ClassBool INSTANCE;
+		static Object TRUE, FALSE;
+		std::string name() override;
+		std::string toString(Object* self) override;
+	};
+	
+	class ClassNumber : public Class {
+	public:
+		static ClassNumber INSTANCE;
+		std::string name() override;
+		std::string toString(Object* self) override;
+	};
+	
 	class ClassString : public Class {
 	public:
 		static ClassString INSTANCE;
