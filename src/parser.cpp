@@ -88,11 +88,18 @@ namespace iconus {
 				} else {
 					switch (tokens.front().type) {
 					case Token::Type::PIPE: {
+						tokens.pop_front();
 						return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
 					} break;
 					case Token::Type::FLAG: {
 						string value = tokens.front().value;
 						tokens.pop_front();
+						
+						if (tokens.empty()) {
+							call->args.emplace_back(value, new OpConst(&ClassNil::NIL)); // TODO: true should be the default when value not specified
+							return call;
+						}
+						
 						Op* arg = parseArg(session, tokens);
 						if (arg) {
 							call->args.emplace_back(value, arg);
