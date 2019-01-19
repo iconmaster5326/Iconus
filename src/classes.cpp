@@ -6,6 +6,7 @@
  */
 
 #include "classes.hpp"
+#include "error.hpp"
 
 #include <sstream>
 #include <deque>
@@ -13,8 +14,8 @@
 using namespace std;
 using namespace iconus;
 
-iconus::ClassNil iconus::ClassNil::INSTANCE;
-iconus::Object iconus::ClassNil::NIL(&INSTANCE);
+iconus::ClassNil iconus::ClassNil::INSTANCE{};
+iconus::Object iconus::ClassNil::NIL(&ClassNil::INSTANCE);
 
 std::string iconus::ClassNil::name() {
 	return "nil";
@@ -24,7 +25,7 @@ std::string iconus::ClassNil::toString(Object* self) {
 	return "nil";
 }
 
-iconus::ClassString iconus::ClassString::INSTANCE;
+iconus::ClassString iconus::ClassString::INSTANCE{};
 
 std::string iconus::ClassString::name() {
 	return "string";
@@ -35,7 +36,7 @@ std::string iconus::ClassString::toString(Object* self) {
 	return *value;
 }
 
-iconus::ClassSystemFunction iconus::ClassSystemFunction::INSTANCE;
+iconus::ClassSystemFunction iconus::ClassSystemFunction::INSTANCE{};
 
 std::string iconus::ClassSystemFunction::name() {
 	return "function";
@@ -52,7 +53,66 @@ Object* iconus::ClassSystemFunction::execute(Object* self, Session& session, Sco
 	return handler->operator()(session, scope, input, args, flags);
 }
 
-iconus::ClassList iconus::ClassList::INSTANCE;
+iconus::ClassManagedFunction iconus::ClassManagedFunction::INSTANCE{};
+
+Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
+		Scope& scope, Object* input, const std::vector<Object*>& args,
+		const std::unordered_map<std::string, Object*>& flags) {
+	Instance* instance = (Instance*) self->value.asPtr;
+	std::unordered_map<std::string, Object*> mappedArgs;
+	auto argAt = args.begin();
+	std::unordered_map<std::string, Object*> restFlags(flags);
+	
+	for (const Instance::Arg& arg : instance->args) {
+		auto it = flags.find(arg.name);
+		if (it == flags.end()) {
+			if (argAt == args.end()) {
+				if (arg.defaultValue) {
+					mappedArgs[arg.name] = arg.defaultValue;
+				} else {
+					throw Error("Argument '"+arg.name+"' required");
+				}
+			} else {
+				mappedArgs[arg.name] = *argAt;
+				argAt++;
+			}
+		} else {
+			mappedArgs[arg.name] = it->second;
+			restFlags.erase(arg.name);
+		}
+	}
+	
+	if (instance->vararg.empty()) {
+		if (argAt != args.end()) {
+			Object* lastArg = *argAt;
+			argAt++;
+			if (argAt == args.end()) {
+				input = lastArg;
+			} else {
+				throw Error("Too many positional arguments");
+			}
+		}
+	} else {
+		mappedArgs[instance->vararg] = new Object(&ClassList::INSTANCE, new deque<Object*>(argAt, args.end()));
+	}
+	
+	if (instance->varflag.empty()) {
+		if (!restFlags.empty()) {
+			throw Error("Unknown flag '"+restFlags.begin()->first+"'");
+		}
+	} else {
+		// TODO
+	}
+	
+	if (!instance->input.empty()) {
+		mappedArgs[instance->input] = input;
+	}
+	
+	vector<Object*> restArgs(argAt, args.end());
+	return instance->handler(session, scope, input, mappedArgs, restArgs, restFlags);
+}
+
+iconus::ClassList iconus::ClassList::INSTANCE{};
 
 std::string iconus::ClassList::name() {
 	return "list";
@@ -78,7 +138,7 @@ std::string iconus::ClassList::toString(Object* self) {
 	return sb.str();
 }
 
-iconus::ClassError iconus::ClassError::INSTANCE;
+iconus::ClassError iconus::ClassError::INSTANCE{};
 
 std::string iconus::ClassError::name() {
 	return "error";
