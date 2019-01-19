@@ -30,6 +30,44 @@ namespace iconus {
 		default: throw Error("Token invalid after constant: "+tokens.front().value);
 		}
 	}
+	
+	static Op* parseArg(Session& session, list<Token>& tokens) {
+		string value = tokens.front().value;
+		
+		switch (tokens.front().type) {
+		case Token::Type::WORD: {
+			tokens.pop_front();
+			return new OpConst(new Object(&ClassString::INSTANCE, new string(value)));
+		} break;
+		
+		case Token::Type::LPAREN: {
+			tokens.pop_front();
+			list<Token> subTokens;
+			int parenLevel = 0;
+			
+			while (parenLevel >= 0) {
+				if (tokens.empty()) throw Error("expected ')'; not found");
+				if (tokens.front().type == Token::Type::LPAREN) {
+					parenLevel++;
+				} else if (tokens.front().type == Token::Type::RPAREN) {
+					parenLevel--;
+				}
+				
+				subTokens.push_back(tokens.front());
+				tokens.pop_front();
+			}
+			
+			subTokens.pop_back();
+			return parse(session, subTokens);
+		} break;
+		case Token::Type::STRING: {
+			tokens.pop_front();
+			return new OpConst(new Object(&ClassString::INSTANCE, new string(value)));
+		} break;
+		}
+		
+		return nullptr;
+	}
 
 	static Op* parse(Session& session, list<Token>& tokens) {
 		if (tokens.empty()) {
@@ -44,40 +82,37 @@ namespace iconus {
 			while (true) {
 				if (tokens.empty()) return call;
 				
-				switch (tokens.front().type) {
-				case Token::Type::WORD: {
-					call->args.emplace_back(new OpConst(new Object(&ClassString::INSTANCE, new string(tokens.front().value))));
-					tokens.pop_front();
-				} break;
-				case Token::Type::PIPE: {
-					tokens.pop_front();
-					return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
-				} break;
-				case Token::Type::LPAREN: {
-					tokens.pop_front();
-					list<Token> subTokens;
-					int parenLevel = 0;
-					
-					while (parenLevel >= 0) {
-						if (tokens.empty()) throw Error("expected ')'; not found");
-						if (tokens.front().type == Token::Type::LPAREN) {
-							parenLevel++;
-						} else if (tokens.front().type == Token::Type::RPAREN) {
-							parenLevel--;
-						}
-						
-						subTokens.push_back(tokens.front());
+				Op* arg = parseArg(session, tokens);
+				if (arg) {
+					call->args.emplace_back(arg);
+				} else {
+					switch (tokens.front().type) {
+					case Token::Type::PIPE: {
+						return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
+					} break;
+					case Token::Type::FLAG: {
+						string value = tokens.front().value;
 						tokens.pop_front();
+						Op* arg = parseArg(session, tokens);
+						if (arg) {
+							call->args.emplace_back(value, arg);
+						} else {
+							call->args.emplace_back(value, new OpConst(&ClassNil::NIL)); // TODO: true should be the default when value not specified
+							
+							switch (tokens.front().type) {
+							case Token::Type::PIPE: {
+								tokens.pop_front();
+								return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
+							} break;
+							case Token::Type::FLAG: {
+								// do nothing; let next loop handle this flag
+							} break;
+							default: throw Error("Token invalid after flag: "+tokens.front().value);
+							}
+						}
+					} break;
+					default: throw Error("Token invalid in function call: "+tokens.front().value);
 					}
-					
-					subTokens.pop_back();
-					call->args.emplace_back(parse(session, subTokens));
-				} break;
-				case Token::Type::STRING: {
-					call->args.emplace_back(new OpConst(new Object(&ClassString::INSTANCE, new string(tokens.front().value))));
-					tokens.pop_front();
-				} break;
-				default: throw Error("Token invalid in function call: "+tokens.front().value);
 				}
 			}
 		} break;

@@ -74,7 +74,7 @@ namespace iconus {
 		class Arg {
 		public:
 			inline Arg(Op* value) : isFlag(false), key(""), value(value) {}
-			inline Arg(std::string key, Op* value) : isFlag(true), key(key), value(value) {}
+			inline Arg(const std::string& key, Op* value) : isFlag(true), key(key), value(value) {}
 			
 			bool isFlag;
 			std::string key;

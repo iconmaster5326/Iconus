@@ -63,6 +63,16 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 	auto argAt = args.begin();
 	std::unordered_map<std::string, Object*> restFlags(flags);
 	
+	bool inputExplicit = false;
+	if (!instance->input.empty()) {
+		auto it = flags.find(instance->input);
+		if (it != flags.end()) {
+			input = it->second;
+			inputExplicit = true;
+			restFlags.erase(instance->input);
+		}
+	}
+	
 	for (const Instance::Arg& arg : instance->args) {
 		auto it = flags.find(arg.name);
 		if (it == flags.end()) {
@@ -86,14 +96,25 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		if (argAt != args.end()) {
 			Object* lastArg = *argAt;
 			argAt++;
-			if (argAt == args.end()) {
+			if (!inputExplicit && argAt == args.end()) {
 				input = lastArg;
 			} else {
 				throw Error("Too many positional arguments");
 			}
 		}
 	} else {
-		mappedArgs[instance->vararg] = new Object(&ClassList::INSTANCE, new deque<Object*>(argAt, args.end()));
+		auto it = flags.find(instance->vararg);
+		if (it == flags.end()) {
+			mappedArgs[instance->vararg] = new Object(&ClassList::INSTANCE, new deque<Object*>(argAt, args.end()));
+		} else {
+			mappedArgs[instance->vararg] = it->second;
+			restFlags.erase(instance->vararg);
+			// TODO: unpack list given
+			
+			if (argAt != args.end()) {
+				throw Error("Positional arguments given after vararg argument explicity specified");
+			}
+		}
 	}
 	
 	if (instance->varflag.empty()) {
@@ -101,7 +122,18 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 			throw Error("Unknown flag '"+restFlags.begin()->first+"'");
 		}
 	} else {
-		// TODO
+		auto it = flags.find(instance->varflag);
+		if (it == flags.end()) {
+			// TODO
+		} else {
+			mappedArgs[instance->varflag] = it->second;
+			restFlags.erase(instance->varflag);
+			// TODO: unpack list given
+			
+			if (!restFlags.empty()) {
+				throw Error("More flags given after varflag argument explicity specified");
+			}
+		}
 	}
 	
 	if (!instance->input.empty()) {
