@@ -33,8 +33,8 @@ bool iconus::Class::executable() {
 }
 
 Object* iconus::Class::execute(Object* self, Session& session, Scope& scope, Object* input,
-		const std::vector<Object*>& args,
-		const std::unordered_map<std::string, Object*>& flags) {
+		std::vector<Object*>& args,
+		std::unordered_map<std::string, Object*>& flags) {
 	throw Error("cannot execute an object of class "+name());
 }
 

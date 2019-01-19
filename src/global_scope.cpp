@@ -8,6 +8,8 @@
 #include "session.hpp"
 #include "classes.hpp"
 
+#include <iostream>
+
 using namespace std;
 using namespace iconus;
 
@@ -17,7 +19,7 @@ void iconus::Session::addGlobalScope() {
 	globalScope.vars["echo"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"input", "", "",
 			{}, {},
-			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input;
 			}
 	));
@@ -25,7 +27,7 @@ void iconus::Session::addGlobalScope() {
 	globalScope.vars["list"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"", "args", "",
 			{}, {},
-			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		deque<Object*>* items = new deque<Object*>(varargs.begin(), varargs.end());
 		return new Object(&ClassList::INSTANCE, items);
 			}
@@ -34,7 +36,7 @@ void iconus::Session::addGlobalScope() {
 	globalScope.vars["apply"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"", "args", "flags",
 			{Arg("fn")}, {},
-			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return args["fn"]->execute(session, scope, input, varargs, varflags);
 			}
 	));
@@ -42,7 +44,7 @@ void iconus::Session::addGlobalScope() {
 	globalScope.vars["get"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"i", "", "",
 			{Arg("k")}, {},
-			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input->getField(args["k"]);
 			}
 	));
@@ -50,8 +52,18 @@ void iconus::Session::addGlobalScope() {
 	globalScope.vars["set"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"i", "", "",
 			{Arg("k"), Arg("v")}, {},
-			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
+			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		input->setField(args["k"], args["v"]);
+		return input;
+			}
+	));
+	
+	globalScope.vars["local"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"i", "", "",
+			{Arg("v")}, {},
+			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		string name = ClassString::value(args["v"]);
+		scope.setLocal(name, input);
 		return input;
 			}
 	));

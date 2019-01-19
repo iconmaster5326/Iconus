@@ -40,7 +40,7 @@ namespace iconus {
 		static inline Object* create(double n) {
 			return new Object(&INSTANCE, n);
 		}
-		static inline double value(Object* ob) {
+		static inline double& value(Object* ob) {
 			return Object::castTo(ob, &INSTANCE)->value.asDouble;
 		}
 		
@@ -51,23 +51,30 @@ namespace iconus {
 	class ClassString : public Class {
 	public:
 		static ClassString INSTANCE;
+		static inline Object* create(const std::string& s) {
+			return new Object(&INSTANCE, new std::string(s));
+		}
+		static inline std::string& value(Object* ob) {
+			return *(std::string*)Object::castTo(ob, &INSTANCE)->value.asPtr;
+		}
+		
 		std::string name() override;
 		std::string toString(Object* self) override;
 	};
 	
 	class ClassSystemFunction : public Class {
 	public:
-		using Handler = std::function<Object*(Session&, Scope&, Object*, const std::vector<Object*>&, const std::unordered_map<std::string,Object*>&)>;
+		using Handler = std::function<Object*(Session&, Scope&, Object*, std::vector<Object*>&, std::unordered_map<std::string,Object*>&)>;
 		
 		static ClassSystemFunction INSTANCE;
 		std::string name() override;
 		bool executable() override;
-		Object* execute(Object* self, Session& session, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) override;
+		Object* execute(Object* self, Session& session, Scope& scope, Object* input, std::vector<Object*>& args, std::unordered_map<std::string,Object*>& flags) override;
 	};
 	
 	class ClassManagedFunction : public ClassSystemFunction {
 	public:
-		using Handler = std::function<Object*(Session&, Scope&, Object*, const std::unordered_map<std::string,Object*>&, const std::vector<Object*>&, const std::unordered_map<std::string,Object*>&)>;
+		using Handler = std::function<Object*(Session&, Scope&, Object*, std::unordered_map<std::string,Object*>&, std::vector<Object*>&, std::unordered_map<std::string,Object*>&)>;
 		
 		class Instance {
 		public:
@@ -86,7 +93,7 @@ namespace iconus {
 		};
 		
 		static ClassManagedFunction INSTANCE;
-		Object* execute(Object* self, Session& session, Scope& scope, Object* input, const std::vector<Object*>& args, const std::unordered_map<std::string,Object*>& flags) override;
+		Object* execute(Object* self, Session& session, Scope& scope, Object* input, std::vector<Object*>& args, std::unordered_map<std::string,Object*>& flags) override;
 	};
 	
 	class ClassUserFunction : public ClassManagedFunction {
@@ -107,8 +114,8 @@ namespace iconus {
 		template<typename T> static Object* create(T begin, T end) {
 			return create(new std::deque<Object*>(begin, end));
 		}
-		static inline std::deque<Object*>* value(Object* ob) {
-			return (std::deque<Object*>*) Object::castTo(ob, &INSTANCE)->value.asPtr;
+		static inline std::deque<Object*>& value(Object* ob) {
+			return *(std::deque<Object*>*)Object::castTo(ob, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;

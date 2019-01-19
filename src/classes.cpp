@@ -48,17 +48,17 @@ bool iconus::ClassSystemFunction::executable() {
 }
 
 Object* iconus::ClassSystemFunction::execute(Object* self, Session& session, Scope& scope, Object* input,
-		const std::vector<Object*>& args,
-		const std::unordered_map<std::string, Object*>& flags) {
+		std::vector<Object*>& args,
+		std::unordered_map<std::string, Object*>& flags) {
 	Handler* handler = (Handler*) self->value.asPtr;
-	return handler->operator()(session, scope, input, args, flags);
+	return (*handler)(session, scope, input, args, flags);
 }
 
 iconus::ClassManagedFunction iconus::ClassManagedFunction::INSTANCE{};
 
 Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
-		Scope& scope, Object* input, const std::vector<Object*>& args,
-		const std::unordered_map<std::string, Object*>& flags) {
+		Scope& scope, Object* input, std::vector<Object*>& args,
+		std::unordered_map<std::string, Object*>& flags) {
 	Instance* instance = (Instance*) self->value.asPtr;
 	std::unordered_map<std::string, Object*> mappedArgs;
 	auto argAt = args.begin();
@@ -231,8 +231,9 @@ std::string iconus::ClassNumber::toString(Object* self) {
 iconus::ClassUserFunction iconus::ClassUserFunction::INSTANCE{};
 
 Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& fn) {
-	return new Object(&ClassUserFunction::INSTANCE, new ClassManagedFunction::Instance(fn, [&scope,op](auto session, auto evalScope, auto input, auto args, auto varargs, auto varflags) {
-		Scope newScope(scope);
+	Scope* oldScope = &scope;
+	return new Object(&ClassUserFunction::INSTANCE, new ClassManagedFunction::Instance(fn, [oldScope,op](auto& session, auto& evalScope, auto input, auto& args, auto& varargs, auto& varflags) {
+		Scope newScope(oldScope);
 		for (const pair<string,Object*>& kv : args) {
 			newScope.setLocal(kv.first, kv.second);
 		}
@@ -241,7 +242,7 @@ Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& 
 }
 
 std::vector<Object*> iconus::ClassList::fieldNames(Object* self) {
-	deque<Object*>& list = *ClassList::value(self);
+	deque<Object*>& list = ClassList::value(self);
 	vector<Object*> result;
 	
 	for (int i = 0; i < list.size(); i++) {
@@ -252,14 +253,14 @@ std::vector<Object*> iconus::ClassList::fieldNames(Object* self) {
 }
 
 bool iconus::ClassList::hasField(Object* self, Object* name) {
-	deque<Object*>& list = *ClassList::value(self);
+	deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	return i >= 0 && i < list.size();
 }
 
 Object* iconus::ClassList::getField(Object* self, Object* name) {
-	deque<Object*>& list = *ClassList::value(self);
+	deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	if (i >= 0 && i < list.size()) {
@@ -270,14 +271,14 @@ Object* iconus::ClassList::getField(Object* self, Object* name) {
 }
 
 bool iconus::ClassList::canSetField(Object* self, Object* name) {
-	deque<Object*>& list = *ClassList::value(self);
+	deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	return i >= 0 && i < list.size();
 }
 
 void iconus::ClassList::setField(Object* self, Object* name, Object* value) {
-	deque<Object*>& list = *ClassList::value(self);
+	deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	if (i >= 0 && i < list.size()) {
