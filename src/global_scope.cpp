@@ -32,7 +32,7 @@ void iconus::Session::addGlobalScope() {
 	));
 	
 	globalScope.vars["apply"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"", "args", "",
+			"", "args", "flags",
 			{Arg("fn")}, {},
 			[](auto session, auto scope, auto input, auto args, auto varargs, auto varflags) {
 		return ((Object*)args["fn"])->execute(session, scope, input, varargs, varflags);
