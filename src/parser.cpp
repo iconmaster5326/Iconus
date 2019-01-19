@@ -45,7 +45,6 @@ namespace iconus {
 				return new OpConst(new Object(&ClassString::INSTANCE, new string(value)));
 			}
 		} break;
-		
 		case Token::Type::LPAREN: {
 			tokens.pop_front();
 			list<Token> subTokens;
@@ -69,6 +68,10 @@ namespace iconus {
 		case Token::Type::STRING: {
 			tokens.pop_front();
 			return new OpConst(new Object(&ClassString::INSTANCE, new string(value)));
+		} break;
+		case Token::Type::VAR: {
+			tokens.pop_front();
+			return new OpVar(value);
 		} break;
 		}
 		
@@ -162,6 +165,11 @@ namespace iconus {
 		} break;
 		case Token::Type::STRING: {
 			Op* op = new OpConst(new Object(&ClassString::INSTANCE, new string(tokens.front().value)));
+			tokens.pop_front();
+			return parsePostConst(session, op, tokens);
+		} break;
+		case Token::Type::VAR: {
+			Op* op = new OpVar(tokens.front().value);
 			tokens.pop_front();
 			return parsePostConst(session, op, tokens);
 		} break;

@@ -50,7 +50,11 @@ namespace iconus {
 	class Scope {
 	public:
 		std::unordered_map<std::string, Object*> vars;
-		Scope* parent;
+		Scope* parent = nullptr;
+		
+		Object* get(const std::string& name);
+		void set(const std::string& name, Object* value);
+		void setLocal(const std::string& name, Object* value);
 	};
 }
 

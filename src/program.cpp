@@ -37,3 +37,36 @@ Object* iconus::Class::execute(Object* self, Session& session, Scope& scope, Obj
 		const std::unordered_map<std::string, Object*>& flags) {
 	throw Error("cannot execute an object of class "+name());
 }
+
+Object* iconus::Scope::get(const std::string& name) {
+	auto it = vars.find(name);
+	if (it == vars.end()) {
+		if (parent) {
+			return parent->get(name);
+		} else {
+			return nullptr;
+		}
+	} else {
+		return it->second;
+	}
+}
+
+void iconus::Scope::set(const std::string& name, Object* value) {
+	if (vars.find(name) == vars.end()) {
+		if (parent) {
+			if (parent->get(name)) {
+				parent->set(name, value);
+			} else {
+				vars[name] = value;
+			}
+		} else {
+			vars[name] = value;
+		}
+	} else {
+		vars[name] = value;
+	}
+}
+
+void iconus::Scope::setLocal(const std::string& name, Object* value) {
+	vars[name] = value;
+}

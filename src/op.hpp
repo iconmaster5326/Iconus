@@ -69,6 +69,16 @@ namespace iconus {
 		Op* lhs;
 		Op* rhs;
 	};
+	
+	class OpVar : public Op {
+	public:
+		inline OpVar(std::string name) : name(name) {}
+		virtual ~OpVar();
+		Object* evaluate(Session& session, Scope& scope, Object* input) override;
+		operator std::string() override;
+		
+		std::string name;
+	};
 }
 
 

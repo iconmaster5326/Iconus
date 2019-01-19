@@ -7,6 +7,7 @@
 
 #include "op.hpp"
 #include "error.hpp"
+#include "classes.hpp"
 
 #include <sstream>
 
@@ -105,4 +106,21 @@ iconus::OpBinary::operator std::string() {
 	
 	sb << "]";
 	return sb.str();
+}
+
+iconus::OpVar::~OpVar() {
+	
+}
+
+Object* iconus::OpVar::evaluate(Session& session, Scope& scope, Object* input) {
+	Object* value = scope.get(name);
+	if (value) {
+		return value;
+	} else {
+		return &ClassNil::NIL;
+	}
+}
+
+iconus::OpVar::operator std::string() {
+	return "$"+name;
 }
