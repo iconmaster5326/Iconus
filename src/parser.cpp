@@ -19,6 +19,7 @@ namespace iconus {
 	// That was the point of having Lexer act like a stream! So this didn't have to happen!!
 
 	static Op* parse(Session& session, list<Token>& tokens);
+	static Op* parseArg(Session& session, list<Token>& tokens);
 	
 	static OpLambda* parseBraces(Session& session, list<Token>& tokens, OpLambda* lambda) {
 		if (tokens.empty() || tokens.front().type != Token::Type::LBRACE) throw Error("expected '{'; not found");
@@ -77,7 +78,7 @@ namespace iconus {
 				case Token::Type::PIPE: {
 					tokens.pop_front();
 					if (!lambda->fn.args.empty()) {
-						if (lambda->fn.args.size() > 1) throw Error("can only have 1 variable before the | in argument specification");
+						if (lambda->fn.args.size() > 1) throw Error("can only have 1 variable before the | in arguments specification");
 						lambda->fn.input = lambda->fn.args.front().name;
 						lambda->fn.args.pop_back();
 					}
@@ -86,7 +87,37 @@ namespace iconus {
 					lambda->fn.flags.emplace_back(tokens.front().value);
 					tokens.pop_front();
 				} break;
-				default: throw Error("Token invalid in argument specification: "+tokens.front().value);
+				case Token::Type::LPAREN: {
+					tokens.pop_front();
+					switch (tokens.front().type) {
+					case Token::Type::WORD: {
+						string name = tokens.front().value;
+						
+						tokens.pop_front();
+						if (tokens.empty()) throw Error("expected ')'; not found");
+						
+						Op* value = parseArg(session, tokens);
+						if (tokens.empty() || tokens.front().type != Token::Type::RPAREN) throw Error("expected ')'; found: "+tokens.front().value);
+						tokens.pop_front();
+						
+						lambda->fn.args.emplace_back(name, value);
+					} break;
+					case Token::Type::FLAG: {
+						string name = tokens.front().value;
+						
+						tokens.pop_front();
+						if (tokens.empty()) throw Error("expected ')'; not found");
+						
+						Op* value = parseArg(session, tokens);
+						if (tokens.empty() || tokens.front().type != Token::Type::RPAREN) throw Error("expected ')'; found: "+tokens.front().value);
+						tokens.pop_front();
+						
+						lambda->fn.flags.emplace_back(name, value);
+					} break;
+					default: throw Error("Token invalid in extended argument specification: "+tokens.front().value);
+					}
+				} break;
+				default: throw Error("Token invalid in arguments specification: "+tokens.front().value);
 				}
 			}
 			
