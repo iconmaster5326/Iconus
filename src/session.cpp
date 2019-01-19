@@ -18,6 +18,7 @@ using namespace iconus;
 
 iconus::Session::Session() {
 	addDefaultRenderers();
+	addDefaultWordParsers();
 	addGlobalScope();
 }
 
@@ -39,4 +40,14 @@ std::string iconus::Session::render(Object* ob) {
 	}
 	
 	throw runtime_error("no renderer defined for object!");
+}
+
+Object* iconus::Session::parseWord(std::string word) {
+	for (const WordParser& parser : parsers) {
+		if (parser.filter(*this, word)) {
+			return parser.handler(*this, word);
+		}
+	}
+	
+	return nullptr;
 }

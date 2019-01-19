@@ -37,7 +37,13 @@ namespace iconus {
 		switch (tokens.front().type) {
 		case Token::Type::WORD: {
 			tokens.pop_front();
-			return new OpConst(new Object(&ClassString::INSTANCE, new string(value)));
+			
+			Object* parsedConst = session.parseWord(value);
+			if (parsedConst) {
+				return new OpConst(parsedConst);
+			} else {
+				return new OpConst(new Object(&ClassString::INSTANCE, new string(value)));
+			}
 		} break;
 		
 		case Token::Type::LPAREN: {
@@ -76,49 +82,56 @@ namespace iconus {
 		
 		switch (tokens.front().type) {
 		case Token::Type::WORD: {
-			OpCall* call = new OpCall(tokens.front().value);
-			tokens.pop_front();
-			
-			while (true) {
-				if (tokens.empty()) return call;
+			Object* parsedConst = session.parseWord(tokens.front().value);
+			if (parsedConst) {
+				Op* op = new OpConst(parsedConst);
+				tokens.pop_front();
+				return parsePostConst(session, op, tokens);
+			} else {
+				OpCall* call = new OpCall(tokens.front().value);
+				tokens.pop_front();
 				
-				Op* arg = parseArg(session, tokens);
-				if (arg) {
-					call->args.emplace_back(arg);
-				} else {
-					switch (tokens.front().type) {
-					case Token::Type::PIPE: {
-						tokens.pop_front();
-						return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
-					} break;
-					case Token::Type::FLAG: {
-						string value = tokens.front().value;
-						tokens.pop_front();
-						
-						if (tokens.empty()) {
-							call->args.emplace_back(value, new OpConst(&ClassBool::TRUE));
-							return call;
-						}
-						
-						Op* arg = parseArg(session, tokens);
-						if (arg) {
-							call->args.emplace_back(value, arg);
-						} else {
-							call->args.emplace_back(value, new OpConst(&ClassBool::TRUE));
+				while (true) {
+					if (tokens.empty()) return call;
+					
+					Op* arg = parseArg(session, tokens);
+					if (arg) {
+						call->args.emplace_back(arg);
+					} else {
+						switch (tokens.front().type) {
+						case Token::Type::PIPE: {
+							tokens.pop_front();
+							return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
+						} break;
+						case Token::Type::FLAG: {
+							string value = tokens.front().value;
+							tokens.pop_front();
 							
-							switch (tokens.front().type) {
-							case Token::Type::PIPE: {
-								tokens.pop_front();
-								return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
-							} break;
-							case Token::Type::FLAG: {
-								// do nothing; let next loop handle this flag
-							} break;
-							default: throw Error("Token invalid after flag: "+tokens.front().value);
+							if (tokens.empty()) {
+								call->args.emplace_back(value, new OpConst(&ClassBool::TRUE));
+								return call;
 							}
+							
+							Op* arg = parseArg(session, tokens);
+							if (arg) {
+								call->args.emplace_back(value, arg);
+							} else {
+								call->args.emplace_back(value, new OpConst(&ClassBool::TRUE));
+								
+								switch (tokens.front().type) {
+								case Token::Type::PIPE: {
+									tokens.pop_front();
+									return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
+								} break;
+								case Token::Type::FLAG: {
+									// do nothing; let next loop handle this flag
+								} break;
+								default: throw Error("Token invalid after flag: "+tokens.front().value);
+								}
+							}
+						} break;
+						default: throw Error("Token invalid in function call: "+tokens.front().value);
 						}
-					} break;
-					default: throw Error("Token invalid in function call: "+tokens.front().value);
 					}
 				}
 			}

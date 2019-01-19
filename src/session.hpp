@@ -13,9 +13,19 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace iconus {
-	class Scope;
+	class WordParser {
+	public:
+		using Filter = std::function<bool(Session&, const std::string&)>;
+		using Handler = std::function<Object*(Session&, const std::string&)>;
+		
+		inline WordParser(Filter filter, Handler handler) : filter(filter), handler(handler) {}
+		
+		Filter filter;
+		Handler handler;
+	};
 	
 	class Session {
 	public:
@@ -23,12 +33,15 @@ namespace iconus {
 		
 		Object* evaluate(const std::string& input);
 		std::string render(Object* object);
+		Object* parseWord(std::string word);
 		
 		Scope globalScope;
 		std::vector<Renderer> renderers;
+		std::vector<WordParser> parsers;
 	private:
 		void addGlobalScope();
 		void addDefaultRenderers();
+		void addDefaultWordParsers();
 	};
 }
 
