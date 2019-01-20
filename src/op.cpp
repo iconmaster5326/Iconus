@@ -10,6 +10,7 @@
 #include "classes.hpp"
 
 #include <sstream>
+#include <deque>
 
 using namespace std;
 using namespace iconus;
@@ -68,7 +69,19 @@ Object* iconus::OpBinary::evaluate(Session& session, Scope& scope, Object* input
 		if (lhs) lhs->evaluate(session, scope, input);
 		return rhs ? rhs->evaluate(session, scope, scope.input) : scope.input;
 	} break;
-	default: throw exception();
+	case Type::FOREACH: {
+		Object* lhsResult = lhs ? lhs->evaluate(session, scope, input) : input;
+		if (rhs) {
+			deque<Object*> foreachResult;
+			for (Object* value : lhsResult->fieldValues()) {
+				foreachResult.push_back(rhs->evaluate(session, scope, value));
+			}
+			return ClassList::create(foreachResult);
+		} else {
+			vector<Object*> v = lhsResult->fieldValues();
+			return ClassList::create(v.begin(), v.end());
+		}
+	} break;
 	}
 }
 

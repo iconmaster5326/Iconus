@@ -136,6 +136,10 @@ namespace iconus {
 			tokens.pop_front();
 			return new OpBinary(op,OpBinary::Type::RESET,parse(session, tokens));
 		} break;
+		case Token::Type::AND: {
+			tokens.pop_front();
+			return new OpBinary(op,OpBinary::Type::FOREACH,parse(session, tokens));
+		} break;
 		default: throw Error("Token invalid after constant: "+tokens.front().value);
 		}
 	}
@@ -225,6 +229,10 @@ namespace iconus {
 							tokens.pop_front();
 							return new OpBinary(call,OpBinary::Type::RESET,parse(session, tokens));
 						} break;
+						case Token::Type::AND: {
+							tokens.pop_front();
+							return new OpBinary(call,OpBinary::Type::FOREACH,parse(session, tokens));
+						} break;
 						case Token::Type::FLAG: {
 							string value = tokens.front().value;
 							tokens.pop_front();
@@ -249,6 +257,10 @@ namespace iconus {
 									tokens.pop_front();
 									return new OpBinary(call,OpBinary::Type::RESET,parse(session, tokens));
 								} break;
+								case Token::Type::AND: {
+									tokens.pop_front();
+									return new OpBinary(call,OpBinary::Type::FOREACH,parse(session, tokens));
+								} break;
 								case Token::Type::FLAG: {
 									// do nothing; let next loop handle this flag
 								} break;
@@ -269,6 +281,10 @@ namespace iconus {
 		case Token::Type::SEMICOLON: {
 			tokens.pop_front();
 			return new OpBinary(nullptr,OpBinary::Type::RESET,parse(session, tokens));
+		} break;
+		case Token::Type::AND: {
+			tokens.pop_front();
+			return new OpBinary(nullptr,OpBinary::Type::FOREACH,parse(session, tokens));
 		} break;
 		case Token::Type::LPAREN: {
 			tokens.pop_front();

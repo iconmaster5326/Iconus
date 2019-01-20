@@ -101,4 +101,22 @@ Object* iconus::Object::castTo(Object* ob, Class* clazz) {
 
 iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent) : parent(nullptr), input(&ClassNil::NIL) {}
-iconus::Scope::Scope(Scope* parent, Object* input) : parent(nullptr), input(input) {}
+iconus::Scope::Scope(Scope* parent, Object* input) :
+		parent(nullptr), input(input) {
+}
+
+std::vector<Object*> iconus::Class::fieldValues(Object* self) {
+	vector<Object*> result;
+	for (Object* name : fieldNames(self)) {
+		result.push_back(getField(self, name));
+	}
+	return result;
+}
+
+std::vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self) {
+	vector<pair<Object*, Object*> > result;
+	for (Object* name : fieldNames(self)) {
+		result.push_back(make_pair(name, getField(self, name)));
+	}
+	return result;
+}

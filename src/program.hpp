@@ -23,11 +23,16 @@ namespace iconus {
 		virtual bool executable();
 		virtual Object* execute(Object* self, Session& session, Scope& scope, Object* input, std::vector<Object*>& args, std::unordered_map<std::string,Object*>& flags);
 		
+		// necesary to implement fields
 		virtual std::vector<Object*> fieldNames(Object* self);
 		virtual bool hasField(Object* self, Object* name);
 		virtual Object* getField(Object* self, Object* name);
 		virtual bool canSetField(Object* self, Object* name);
 		virtual void setField(Object* self, Object* name, Object* value);
+		
+		// optional to implement fields
+		virtual std::vector<Object*> fieldValues(Object* self);
+		virtual std::vector<std::pair<Object*,Object*> > fields(Object* self);
 	};
 	
 	class Object {
@@ -50,6 +55,12 @@ namespace iconus {
 		
 		inline std::vector<Object*> fieldNames() {
 			return clazz->fieldNames(this);
+		}
+		inline std::vector<Object*> fieldValues() {
+			return clazz->fieldValues(this);
+		}
+		inline std::vector<std::pair<Object*,Object*> > fields() {
+			return clazz->fields(this);
 		}
 		inline bool hasField(Object* name) {
 			return clazz->hasField(this, name);
