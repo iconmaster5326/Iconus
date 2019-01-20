@@ -98,3 +98,7 @@ Object* iconus::Object::castTo(Object* ob, Class* clazz) {
 		throw Error("Cannot cast object of class "+ob->clazz->name()+" to class "+clazz->name());
 	}
 }
+
+iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
+iconus::Scope::Scope(Scope* parent) : parent(nullptr), input(&ClassNil::NIL) {}
+iconus::Scope::Scope(Scope* parent, Object* input) : parent(nullptr), input(input) {}

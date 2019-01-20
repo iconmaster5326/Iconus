@@ -64,6 +64,10 @@ Object* iconus::OpBinary::evaluate(Session& session, Scope& scope, Object* input
 		Object* lhsResult = lhs ? lhs->evaluate(session, scope, input) : input;
 		return rhs ? rhs->evaluate(session, scope, lhsResult) : lhsResult;
 	} break;
+	case Type::RESET: {
+		if (lhs) lhs->evaluate(session, scope, input);
+		return rhs ? rhs->evaluate(session, scope, scope.input) : scope.input;
+	} break;
 	default: throw exception();
 	}
 }

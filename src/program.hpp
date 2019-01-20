@@ -75,9 +75,11 @@ namespace iconus {
 	public:
 		std::unordered_map<std::string, Object*> vars;
 		Scope* parent;
+		Object* input;
 		
-		inline Scope() : parent(nullptr) {}
-		inline Scope(Scope* parent) : parent(parent) {}
+		Scope();
+		Scope(Scope* parent);
+		Scope(Scope* parent, Object* input);
 		
 		Object* get(const std::string& name);
 		void set(const std::string& name, Object* value);
