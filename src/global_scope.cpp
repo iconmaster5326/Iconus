@@ -45,7 +45,7 @@ void iconus::Session::addGlobalScope() {
 			"i", "", "",
 			{Arg("k")}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		return input->getField(args["k"]);
+		return input->getField(session, args["k"]);
 			}
 	));
 	
@@ -53,7 +53,7 @@ void iconus::Session::addGlobalScope() {
 			"i", "", "",
 			{Arg("k"), Arg("v")}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		input->setField(args["k"], args["v"]);
+		input->setField(session, args["k"], args["v"]);
 		return input;
 			}
 	));
@@ -62,7 +62,7 @@ void iconus::Session::addGlobalScope() {
 			"i", "", "",
 			{Arg("v")}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		string name = ClassString::value(args["v"]);
+		string name = ClassString::value(session, args["v"]);
 		scope.setLocal(name, input);
 		return input;
 			}

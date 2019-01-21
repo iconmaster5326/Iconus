@@ -46,6 +46,6 @@ void Session::addDefaultRenderers() {
 	renderers.emplace_back("raw string", [](Session& session, Object* ob) {
 		return true;
 	}, [](Session& session, Object* ob) {
-		return ob->operator string();
+		return ob->toString(session);
 	});
 }

@@ -24,7 +24,7 @@ Object* iconus::OpCall::evaluate(Session& session, Scope& scope, Object* input) 
 	if (!cmdOb) {
 		throw Error("command not in scope: "+cmd);
 	}
-	if (!cmdOb->executable()) {
+	if (!cmdOb->executable(session)) {
 		throw Error("command not executable: "+cmd);
 	}
 	
@@ -57,12 +57,12 @@ Object* iconus::OpBinary::evaluate(Session& session, Scope& scope, Object* input
 		Object* lhsResult = lhs ? lhs->evaluate(session, scope, input) : input;
 		if (rhs) {
 			Deque<Object*> foreachResult;
-			for (Object* value : lhsResult->fieldValues()) {
+			for (Object* value : lhsResult->fieldValues(session)) {
 				foreachResult.push_back(rhs->evaluate(session, scope, value));
 			}
 			return ClassList::create(foreachResult);
 		} else {
-			Vector<Object*> v = lhsResult->fieldValues();
+			Vector<Object*> v = lhsResult->fieldValues(session);
 			return ClassList::create(v.begin(), v.end());
 		}
 	} break;
@@ -70,7 +70,7 @@ Object* iconus::OpBinary::evaluate(Session& session, Scope& scope, Object* input
 }
 
 iconus::OpConst::operator std::string() {
-	return value->operator string();
+	return "(const)"; // TODO
 }
 
 iconus::OpCall::operator std::string() {

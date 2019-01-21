@@ -22,13 +22,13 @@ std::string iconus::Class::name() {
 	return nullptr;
 }
 
-std::string iconus::Class::toString(Object* self) {
+std::string iconus::Class::toString(Object* self, Session& session) {
 	ostringstream sb;
 	sb << name() << '@' << ((void*)self);
 	return sb.str();
 }
 
-bool iconus::Class::executable() {
+bool iconus::Class::executable(Object* self, Session& session) {
 	return false;
 }
 
@@ -71,42 +71,42 @@ void iconus::Scope::setLocal(const std::string& name, Object* value) {
 	vars[name] = value;
 }
 
-Vector<Object*> iconus::Class::fieldNames(Object* self) {
+Vector<Object*> iconus::Class::fieldNames(Object* self, Session& session) {
 	return Vector<Object*>();
 }
 
-bool iconus::Class::hasField(Object* self, Object* name) {
+bool iconus::Class::hasField(Object* self, Session& session, Object* name) {
 	return false;
 }
 
-Object* iconus::Class::getField(Object* self, Object* name) {
+Object* iconus::Class::getField(Object* self, Session& session, Object* name) {
 	return &ClassNil::NIL;
 }
 
-bool iconus::Class::canSetField(Object* self, Object* name) {
+bool iconus::Class::canSetField(Object* self, Session& session, Object* name) {
 	return false;
 }
 
-void iconus::Class::setField(Object* self, Object* name, Object* value) {
-	throw Error("Cannot set field '"+name->operator string()+"' on object of class "+self->clazz->name());
+void iconus::Class::setField(Object* self, Session& session, Object* name, Object* value) {
+	throw Error("Cannot set field '"+name->toString(session)+"' on object of class "+self->clazz->name());
 }
 
 iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent) : parent(parent), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent, Object* input) : parent(parent), input(input) {}
 
-Vector<Object*> iconus::Class::fieldValues(Object* self) {
+Vector<Object*> iconus::Class::fieldValues(Object* self, Session& session) {
 	Vector<Object*> result;
-	for (Object* name : fieldNames(self)) {
-		result.push_back(getField(self, name));
+	for (Object* name : fieldNames(self, session)) {
+		result.push_back(getField(self, session, name));
 	}
 	return result;
 }
 
-Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self) {
+Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self, Session& session) {
 	Vector<pair<Object*, Object*> > result;
-	for (Object* name : fieldNames(self)) {
-		result.push_back(make_pair(name, getField(self, name)));
+	for (Object* name : fieldNames(self, session)) {
+		result.push_back(make_pair(name, getField(self, session, name)));
 	}
 	return result;
 }

@@ -20,22 +20,22 @@ namespace iconus {
 	public:
 		virtual ~Class();
 		virtual std::string name();
-		virtual std::string toString(Object* self);
+		virtual std::string toString(Object* self, Session& session);
 		
 		// execution
-		virtual bool executable();
+		virtual bool executable(Object* self, Session& session);
 		virtual Object* execute(Object* self, Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags);
 		
 		// necesary to implement fields
-		virtual Vector<Object*> fieldNames(Object* self);
-		virtual bool hasField(Object* self, Object* name);
-		virtual Object* getField(Object* self, Object* name);
-		virtual bool canSetField(Object* self, Object* name);
-		virtual void setField(Object* self, Object* name, Object* value);
+		virtual Vector<Object*> fieldNames(Object* self, Session& session);
+		virtual bool hasField(Object* self, Session& session, Object* name);
+		virtual Object* getField(Object* self, Session& session, Object* name);
+		virtual bool canSetField(Object* self, Session& session, Object* name);
+		virtual void setField(Object* self, Session& session, Object* name, Object* value);
 		
 		// optional to implement fields
-		virtual Vector<Object*> fieldValues(Object* self);
-		virtual Vector<std::pair<Object*,Object*> > fields(Object* self);
+		virtual Vector<Object*> fieldValues(Object* self, Session& session);
+		virtual Vector<std::pair<Object*,Object*> > fields(Object* self, Session& session);
 		
 		// adaptors
 		using Adaptor = std::function<Object*(Session&, Object*)>;
@@ -48,36 +48,36 @@ namespace iconus {
 		inline Object(Class* clazz, double value) : clazz(clazz), value{.asDouble = value} {}
 		inline Object(Class* clazz, void* value) : clazz(clazz), value{.asPtr = value} {}
 		
-		inline operator std::string() {
-			return clazz->toString(this);
+		inline std::string toString(Session& session) {
+			return clazz->toString(this, session);
 		}
-		inline bool executable() {
-			return clazz->executable();
+		inline bool executable(Session& session) {
+			return clazz->executable(this, session);
 		}
 		inline Object* execute(Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) {
 			return clazz->execute(this, session, scope, input, args, flags);
 		}
 		
-		inline Vector<Object*> fieldNames() {
-			return clazz->fieldNames(this);
+		inline Vector<Object*> fieldNames(Session& session) {
+			return clazz->fieldNames(this, session);
 		}
-		inline Vector<Object*> fieldValues() {
-			return clazz->fieldValues(this);
+		inline Vector<Object*> fieldValues(Session& session) {
+			return clazz->fieldValues(this, session);
 		}
-		inline Vector<std::pair<Object*,Object*> > fields() {
-			return clazz->fields(this);
+		inline Vector<std::pair<Object*,Object*> > fields(Session& session) {
+			return clazz->fields(this, session);
 		}
-		inline bool hasField(Object* name) {
-			return clazz->hasField(this, name);
+		inline bool hasField(Session& session, Object* name) {
+			return clazz->hasField(this, session, name);
 		}
-		inline Object* getField(Object* name) {
-			return clazz->getField(this, name);
+		inline Object* getField(Session& session, Object* name) {
+			return clazz->getField(this, session, name);
 		}
-		inline bool canSetField(Object* name) {
-			return clazz->canSetField(this, name);
+		inline bool canSetField(Session& session, Object* name) {
+			return clazz->canSetField(this, session, name);
 		}
-		inline void setField(Object* name, Object* value) {
-			clazz->setField(this, name, value);
+		inline void setField(Session& session, Object* name, Object* value) {
+			clazz->setField(this, session, name, value);
 		}
 		
 		bool adaptableTo(Session& session, Class* clazz);

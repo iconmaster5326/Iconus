@@ -22,7 +22,7 @@ std::string iconus::ClassNil::name() {
 	return "nil";
 }
 
-std::string iconus::ClassNil::toString(Object* self) {
+std::string iconus::ClassNil::toString(Object* self, Session& session) {
 	return "nil";
 }
 
@@ -32,7 +32,7 @@ std::string iconus::ClassString::name() {
 	return "string";
 }
 
-std::string iconus::ClassString::toString(Object* self) {
+std::string iconus::ClassString::toString(Object* self, Session& session) {
 	string* value = (string*) self->value.asPtr;
 	return *value;
 }
@@ -43,7 +43,7 @@ std::string iconus::ClassSystemFunction::name() {
 	return "function";
 }
 
-bool iconus::ClassSystemFunction::executable() {
+bool iconus::ClassSystemFunction::executable(Object* self, Session& session) {
 	return true;
 }
 
@@ -169,7 +169,7 @@ std::string iconus::ClassList::name() {
 	return "list";
 }
 
-std::string iconus::ClassList::toString(Object* self) {
+std::string iconus::ClassList::toString(Object* self, Session& session) {
 	ostringstream sb;
 	sb << '[';
 	
@@ -182,7 +182,7 @@ std::string iconus::ClassList::toString(Object* self) {
 		} else {
 			sb << ", ";
 		}
-		sb << ob->operator string();
+		sb << ob->toString(session);
 	}
 	
 	sb << ']';
@@ -195,9 +195,9 @@ std::string iconus::ClassError::name() {
 	return "error";
 }
 
-std::string iconus::ClassError::toString(Object* self) {
+std::string iconus::ClassError::toString(Object* self, Session& session) {
 	Object* what = (Object*) self->value.asPtr;
-	return "error: "+what->operator string();
+	return "error: "+what->toString(session);
 }
 
 iconus::ClassBool iconus::ClassBool::INSTANCE{};
@@ -208,7 +208,7 @@ std::string iconus::ClassBool::name() {
 	return "bool";
 }
 
-std::string iconus::ClassBool::toString(Object* self) {
+std::string iconus::ClassBool::toString(Object* self, Session& session) {
 	if (self == &TRUE) {
 		return "true";
 	} else if (self == &FALSE) {
@@ -224,7 +224,7 @@ std::string iconus::ClassNumber::name() {
 	return "number";
 }
 
-std::string iconus::ClassNumber::toString(Object* self) {
+std::string iconus::ClassNumber::toString(Object* self, Session& session) {
 	return to_string(self->value.asDouble);
 }
 
@@ -241,8 +241,8 @@ Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& 
 	}));
 }
 
-Vector<Object*> iconus::ClassList::fieldNames(Object* self) {
-	Deque<Object*>& list = ClassList::value(self);
+Vector<Object*> iconus::ClassList::fieldNames(Object* self, Session& session) {
+	Deque<Object*>& list = ClassList::value(session, self);
 	Vector<Object*> result;
 	
 	for (int i = 0; i < list.size(); i++) {
@@ -252,38 +252,38 @@ Vector<Object*> iconus::ClassList::fieldNames(Object* self) {
 	return result;
 }
 
-bool iconus::ClassList::hasField(Object* self, Object* name) {
-	Deque<Object*>& list = ClassList::value(self);
-	int i = (int) ClassNumber::value(name);
+bool iconus::ClassList::hasField(Object* self, Session& session, Object* name) {
+	Deque<Object*>& list = ClassList::value(session, self);
+	int i = (int) ClassNumber::value(session, name);
 	
 	return i >= 0 && i < list.size();
 }
 
-Object* iconus::ClassList::getField(Object* self, Object* name) {
-	Deque<Object*>& list = ClassList::value(self);
-	int i = (int) ClassNumber::value(name);
+Object* iconus::ClassList::getField(Object* self, Session& session, Object* name) {
+	Deque<Object*>& list = ClassList::value(session, self);
+	int i = (int) ClassNumber::value(session, name);
 	
 	if (i >= 0 && i < list.size()) {
 		return list[i];
 	} else {
-		return Class::getField(self, name);
+		return Class::getField(self, session, name);
 	}
 }
 
-bool iconus::ClassList::canSetField(Object* self, Object* name) {
-	Deque<Object*>& list = ClassList::value(self);
-	int i = (int) ClassNumber::value(name);
+bool iconus::ClassList::canSetField(Object* self, Session& session, Object* name) {
+	Deque<Object*>& list = ClassList::value(session, self);
+	int i = (int) ClassNumber::value(session, name);
 	
 	return i >= 0 && i < list.size();
 }
 
-void iconus::ClassList::setField(Object* self, Object* name, Object* value) {
-	Deque<Object*>& list = ClassList::value(self);
-	int i = (int) ClassNumber::value(name);
+void iconus::ClassList::setField(Object* self, Session& session, Object* name, Object* value) {
+	Deque<Object*>& list = ClassList::value(session, self);
+	int i = (int) ClassNumber::value(session, name);
 	
 	if (i >= 0 && i < list.size()) {
 		list[i] = value;
 	} else {
-		Class::setField(self, name, value);
+		Class::setField(self, session, name, value);
 	}
 }

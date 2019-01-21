@@ -23,7 +23,7 @@ namespace iconus {
 		static ClassNil INSTANCE;
 		static Object NIL;
 		std::string name() override;
-		std::string toString(Object* self) override;
+		std::string toString(Object* self, Session& session) override;
 	};
 	
 	class ClassBool : public Class {
@@ -31,7 +31,7 @@ namespace iconus {
 		static ClassBool INSTANCE;
 		static Object TRUE, FALSE;
 		std::string name() override;
-		std::string toString(Object* self) override;
+		std::string toString(Object* self, Session& session) override;
 	};
 	
 	class ClassNumber : public Class {
@@ -40,12 +40,12 @@ namespace iconus {
 		static inline Object* create(double n) {
 			return new Object(&INSTANCE, n);
 		}
-		static inline double& value(Object* ob) {
-			return ob->value.asDouble;
+		static inline double& value(Session& session, Object* ob) {
+			return ob->adapt(session, &INSTANCE)->value.asDouble;
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self) override;
+		std::string toString(Object* self, Session& session) override;
 	};
 	
 	class ClassString : public Class {
@@ -54,12 +54,12 @@ namespace iconus {
 		static inline Object* create(const std::string& s) {
 			return new Object(&INSTANCE, gcAlloc<std::string>(s));
 		}
-		static inline std::string& value(Object* ob) {
-			return *(std::string*)ob->value.asPtr;
+		static inline std::string& value(Session& session, Object* ob) {
+			return *(std::string*)ob->adapt(session, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self) override;
+		std::string toString(Object* self, Session& session) override;
 	};
 	
 	class ClassSystemFunction : public Class {
@@ -68,7 +68,7 @@ namespace iconus {
 		
 		static ClassSystemFunction INSTANCE;
 		std::string name() override;
-		bool executable() override;
+		bool executable(Object* self, Session& session) override;
 		Object* execute(Object* self, Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
 	};
 	
@@ -114,25 +114,25 @@ namespace iconus {
 		template<typename T> static Object* create(T begin, T end) {
 			return create(gcAlloc<Deque<Object*>>(begin, end));
 		}
-		static inline Deque<Object*>& value(Object* ob) {
-			return *(Deque<Object*>*)ob->value.asPtr;
+		static inline Deque<Object*>& value(Session& session, Object* ob) {
+			return *(Deque<Object*>*)ob->adapt(session, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self) override;
+		std::string toString(Object* self, Session& session) override;
 		
-		Vector<Object*> fieldNames(Object* self) override;
-		bool hasField(Object* self, Object* name) override;
-		Object* getField(Object* self, Object* name) override;
-		bool canSetField(Object* self, Object* name) override;
-		void setField(Object* self, Object* name, Object* value) override;
+		Vector<Object*> fieldNames(Object* self, Session& session) override;
+		bool hasField(Object* self, Session& session, Object* name) override;
+		Object* getField(Object* self, Session& session, Object* name) override;
+		bool canSetField(Object* self, Session& session, Object* name) override;
+		void setField(Object* self, Session& session, Object* name, Object* value) override;
 	};
 	
 	class ClassError : public Class {
 	public:
 		static ClassError INSTANCE;
 		std::string name() override;
-		std::string toString(Object* self) override;
+		std::string toString(Object* self, Session& session) override;
 	};
 }
 
