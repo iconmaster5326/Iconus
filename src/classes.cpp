@@ -287,3 +287,42 @@ void iconus::ClassList::setField(Object* self, Session& session, Object* name, O
 		Class::setField(self, session, name, value);
 	}
 }
+
+std::size_t iconus::ClassNumber::hash(const Object* self) const {
+	return std::hash<double>()(self->value.asDouble);
+}
+
+bool iconus::ClassNumber::equals(const Object* self, const Object* other) const {
+	return self->value.asDouble == other->value.asDouble;
+}
+
+std::size_t iconus::ClassString::hash(const Object* self) const {
+	return std::hash<string>()(*(string*)self->value.asPtr);
+}
+
+bool iconus::ClassString::equals(const Object* self,
+		const Object* other) const {
+	const string& a = *(string*)self->value.asPtr;
+	const string& b = *(string*)other->value.asPtr;
+	return a == b;
+}
+
+std::size_t iconus::ClassList::hash(const Object* self) const {
+	size_t result = 1;
+	Deque<Object*>& value = *(Deque<Object*>*)self->value.asPtr;
+	for (const Object* item : value) {
+		result *= item->hash();
+	}
+	return result;
+}
+
+bool iconus::ClassList::equals(const Object* self, const Object* other) const {
+	Deque<Object*>& a = *(Deque<Object*>*)self->value.asPtr;
+	Deque<Object*>& b = *(Deque<Object*>*)other->value.asPtr;
+	
+	if (a.size() != b.size()) return false;
+	for (size_t i = 0; i < a.size(); i++) {
+		if (!a[i]->equals(b[i])) return false;
+	}
+	return true;
+}

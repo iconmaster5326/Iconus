@@ -13,9 +13,8 @@
 #include "function.hpp"
 
 #include <functional>
-
+#include <stdexcept>
 #include <initializer_list>
-
 
 namespace iconus {
 	class ClassNil : public Class {
@@ -30,6 +29,20 @@ namespace iconus {
 	public:
 		static ClassBool INSTANCE;
 		static Object TRUE, FALSE;
+		static inline Object* create(bool b) {
+			return b ? &TRUE : &FALSE;
+		}
+		static inline bool value(Session& session, Object* ob) {
+			ob = ob->adapt(session, &INSTANCE);
+			if (ob == &TRUE) {
+				return true;
+			} else if (ob == &FALSE) {
+				return false;
+			} else {
+				throw new std::runtime_error("bool wasn't TRUE or FALSE");
+			}
+		}
+		
 		std::string name() override;
 		std::string toString(Object* self, Session& session) override;
 	};
@@ -46,6 +59,8 @@ namespace iconus {
 		
 		std::string name() override;
 		std::string toString(Object* self, Session& session) override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
 	};
 	
 	class ClassString : public Class {
@@ -60,6 +75,8 @@ namespace iconus {
 		
 		std::string name() override;
 		std::string toString(Object* self, Session& session) override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
 	};
 	
 	class ClassSystemFunction : public Class {
@@ -120,6 +137,8 @@ namespace iconus {
 		
 		std::string name() override;
 		std::string toString(Object* self, Session& session) override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
 		
 		Vector<Object*> fieldNames(Object* self, Session& session) override;
 		bool hasField(Object* self, Session& session, Object* name) override;
@@ -134,6 +153,22 @@ namespace iconus {
 		std::string name() override;
 		std::string toString(Object* self, Session& session) override;
 	};
+	
+//	class ClassUser : public Class {
+//	public:
+//		class Instance : public gc {
+//			Map<Object*,Object*> fields;
+//		};
+//		
+//		std::string name() override;
+//		std::string toString(Object* self, Session& session) override;
+//		
+//		std::string className;
+//		Map<Object*,Object*> fieldGetters;
+//		Map<Object*,Object*> fieldSetters;
+//		
+//		inline ClassUser(const std::string& name) : className(name) {}
+//	};
 }
 
 #endif /* SRC_CLASSES_HPP_ */

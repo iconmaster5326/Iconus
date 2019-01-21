@@ -87,4 +87,12 @@ void iconus::Session::addGlobalScope() {
 		return input->adapt(session, &ClassBool::INSTANCE);
 			}
 	));
+	
+	globalScope.vars["=="] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"a", "", "",
+			{Arg("b")}, {},
+			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		return ClassBool::create(args["a"]->equals(args["b"]));
+			}
+	));
 }

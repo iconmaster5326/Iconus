@@ -22,6 +22,10 @@ namespace iconus {
 		virtual std::string name();
 		virtual std::string toString(Object* self, Session& session);
 		
+		// C++ properties; session is not available due to use in std::hash, etc.
+		virtual std::size_t hash(const Object* self) const;
+		virtual bool equals(const Object* self, const Object* other) const;
+		
 		// execution
 		virtual bool executable(Object* self, Session& session);
 		virtual Object* execute(Object* self, Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags);
@@ -47,7 +51,15 @@ namespace iconus {
 		inline std::string toString(Session& session) {
 			return clazz->toString(this, session);
 		}
-		inline bool executable(Session& session) {
+		
+		inline std::size_t hash() const {
+			return clazz->hash(this);
+		}
+		inline bool equals(Object* other) const {
+			return clazz->equals(this, other);
+		}
+		
+		inline bool executable(Session& session)  {
 			return clazz->executable(this, session);
 		}
 		inline Object* execute(Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) {
@@ -101,5 +113,17 @@ namespace iconus {
 		void setLocal(const std::string& name, Object* value);
 	};
 }
+
+template<> struct std::hash<iconus::Object*> {
+	size_t operator()(const iconus::Object* ob) const {
+		return ob->hash();
+	};
+};
+
+template<> struct std::equal_to<iconus::Object*> {
+	constexpr bool operator()(const iconus::Object* a, const iconus::Object* b) const {
+		return a->value.asPtr == b->value.asPtr;
+	};
+};
 
 #endif /* SRC_PROGRAM_HPP_ */

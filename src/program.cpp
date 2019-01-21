@@ -124,3 +124,11 @@ Object* iconus::Object::adapt(Session& session, Class* to) {
 		throw Error("Cannot adapt object of class "+clazz->name()+" to class "+to->name());
 	}
 }
+
+std::size_t iconus::Class::hash(const Object* self) const {
+	return (size_t) self;
+}
+
+bool iconus::Class::equals(const Object* self, const Object* other) const {
+	return self == other;
+}
