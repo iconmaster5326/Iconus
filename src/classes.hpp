@@ -154,6 +154,22 @@ namespace iconus {
 		std::string toString(Object* self, Session& session) override;
 	};
 	
+	class ClassClass : public Class {
+	public:
+		static ClassClass INSTANCE;
+		static inline Object* create(Class* clazz) {
+			return new Object(&INSTANCE, clazz);
+		}
+		static inline Class* value(Session& session, Object* ob) {
+			return (Class*) ob->adapt(session, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
+		std::string toString(Object* self, Session& session) override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
+	};
+	
 //	class ClassUser : public Class {
 //	public:
 //		class Instance : public gc {

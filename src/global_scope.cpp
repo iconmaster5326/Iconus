@@ -17,6 +17,9 @@ using namespace iconus;
 void iconus::Session::addGlobalScope() {
 	using Arg = Function::Arg;
 	
+	////////////
+	// functions
+	////////////
 	globalScope.vars["echo"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"input", "", "",
 			{}, {},
@@ -93,6 +96,14 @@ void iconus::Session::addGlobalScope() {
 			{Arg("b")}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassBool::create(args["a"]->equals(args["b"]));
+			}
+	));
+	
+	globalScope.vars["get-class"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"i", "", "",
+			{}, {},
+			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		return ClassClass::create(input->clazz);
 			}
 	));
 }
