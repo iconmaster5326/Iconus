@@ -15,6 +15,7 @@
 
 # Executables
 *.exe
+*.icolib
 /iconus
 /test/test_lexer
 /test/test_parser

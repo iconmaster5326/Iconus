@@ -9,15 +9,19 @@ O_FILES := $(patsubst src/%.cpp,build/%.o,$(CXX_FILES))
 D_FILES := $(patsubst src/%.cpp,build/%.d,$(CXX_FILES))
 EXE_FILES := iconus test/test_parser
 
+PLUGINS := $(wildcard plugins/*)
+PLUGIN_DLS := $(patsubst plugins/%,%.icolib,$(PLUGINS))
+
 CXXFLAGS := -g -std=c++14 -I. -Isrc -ISimple-Web-Server -ISimple-WebSocket-Server
 LINKFLAGS := -lcrypto -lpthread -lboost_system -lboost_thread -lgc -lgccpp -ldl
+PLUGIN_FLAGS := -fPIC -shared
 
 CURL := curl
 TAR := tar
 
 # executables
 # (main exe must be at top, so it's default)
-iconus$(EXE_SUFFIX): $(O_FILES)
+iconus$(EXE_SUFFIX): $(O_FILES) $(PLUGIN_DLS)
 	$(CXX) $(CXXFLAGS) -o iconus $(O_FILES) $(LINKFLAGS)
 
 # source files
@@ -45,6 +49,11 @@ test/test_parser$(EXE_SUFFIX): test/test_parser.cpp $(TEST_O_FILES)
 # embedded files
 build/index.cxx: src/index.html | build
 	xxd -i src/index.html > build/index.cxx
+
+# plugins
+$(PLUGIN_DLS): | $(HXX_FILES) json.hpp
+$(PLUGIN_DLS): %.icolib: $(wildcard plugins/%/*)
+	$(CXX) $(PLUGIN_FLAGS) $(CXXFLAGS) -o $@ $(filter %.cpp,$<) $(LINKFLAGS)
 
 # dependencies
 SWS_VER := v3.0.0-rc3
