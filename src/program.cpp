@@ -55,21 +55,29 @@ Object* iconus::Scope::get(const std::string& name) {
 void iconus::Scope::set(const std::string& name, Object* value) {
 	if (vars.find(name) == vars.end()) {
 		if (parent) {
-			if (parent->get(name)) {
+			if (parent->canSet(name) && parent->get(name)) {
 				parent->set(name, value);
 			} else {
-				vars[name] = value;
+				setLocal(name, value);
 			}
 		} else {
-			vars[name] = value;
+			setLocal(name, value);
 		}
 	} else {
-		vars[name] = value;
+		setLocal(name, value);
 	}
 }
 
 void iconus::Scope::setLocal(const std::string& name, Object* value) {
-	vars[name] = value;
+	if (canSet(name)) {
+		vars[name] = value;
+	} else {
+		throw Error("Field '"+name+"' of this scope cannot be set");
+	}
+}
+
+bool iconus::Scope::canSet(const std::string& name) {
+	return true;
 }
 
 Vector<Object*> iconus::Class::fieldNames(Object* self, Session& session) {
@@ -95,6 +103,7 @@ void iconus::Class::setField(Object* self, Session& session, Object* name, Objec
 iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent) : parent(parent), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent, Object* input) : parent(parent), input(input) {}
+iconus::Scope::~Scope() {}
 
 Vector<Object*> iconus::Class::fieldValues(Object* self, Session& session) {
 	Vector<Object*> result;

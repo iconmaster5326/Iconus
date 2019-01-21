@@ -29,6 +29,13 @@ namespace iconus {
 		Handler handler;
 	};
 	
+	class GlobalScope : public Scope {
+	public:
+		static GlobalScope INSTANCE;
+		GlobalScope();
+		bool canSet(const std::string& name) override;
+	};
+	
 	class Session {
 	public:
 		Session();
@@ -38,12 +45,11 @@ namespace iconus {
 		Object* parseWord(std::string word);
 		Adaptor getAdaptor(Class* from, Class* to);
 		
-		Scope globalScope;
+		Scope sessionScope;
 		Vector<Renderer> renderers;
 		Vector<WordParser> parsers;
 		Map<Class*, Map<Class*, Adaptor>> adaptors;
 	private:
-		void addGlobalScope();
 		void addDefaultRenderers();
 		void addDefaultWordParsers();
 		void addDefaultAdaptors();

@@ -107,10 +107,12 @@ namespace iconus {
 		Scope();
 		Scope(Scope* parent);
 		Scope(Scope* parent, Object* input);
+		virtual ~Scope();
 		
-		Object* get(const std::string& name);
-		void set(const std::string& name, Object* value);
-		void setLocal(const std::string& name, Object* value);
+		virtual Object* get(const std::string& name);
+		virtual void set(const std::string& name, Object* value);
+		virtual void setLocal(const std::string& name, Object* value);
+		virtual bool canSet(const std::string& name);
 	};
 }
 

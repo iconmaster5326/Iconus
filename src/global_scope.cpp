@@ -10,17 +10,13 @@
 
 #include <iostream>
 
-
 using namespace std;
 using namespace iconus;
 
-void iconus::Session::addGlobalScope() {
+iconus::GlobalScope::GlobalScope() : Scope() {
 	using Arg = Function::Arg;
 	
-	////////////
-	// functions
-	////////////
-	globalScope.vars["echo"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["echo"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"input", "", "",
 			{}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -28,7 +24,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["list"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["list"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"", "args", "",
 			{}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -36,7 +32,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["apply"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["apply"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"", "args", "flags",
 			{Arg("fn")}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -44,7 +40,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["get"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["get"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"i", "", "",
 			{Arg("k")}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -52,7 +48,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["set"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["set"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"i", "", "",
 			{Arg("k"), Arg("v")}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -61,7 +57,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["local"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["local"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"i", "", "",
 			{Arg("v")}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -71,7 +67,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["vars"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["vars"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"", "", "",
 			{}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -83,7 +79,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["bool"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["bool"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"i", "", "",
 			{}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -91,7 +87,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["=="] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["=="] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"a", "", "",
 			{Arg("b")}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -99,7 +95,7 @@ void iconus::Session::addGlobalScope() {
 			}
 	));
 	
-	globalScope.vars["get-class"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	vars["get-class"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"i", "", "",
 			{}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {

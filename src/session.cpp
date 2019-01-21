@@ -16,18 +16,17 @@
 using namespace std;
 using namespace iconus;
 
-iconus::Session::Session() {
+iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE) {
 	addDefaultRenderers();
 	addDefaultWordParsers();
 	addDefaultAdaptors();
-	addGlobalScope();
 }
 
 Object* iconus::Session::evaluate(const std::string& input) {
 	try {
 		Lexer lexer(input);
 		Op* op = parse(*this, lexer);
-		return op->evaluate(*this, globalScope, &ClassNil::NIL);
+		return op->evaluate(*this, sessionScope, &ClassNil::NIL);
 	} catch (const Error& e) {
 		return e.value;
 	}
@@ -88,4 +87,10 @@ static Adaptor getAdaptor(Session& session, Class* from, Class* to, Set<Class*>&
 Adaptor iconus::Session::getAdaptor(Class* from, Class* to) {
 	Set<Class*> checked;
 	return ::getAdaptor(*this, from, to, checked);
+}
+
+GlobalScope GlobalScope::INSTANCE{};
+
+bool iconus::GlobalScope::canSet(const std::string& name) {
+	return false;
 }
