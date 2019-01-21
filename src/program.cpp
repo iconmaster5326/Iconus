@@ -91,14 +91,6 @@ void iconus::Class::setField(Object* self, Object* name, Object* value) {
 	throw Error("Cannot set field '"+name->operator string()+"' on object of class "+self->clazz->name());
 }
 
-Object* iconus::Object::castTo(Object* ob, Class* clazz) {
-	if (ob->clazz == clazz) {
-		return ob;
-	} else {
-		throw Error("Cannot cast object of class "+ob->clazz->name()+" to class "+clazz->name());
-	}
-}
-
 iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent) : parent(parent), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent, Object* input) : parent(parent), input(input) {}
@@ -117,4 +109,21 @@ Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self) {
 		result.push_back(make_pair(name, getField(self, name)));
 	}
 	return result;
+}
+
+bool iconus::Object::adaptableTo(Session& session, Class* target) {
+	return clazz->adaptors.find(target) != clazz->adaptors.end();
+}
+
+Object* iconus::Object::adapt(Session& session, Class* target) {
+	if (clazz == target) {
+		return this;
+	} else {
+		auto it = clazz->adaptors.find(target);
+		if (it == clazz->adaptors.end()) {
+			throw Error("Cannot adapt object of class "+clazz->name()+" to class "+target->name());
+		} else {
+			return it->second(session, this);
+		}
+	}
 }

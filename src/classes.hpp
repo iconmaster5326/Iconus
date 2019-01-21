@@ -41,7 +41,7 @@ namespace iconus {
 			return new Object(&INSTANCE, n);
 		}
 		static inline double& value(Object* ob) {
-			return Object::castTo(ob, &INSTANCE)->value.asDouble;
+			return ob->value.asDouble;
 		}
 		
 		std::string name() override;
@@ -55,7 +55,7 @@ namespace iconus {
 			return new Object(&INSTANCE, gcAlloc<std::string>(s));
 		}
 		static inline std::string& value(Object* ob) {
-			return *(std::string*)Object::castTo(ob, &INSTANCE)->value.asPtr;
+			return *(std::string*)ob->value.asPtr;
 		}
 		
 		std::string name() override;
@@ -115,7 +115,7 @@ namespace iconus {
 			return create(gcAlloc<Deque<Object*>>(begin, end));
 		}
 		static inline Deque<Object*>& value(Object* ob) {
-			return *(Deque<Object*>*)Object::castTo(ob, &INSTANCE)->value.asPtr;
+			return *(Deque<Object*>*)ob->value.asPtr;
 		}
 		
 		std::string name() override;
