@@ -100,10 +100,8 @@ Object* iconus::Object::castTo(Object* ob, Class* clazz) {
 }
 
 iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
-iconus::Scope::Scope(Scope* parent) : parent(nullptr), input(&ClassNil::NIL) {}
-iconus::Scope::Scope(Scope* parent, Object* input) :
-		parent(nullptr), input(input) {
-}
+iconus::Scope::Scope(Scope* parent) : parent(parent), input(&ClassNil::NIL) {}
+iconus::Scope::Scope(Scope* parent, Object* input) : parent(parent), input(input) {}
 
 std::vector<Object*> iconus::Class::fieldValues(Object* self) {
 	vector<Object*> result;

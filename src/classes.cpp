@@ -233,11 +233,11 @@ iconus::ClassUserFunction iconus::ClassUserFunction::INSTANCE{};
 Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& fn) {
 	Scope* oldScope = &scope;
 	return new Object(&ClassUserFunction::INSTANCE, new ClassManagedFunction::Instance(fn, [oldScope,op](auto& session, auto& evalScope, auto input, auto& args, auto& varargs, auto& varflags) {
-		Scope newScope(oldScope, input);
+		Scope* newScope = new Scope(oldScope, input);
 		for (const pair<string,Object*>& kv : args) {
-			newScope.setLocal(kv.first, kv.second);
+			newScope->setLocal(kv.first, kv.second);
 		}
-		return op->evaluate(session, newScope, input);
+		return op->evaluate(session, *newScope, input);
 	}));
 }
 

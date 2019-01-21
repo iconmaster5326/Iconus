@@ -9,6 +9,7 @@
 #include "classes.hpp"
 
 #include <iostream>
+#include <deque>
 
 using namespace std;
 using namespace iconus;
@@ -65,6 +66,18 @@ void iconus::Session::addGlobalScope() {
 		string name = ClassString::value(args["v"]);
 		scope.setLocal(name, input);
 		return input;
+			}
+	));
+	
+	globalScope.vars["vars"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"", "", "",
+			{}, {},
+			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		deque<Object*> result;
+		for (auto& pair : scope.vars) {
+			result.push_back(ClassString::create(pair.first));
+		}
+		return ClassList::create(result);
 			}
 	));
 }
