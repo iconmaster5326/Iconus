@@ -127,21 +127,7 @@ namespace iconus {
 
 	static Op* parsePostConst(Session& session, Op* op, list<Token>& tokens) {
 		if (tokens.empty()) return op;
-		switch (tokens.front().type) {
-		case Token::Type::PIPE: {
-			tokens.pop_front();
-			return new OpBinary(op,OpBinary::Type::PIPE,parse(session, tokens));
-		} break;
-		case Token::Type::SEMICOLON: {
-			tokens.pop_front();
-			return new OpBinary(op,OpBinary::Type::RESET,parse(session, tokens));
-		} break;
-		case Token::Type::AND: {
-			tokens.pop_front();
-			return new OpBinary(op,OpBinary::Type::FOREACH,parse(session, tokens));
-		} break;
-		default: throw Error("Token invalid after constant: "+tokens.front().value);
-		}
+		throw Error("Token invalid after constant: "+tokens.front().value);
 	}
 	
 	static Op* parseArg(Session& session, list<Token>& tokens) {
@@ -197,7 +183,7 @@ namespace iconus {
 		return nullptr;
 	}
 
-	static Op* parse(Session& session, list<Token>& tokens) {
+	static Op* parseCall(Session& session, list<Token>& tokens) {
 		if (tokens.empty()) {
 			return new OpBinary(nullptr,OpBinary::Type::PIPE,nullptr);
 		}
@@ -221,18 +207,6 @@ namespace iconus {
 						call->args.emplace_back(arg);
 					} else {
 						switch (tokens.front().type) {
-						case Token::Type::PIPE: {
-							tokens.pop_front();
-							return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
-						} break;
-						case Token::Type::SEMICOLON: {
-							tokens.pop_front();
-							return new OpBinary(call,OpBinary::Type::RESET,parse(session, tokens));
-						} break;
-						case Token::Type::AND: {
-							tokens.pop_front();
-							return new OpBinary(call,OpBinary::Type::FOREACH,parse(session, tokens));
-						} break;
 						case Token::Type::FLAG: {
 							string value = tokens.front().value;
 							tokens.pop_front();
@@ -249,18 +223,6 @@ namespace iconus {
 								call->args.emplace_back(value, new OpConst(&ClassBool::TRUE));
 								
 								switch (tokens.front().type) {
-								case Token::Type::PIPE: {
-									tokens.pop_front();
-									return new OpBinary(call,OpBinary::Type::PIPE,parse(session, tokens));
-								} break;
-								case Token::Type::SEMICOLON: {
-									tokens.pop_front();
-									return new OpBinary(call,OpBinary::Type::RESET,parse(session, tokens));
-								} break;
-								case Token::Type::AND: {
-									tokens.pop_front();
-									return new OpBinary(call,OpBinary::Type::FOREACH,parse(session, tokens));
-								} break;
 								case Token::Type::FLAG: {
 									// do nothing; let next loop handle this flag
 								} break;
@@ -273,18 +235,6 @@ namespace iconus {
 					}
 				}
 			}
-		} break;
-		case Token::Type::PIPE: {
-			tokens.pop_front();
-			return new OpBinary(nullptr,OpBinary::Type::PIPE,parse(session, tokens));
-		} break;
-		case Token::Type::SEMICOLON: {
-			tokens.pop_front();
-			return new OpBinary(nullptr,OpBinary::Type::RESET,parse(session, tokens));
-		} break;
-		case Token::Type::AND: {
-			tokens.pop_front();
-			return new OpBinary(nullptr,OpBinary::Type::FOREACH,parse(session, tokens));
 		} break;
 		case Token::Type::LPAREN: {
 			tokens.pop_front();
@@ -323,6 +273,114 @@ namespace iconus {
 			return parsePostConst(session, parseBrackets(session, tokens), tokens);
 		} break;
 		default: throw Error("Token invalid: "+tokens.front().value);
+		}
+	}
+	
+	Op* parse(Session& session, list<Token>& tokens) {
+		class Call {
+		public:
+			list<Token> tokens;
+			OpBinary::Type sepAtEnd = OpBinary::Type::PIPE;
+		};
+		
+		list<Call> calls;
+		calls.emplace_back();
+		
+		for (auto it = tokens.begin(); it != tokens.end(); it++) {
+			switch (it->type) {
+			case Token::Type::PIPE: {
+				calls.back().sepAtEnd = OpBinary::Type::PIPE;
+				calls.emplace_back();
+			} break;
+			case Token::Type::SEMICOLON: {
+				calls.back().sepAtEnd = OpBinary::Type::RESET;
+				calls.emplace_back();
+			} break;
+			case Token::Type::AND: {
+				calls.back().sepAtEnd = OpBinary::Type::FOREACH;
+				calls.emplace_back();
+			} break;
+			case Token::Type::LPAREN: {
+				calls.back().tokens.push_back(*it);
+				int parenLevel = 0;
+				
+				while (parenLevel >= 0) {
+					it++;
+					
+					if (it == tokens.end()) throw Error("expected ')'; not found");
+					
+					if (it->type == Token::Type::LPAREN) {
+						parenLevel++;
+					} else if (it->type == Token::Type::RPAREN) {
+						parenLevel--;
+					}
+					
+					calls.back().tokens.push_back(*it);
+				}
+			} break;
+			case Token::Type::LBRACE: {
+				calls.back().tokens.push_back(*it);
+				int parenLevel = 0;
+				
+				while (parenLevel >= 0) {
+					it++;
+					
+					if (it == tokens.end()) throw Error("expected '}'; not found");
+					
+					if (it->type == Token::Type::LBRACE) {
+						parenLevel++;
+					} else if (it->type == Token::Type::RBRACE) {
+						parenLevel--;
+					}
+					
+					calls.back().tokens.push_back(*it);
+				}
+			} break;
+			case Token::Type::LBRACKET: {
+				calls.back().tokens.push_back(*it);
+				int parenLevel = 0;
+				
+				while (parenLevel >= 0) {
+					it++;
+					
+					if (it == tokens.end()) throw Error("expected ']'; not found");
+					
+					if (it->type == Token::Type::LBRACKET) {
+						parenLevel++;
+					} else if (it->type == Token::Type::RBRACKET) {
+						parenLevel--;
+					}
+					
+					calls.back().tokens.push_back(*it);
+				}
+			} break;
+			default: calls.back().tokens.push_back(*it);
+			}
+		}
+		
+		Op* op = nullptr;
+		OpBinary::Type sep = OpBinary::Type::PIPE;
+		for (Call& call : calls) {
+			Op* rhs = nullptr;
+			if (!call.tokens.empty()) {
+				rhs = parseCall(session, call.tokens);
+			}
+			
+			if (!op && sep == OpBinary::Type::PIPE) {
+				op = rhs;
+			} else {
+				op = new OpBinary(op, sep, rhs);
+			}
+			
+			sep = call.sepAtEnd;
+		}
+		
+		if (sep != OpBinary::Type::PIPE) {
+			return new OpBinary(op, sep, nullptr);
+		} else if (op) {
+			return op;
+		} else {
+			return new OpBinary(nullptr, sep, nullptr);
 		}
 	}
 	
