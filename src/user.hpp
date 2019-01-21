@@ -16,15 +16,16 @@
 namespace iconus {
 	class User {
 	public:
-		// TODO: actually verify users using passwords!!!
-		
 		static std::mutex MUTEX;
 		static uid_t REAL_UID;
 		static gid_t REAL_GID;
 		
-		inline User() : uid(REAL_UID), gid(REAL_GID), home("."), cwd("."), name("guest") {} // TODO: guest user
-		User(const std::string& name);
-		User(uid_t uid);
+		// TODO: guest account for users who have not yet logged in
+		// TODO: use encrypted challenge-response method instead of sending password over the wire
+		// TODO: (we should do this even when we switch to HTTPS and WSS)
+		// TODO: Does PAM even support challenge-response instead of asking for passwords via prompt?
+		inline User() : uid(REAL_UID), gid(REAL_GID), home("."), cwd("."), name("guest") {}
+		User(const std::string& name, const std::string& password);
 		
 		void doAsUser(std::function<void()> f);
 		

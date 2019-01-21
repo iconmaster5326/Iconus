@@ -131,6 +131,15 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		return result;
 			}
 	));
+	
+	scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"", "", "",
+			{Arg("user"),Arg("pass")}, {},
+			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		session.user = User(ClassString::value(session, args["user"]), ClassString::value(session, args["pass"]));
+		return &ClassNil::NIL;
+			}
+	));
 }
 
 extern "C" void iconus_initSession(Session& session) {

@@ -15,7 +15,7 @@
 
 using namespace std;
 using namespace SimpleWeb;
-using HttpServer = Server<HTTP>;
+using HttpServer = Server<HTTP>; // TODO: use HTTPS and WSS
 using WsServer = SocketServer<WS>;
 
 namespace iconus {
