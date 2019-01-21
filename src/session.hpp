@@ -46,6 +46,7 @@ namespace iconus {
 		void addGlobalScope();
 		void addDefaultRenderers();
 		void addDefaultWordParsers();
+		void addDefaultAdaptors();
 	};
 }
 

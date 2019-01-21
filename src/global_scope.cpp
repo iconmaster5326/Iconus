@@ -79,4 +79,12 @@ void iconus::Session::addGlobalScope() {
 		return ClassList::create(result);
 			}
 	));
+	
+	globalScope.vars["bool"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"i", "", "",
+			{}, {},
+			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		return input->adapt(session, &ClassBool::INSTANCE);
+			}
+	));
 }

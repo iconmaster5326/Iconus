@@ -19,6 +19,7 @@ using namespace iconus;
 iconus::Session::Session() {
 	addDefaultRenderers();
 	addDefaultWordParsers();
+	addDefaultAdaptors();
 	addGlobalScope();
 }
 
@@ -72,7 +73,7 @@ static Adaptor getAdaptor(Session& session, Class* from, Class* to, Set<Class*>&
 				
 				if (adaptor2) {
 					return [adaptor1,adaptor2](auto& session, auto ob) {
-						return adaptor1(session, adaptor2(session, ob));
+						return adaptor2(session, adaptor1(session, ob));
 					};
 				}
 			}
