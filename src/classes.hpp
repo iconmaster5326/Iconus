@@ -13,9 +13,9 @@
 #include "function.hpp"
 
 #include <functional>
-#include <vector>
+
 #include <initializer_list>
-#include <deque>
+
 
 namespace iconus {
 	class ClassNil : public Class {
@@ -64,23 +64,23 @@ namespace iconus {
 	
 	class ClassSystemFunction : public Class {
 	public:
-		using Handler = std::function<Object*(Session&, Scope&, Object*, std::vector<Object*>&, std::unordered_map<std::string,Object*>&)>;
+		using Handler = std::function<Object*(Session&, Scope&, Object*, Vector<Object*>&, Map<std::string,Object*>&)>;
 		
 		static ClassSystemFunction INSTANCE;
 		std::string name() override;
 		bool executable() override;
-		Object* execute(Object* self, Session& session, Scope& scope, Object* input, std::vector<Object*>& args, std::unordered_map<std::string,Object*>& flags) override;
+		Object* execute(Object* self, Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
 	};
 	
 	class ClassManagedFunction : public ClassSystemFunction {
 	public:
-		using Handler = std::function<Object*(Session&, Scope&, Object*, std::unordered_map<std::string,Object*>&, std::vector<Object*>&, std::unordered_map<std::string,Object*>&)>;
+		using Handler = std::function<Object*(Session&, Scope&, Object*, Map<std::string,Object*>&, Vector<Object*>&, Map<std::string,Object*>&)>;
 		
 		class Instance {
 		public:
 			inline Instance(const Function& fn, Handler handler) : handler(handler), fn(fn) {}
 			
-			inline Instance(std::string input, std::string vararg, std::string varflag, const std::vector<Function::Arg>& args, const std::vector<Function::Arg>& flags, Handler handler) :
+			inline Instance(std::string input, std::string vararg, std::string varflag, const Vector<Function::Arg>& args, const Vector<Function::Arg>& flags, Handler handler) :
 				handler(handler), fn(input, vararg, varflag, args, flags)
 			{}
 			
@@ -93,7 +93,7 @@ namespace iconus {
 		};
 		
 		static ClassManagedFunction INSTANCE;
-		Object* execute(Object* self, Session& session, Scope& scope, Object* input, std::vector<Object*>& args, std::unordered_map<std::string,Object*>& flags) override;
+		Object* execute(Object* self, Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
 	};
 	
 	class ClassUserFunction : public ClassManagedFunction {
@@ -105,23 +105,23 @@ namespace iconus {
 	class ClassList : public Class {
 	public:
 		static ClassList INSTANCE;
-		static inline Object* create(std::deque<Object*>* args) {
+		static inline Object* create(Deque<Object*>* args) {
 			return new Object(&INSTANCE, args);
 		}
 		template<typename T> static Object* create(T args) {
-			return create(new std::deque<Object*>(args));
+			return create(new Deque<Object*>(args));
 		}
 		template<typename T> static Object* create(T begin, T end) {
-			return create(new std::deque<Object*>(begin, end));
+			return create(new Deque<Object*>(begin, end));
 		}
-		static inline std::deque<Object*>& value(Object* ob) {
-			return *(std::deque<Object*>*)Object::castTo(ob, &INSTANCE)->value.asPtr;
+		static inline Deque<Object*>& value(Object* ob) {
+			return *(Deque<Object*>*)Object::castTo(ob, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;
 		std::string toString(Object* self) override;
 		
-		std::vector<Object*> fieldNames(Object* self) override;
+		Vector<Object*> fieldNames(Object* self) override;
 		bool hasField(Object* self, Object* name) override;
 		Object* getField(Object* self, Object* name) override;
 		bool canSetField(Object* self, Object* name) override;

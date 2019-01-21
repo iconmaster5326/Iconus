@@ -28,12 +28,12 @@ namespace iconus {
 		};
 		
 		std::string input, vararg, varflag;
-		std::vector<Arg> args;
-		std::vector<Arg> flags;
+		Vector<Arg> args;
+		Vector<Arg> flags;
 		
 		inline Function() {}
 		
-		inline Function(std::string input, std::string vararg, std::string varflag, const std::vector<Arg>& args, const std::vector<Arg>& flags) :
+		inline Function(std::string input, std::string vararg, std::string varflag, const Vector<Arg>& args, const Vector<Arg>& flags) :
 				input(input), vararg(vararg), varflag(varflag), args(args), flags(flags)
 		{}
 		

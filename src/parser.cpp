@@ -9,7 +9,7 @@
 #include "classes.hpp"
 #include "error.hpp"
 
-#include <list>
+
 
 using namespace std;
 using namespace iconus;
@@ -18,14 +18,14 @@ namespace iconus {
 	// TODO: an algorithm that does this without consuming all the input first
 	// That was the point of having Lexer act like a stream! So this didn't have to happen!!
 
-	static Op* parse(Session& session, list<Token>& tokens);
-	static Op* parseArg(Session& session, list<Token>& tokens);
+	static Op* parse(Session& session, List<Token>& tokens);
+	static Op* parseArg(Session& session, List<Token>& tokens);
 	
-	static OpLambda* parseBraces(Session& session, list<Token>& tokens, OpLambda* lambda) {
+	static OpLambda* parseBraces(Session& session, List<Token>& tokens, OpLambda* lambda) {
 		if (tokens.empty() || tokens.front().type != Token::Type::LBRACE) throw Error("expected '{'; not found");
 		
 		tokens.pop_front();
-		list<Token> subTokens;
+		List<Token> subTokens;
 		int parenLevel = 0;
 		
 		while (parenLevel >= 0) {
@@ -45,9 +45,9 @@ namespace iconus {
 		return lambda;
 	}
 	
-	static OpLambda* parseBrackets(Session& session, list<Token>& tokens) {
+	static OpLambda* parseBrackets(Session& session, List<Token>& tokens) {
 		tokens.pop_front();
-		list<Token> subTokens;
+		List<Token> subTokens;
 		int parenLevel = 0;
 		
 		while (parenLevel >= 0) {
@@ -64,9 +64,9 @@ namespace iconus {
 		
 		subTokens.pop_back();
 		
-		list<Token>& restTokens = tokens;
+		List<Token>& restTokens = tokens;
 		{
-			list<Token>& tokens = subTokens;
+			List<Token>& tokens = subTokens;
 			OpLambda* lambda = new OpLambda();
 			
 			while (!tokens.empty()) {
@@ -125,12 +125,12 @@ namespace iconus {
 		}
 	}
 
-	static Op* parsePostConst(Session& session, Op* op, list<Token>& tokens) {
+	static Op* parsePostConst(Session& session, Op* op, List<Token>& tokens) {
 		if (tokens.empty()) return op;
 		throw Error("Token invalid after constant: "+tokens.front().value);
 	}
 	
-	static Op* parseArg(Session& session, list<Token>& tokens) {
+	static Op* parseArg(Session& session, List<Token>& tokens) {
 		string value = tokens.front().value;
 		
 		switch (tokens.front().type) {
@@ -146,7 +146,7 @@ namespace iconus {
 		} break;
 		case Token::Type::LPAREN: {
 			tokens.pop_front();
-			list<Token> subTokens;
+			List<Token> subTokens;
 			int parenLevel = 0;
 			
 			while (parenLevel >= 0) {
@@ -183,7 +183,7 @@ namespace iconus {
 		return nullptr;
 	}
 
-	static Op* parseCall(Session& session, list<Token>& tokens) {
+	static Op* parseCall(Session& session, List<Token>& tokens) {
 		if (tokens.empty()) {
 			return new OpBinary(nullptr,OpBinary::Type::PIPE,nullptr);
 		}
@@ -238,7 +238,7 @@ namespace iconus {
 		} break;
 		case Token::Type::LPAREN: {
 			tokens.pop_front();
-			list<Token> subTokens;
+			List<Token> subTokens;
 			int parenLevel = 0;
 			
 			while (parenLevel >= 0) {
@@ -276,14 +276,14 @@ namespace iconus {
 		}
 	}
 	
-	Op* parse(Session& session, list<Token>& tokens) {
+	Op* parse(Session& session, List<Token>& tokens) {
 		class Call {
 		public:
-			list<Token> tokens;
+			List<Token> tokens;
 			OpBinary::Type sepAtEnd = OpBinary::Type::PIPE;
 		};
 		
-		list<Call> calls;
+		List<Call> calls;
 		calls.emplace_back();
 		
 		for (auto it = tokens.begin(); it != tokens.end(); it++) {
@@ -385,7 +385,7 @@ namespace iconus {
 	}
 	
 	Op* parse(Session& session, Lexer& input) {
-		list<Token> tokens;
+		List<Token> tokens;
 		for (Token t = input.next(); t.type != Token::Type::NONE; t = input.next()) {
 			tokens.push_back(t);
 		}

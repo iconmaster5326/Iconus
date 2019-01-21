@@ -10,25 +10,13 @@
 #include "classes.hpp"
 
 #include <sstream>
-#include <deque>
+
 
 using namespace std;
 using namespace iconus;
 
-iconus::Op::~Op() {
-	
-}
-
-iconus::OpConst::~OpConst() {
-	
-}
-
 Object* iconus::OpConst::evaluate(Session& session, Scope& scope, Object* input) {
 	return value;
-}
-
-iconus::OpCall::~OpCall() {
-	
 }
 
 Object* iconus::OpCall::evaluate(Session& session, Scope& scope, Object* input) {
@@ -40,8 +28,8 @@ Object* iconus::OpCall::evaluate(Session& session, Scope& scope, Object* input) 
 		throw Error("command not executable: "+cmd);
 	}
 	
-	vector<Object*> argObs;
-	unordered_map<string,Object*> flagObs;
+	Vector<Object*> argObs;
+	Map<string,Object*> flagObs;
 	
 	for (const Arg& arg : args) {
 		Object* value = arg.value->evaluate(session, scope, input);
@@ -53,10 +41,6 @@ Object* iconus::OpCall::evaluate(Session& session, Scope& scope, Object* input) 
 	}
 	
 	return cmdOb->execute(session, scope, input, argObs, flagObs);
-}
-
-iconus::OpBinary::~OpBinary() {
-	
 }
 
 Object* iconus::OpBinary::evaluate(Session& session, Scope& scope, Object* input) {
@@ -72,13 +56,13 @@ Object* iconus::OpBinary::evaluate(Session& session, Scope& scope, Object* input
 	case Type::FOREACH: {
 		Object* lhsResult = lhs ? lhs->evaluate(session, scope, input) : input;
 		if (rhs) {
-			deque<Object*> foreachResult;
+			Deque<Object*> foreachResult;
 			for (Object* value : lhsResult->fieldValues()) {
 				foreachResult.push_back(rhs->evaluate(session, scope, value));
 			}
 			return ClassList::create(foreachResult);
 		} else {
-			vector<Object*> v = lhsResult->fieldValues();
+			Vector<Object*> v = lhsResult->fieldValues();
 			return ClassList::create(v.begin(), v.end());
 		}
 	} break;
@@ -124,10 +108,6 @@ iconus::OpBinary::operator std::string() {
 	return sb.str();
 }
 
-iconus::OpVar::~OpVar() {
-	
-}
-
 Object* iconus::OpVar::evaluate(Session& session, Scope& scope, Object* input) {
 	Object* value = scope.get(name);
 	if (value) {
@@ -139,10 +119,6 @@ Object* iconus::OpVar::evaluate(Session& session, Scope& scope, Object* input) {
 
 iconus::OpVar::operator std::string() {
 	return "$"+name;
-}
-
-iconus::OpLambda::~OpLambda() {
-	
 }
 
 Object* iconus::OpLambda::evaluate(Session& session, Scope& scope, Object* input) {

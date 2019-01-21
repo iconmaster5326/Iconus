@@ -33,8 +33,8 @@ bool iconus::Class::executable() {
 }
 
 Object* iconus::Class::execute(Object* self, Session& session, Scope& scope, Object* input,
-		std::vector<Object*>& args,
-		std::unordered_map<std::string, Object*>& flags) {
+		Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
 	throw Error("cannot execute an object of class "+name());
 }
 
@@ -71,8 +71,8 @@ void iconus::Scope::setLocal(const std::string& name, Object* value) {
 	vars[name] = value;
 }
 
-std::vector<Object*> iconus::Class::fieldNames(Object* self) {
-	return vector<Object*>();
+Vector<Object*> iconus::Class::fieldNames(Object* self) {
+	return Vector<Object*>();
 }
 
 bool iconus::Class::hasField(Object* self, Object* name) {
@@ -103,16 +103,16 @@ iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent) : parent(parent), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent, Object* input) : parent(parent), input(input) {}
 
-std::vector<Object*> iconus::Class::fieldValues(Object* self) {
-	vector<Object*> result;
+Vector<Object*> iconus::Class::fieldValues(Object* self) {
+	Vector<Object*> result;
 	for (Object* name : fieldNames(self)) {
 		result.push_back(getField(self, name));
 	}
 	return result;
 }
 
-std::vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self) {
-	vector<pair<Object*, Object*> > result;
+Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self) {
+	Vector<pair<Object*, Object*> > result;
 	for (Object* name : fieldNames(self)) {
 		result.push_back(make_pair(name, getField(self, name)));
 	}

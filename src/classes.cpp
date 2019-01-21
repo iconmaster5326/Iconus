@@ -10,7 +10,7 @@
 #include "session.hpp"
 
 #include <sstream>
-#include <deque>
+
 
 using namespace std;
 using namespace iconus;
@@ -48,8 +48,8 @@ bool iconus::ClassSystemFunction::executable() {
 }
 
 Object* iconus::ClassSystemFunction::execute(Object* self, Session& session, Scope& scope, Object* input,
-		std::vector<Object*>& args,
-		std::unordered_map<std::string, Object*>& flags) {
+		Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
 	Handler* handler = (Handler*) self->value.asPtr;
 	return (*handler)(session, scope, input, args, flags);
 }
@@ -57,12 +57,12 @@ Object* iconus::ClassSystemFunction::execute(Object* self, Session& session, Sco
 iconus::ClassManagedFunction iconus::ClassManagedFunction::INSTANCE{};
 
 Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
-		Scope& scope, Object* input, std::vector<Object*>& args,
-		std::unordered_map<std::string, Object*>& flags) {
+		Scope& scope, Object* input, Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
 	Instance* instance = (Instance*) self->value.asPtr;
-	std::unordered_map<std::string, Object*> mappedArgs;
+	Map<std::string, Object*> mappedArgs;
 	auto argAt = args.begin();
-	std::unordered_map<std::string, Object*> restFlags(flags);
+	Map<std::string, Object*> restFlags(flags);
 	
 	bool inputExplicit = false;
 	if (!instance->fn.input.empty()) {
@@ -124,7 +124,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 	} else {
 		auto it = flags.find(instance->fn.vararg);
 		if (it == flags.end()) {
-			mappedArgs[instance->fn.vararg] = new Object(&ClassList::INSTANCE, new deque<Object*>(argAt, args.end()));
+			mappedArgs[instance->fn.vararg] = new Object(&ClassList::INSTANCE, new Deque<Object*>(argAt, args.end()));
 		} else {
 			mappedArgs[instance->fn.vararg] = it->second;
 			restFlags.erase(instance->fn.vararg);
@@ -159,7 +159,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		mappedArgs[instance->fn.input] = input;
 	}
 	
-	vector<Object*> restArgs(argAt, args.end());
+	Vector<Object*> restArgs(argAt, args.end());
 	return instance->handler(session, scope, input, mappedArgs, restArgs, restFlags);
 }
 
@@ -173,7 +173,7 @@ std::string iconus::ClassList::toString(Object* self) {
 	ostringstream sb;
 	sb << '[';
 	
-	deque<Object*>& items = *((deque<Object*>*)self->value.asPtr);
+	Deque<Object*>& items = *((Deque<Object*>*)self->value.asPtr);
 	bool first = true;
 	
 	for (Object* ob : items) {
@@ -241,9 +241,9 @@ Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& 
 	}));
 }
 
-std::vector<Object*> iconus::ClassList::fieldNames(Object* self) {
-	deque<Object*>& list = ClassList::value(self);
-	vector<Object*> result;
+Vector<Object*> iconus::ClassList::fieldNames(Object* self) {
+	Deque<Object*>& list = ClassList::value(self);
+	Vector<Object*> result;
 	
 	for (int i = 0; i < list.size(); i++) {
 		result.push_back(ClassNumber::create(i));
@@ -253,14 +253,14 @@ std::vector<Object*> iconus::ClassList::fieldNames(Object* self) {
 }
 
 bool iconus::ClassList::hasField(Object* self, Object* name) {
-	deque<Object*>& list = ClassList::value(self);
+	Deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	return i >= 0 && i < list.size();
 }
 
 Object* iconus::ClassList::getField(Object* self, Object* name) {
-	deque<Object*>& list = ClassList::value(self);
+	Deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	if (i >= 0 && i < list.size()) {
@@ -271,14 +271,14 @@ Object* iconus::ClassList::getField(Object* self, Object* name) {
 }
 
 bool iconus::ClassList::canSetField(Object* self, Object* name) {
-	deque<Object*>& list = ClassList::value(self);
+	Deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	return i >= 0 && i < list.size();
 }
 
 void iconus::ClassList::setField(Object* self, Object* name, Object* value) {
-	deque<Object*>& list = ClassList::value(self);
+	Deque<Object*>& list = ClassList::value(self);
 	int i = (int) ClassNumber::value(name);
 	
 	if (i >= 0 && i < list.size()) {

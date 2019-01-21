@@ -21,7 +21,7 @@ void Session::addDefaultRenderers() {
 		ostringstream sb;
 		sb << "<ol>";
 		
-		deque<Object*>& items = *((deque<Object*>*)ob->value.asPtr);
+		Deque<Object*>& items = *((Deque<Object*>*)ob->value.asPtr);
 		for (Object* item : items) {
 			sb << "<li>" << render(item) << "</li>";
 		}

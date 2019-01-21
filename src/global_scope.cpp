@@ -9,7 +9,7 @@
 #include "classes.hpp"
 
 #include <iostream>
-#include <deque>
+
 
 using namespace std;
 using namespace iconus;
@@ -29,7 +29,7 @@ void iconus::Session::addGlobalScope() {
 			"", "args", "",
 			{}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		deque<Object*>* items = new deque<Object*>(varargs.begin(), varargs.end());
+		Deque<Object*>* items = new Deque<Object*>(varargs.begin(), varargs.end());
 		return new Object(&ClassList::INSTANCE, items);
 			}
 	));
@@ -73,7 +73,7 @@ void iconus::Session::addGlobalScope() {
 			"", "", "",
 			{}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		deque<Object*> result;
+		Deque<Object*> result;
 		for (auto& pair : scope.vars) {
 			result.push_back(ClassString::create(pair.first));
 		}

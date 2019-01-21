@@ -11,7 +11,7 @@
 #include "classes.hpp"
 #include "error.hpp"
 
-#include <deque>
+
 
 using namespace std;
 using namespace iconus;

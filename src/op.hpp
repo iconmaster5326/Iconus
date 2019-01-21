@@ -12,12 +12,11 @@
 #include "function.hpp"
 
 #include <string>
-#include <vector>
+
 
 namespace iconus {
-	class Op {
+	class Op : public gc {
 	public:
-		virtual ~Op();
 		virtual Object* evaluate(Session& session, Scope& scope, Object* input) = 0;
 		virtual operator std::string() = 0;
 	};
@@ -25,7 +24,6 @@ namespace iconus {
 	class OpConst : public Op {
 	public:
 		inline OpConst(Object* value) : value(value) {}
-		virtual ~OpConst();
 		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		
@@ -45,12 +43,11 @@ namespace iconus {
 		};
 		
 		inline OpCall(const std::string& cmd) : cmd(cmd), args() {}
-		virtual ~OpCall();
 		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		
 		std::string cmd;
-		std::vector<Arg> args;
+		Vector<Arg> args;
 	};
 	
 	class OpBinary : public Op {
@@ -62,7 +59,6 @@ namespace iconus {
 		};
 		
 		inline OpBinary(Op* lhs, Type type, Op* rhs) : lhs(lhs), type(type), rhs(rhs) {}
-		virtual ~OpBinary();
 		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		
@@ -74,7 +70,6 @@ namespace iconus {
 	class OpVar : public Op {
 	public:
 		inline OpVar(std::string name) : name(name) {}
-		virtual ~OpVar();
 		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		
@@ -85,7 +80,6 @@ namespace iconus {
 	public:
 		inline OpLambda() : code(nullptr) {}
 		inline OpLambda(Op* code) : code(code) {}
-		virtual ~OpLambda();
 		Object* evaluate(Session& session, Scope& scope, Object* input) override;
 		operator std::string() override;
 		

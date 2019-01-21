@@ -12,7 +12,7 @@
 #include "render.hpp"
 
 #include <string>
-#include <vector>
+
 #include <functional>
 
 namespace iconus {
@@ -36,8 +36,8 @@ namespace iconus {
 		Object* parseWord(std::string word);
 		
 		Scope globalScope;
-		std::vector<Renderer> renderers;
-		std::vector<WordParser> parsers;
+		Vector<Renderer> renderers;
+		Vector<WordParser> parsers;
 	private:
 		void addGlobalScope();
 		void addDefaultRenderers();
