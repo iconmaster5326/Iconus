@@ -110,12 +110,18 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	// assume effective credentials of user
 	status = seteuid(uid);
 	if (status < 0) {
-		throw Error("Couldn't do action as user");
+		throw Error("Couldn't do action as user: " + string(strerror(errno)));
 	}
 	
 	status = setegid(gid);
 	if (status < 0) {
-		throw Error("Couldn't do action as user");
+		status = seteuid(REAL_UID);
+		if (status < 0) {
+			cerr << "FATAL ERROR: Couldn't reset uid: " <<  strerror(errno) << endl;
+			exit(1);
+		}
+		
+		throw Error("Couldn't do action as user: " + string(strerror(errno)));
 	}
 	
 	path oldPath{current_path()};
@@ -127,13 +133,13 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	// re-assume credentials of server
 	status = seteuid(REAL_UID);
 	if (status < 0) {
-		cerr << "FATAL ERROR: Couldn't reset uid" << endl;
+		cerr << "FATAL ERROR: Couldn't reset uid: " <<  strerror(errno) << endl;
 		exit(1);
 	}
 	
 	status = setegid(REAL_GID);
 	if (status < 0) {
-		cerr << "FATAL ERROR: Couldn't reset gid" << endl;
+		cerr << "FATAL ERROR: Couldn't reset gid: " << strerror(errno) << endl;
 		exit(1);
 	}
 	
