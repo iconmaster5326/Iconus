@@ -10,8 +10,9 @@
 #include "parser.hpp"
 #include "classes.hpp"
 #include "error.hpp"
+#include "plugin.hpp"
 
-
+#include <iostream>
 
 using namespace std;
 using namespace iconus;
@@ -20,6 +21,14 @@ iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE) {
 	addDefaultRenderers();
 	addDefaultWordParsers();
 	addDefaultAdaptors();
+	
+	for (Plugin& p : Plugin::plugins) {
+		try {
+			p.initSession(*this);
+		} catch (const exception& e) {
+			cout << "WARNING: error in plugin initSession: " << e.what() << endl;
+		}
+	}
 }
 
 Object* iconus::Session::evaluate(const std::string& input) {
