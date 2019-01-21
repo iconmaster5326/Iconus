@@ -124,7 +124,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 	} else {
 		auto it = flags.find(instance->fn.vararg);
 		if (it == flags.end()) {
-			mappedArgs[instance->fn.vararg] = new Object(&ClassList::INSTANCE, new Deque<Object*>(argAt, args.end()));
+			mappedArgs[instance->fn.vararg] = ClassList::create(argAt, args.end());
 		} else {
 			mappedArgs[instance->fn.vararg] = it->second;
 			restFlags.erase(instance->fn.vararg);

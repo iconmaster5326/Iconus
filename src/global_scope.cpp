@@ -29,8 +29,7 @@ void iconus::Session::addGlobalScope() {
 			"", "args", "",
 			{}, {},
 			[](auto& session, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		Deque<Object*>* items = new Deque<Object*>(varargs.begin(), varargs.end());
-		return new Object(&ClassList::INSTANCE, items);
+		return ClassList::create(varargs.begin(), varargs.end());
 			}
 	));
 	

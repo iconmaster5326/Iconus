@@ -52,7 +52,7 @@ namespace iconus {
 	public:
 		static ClassString INSTANCE;
 		static inline Object* create(const std::string& s) {
-			return new Object(&INSTANCE, new std::string(s));
+			return new Object(&INSTANCE, gcAlloc<std::string>(s));
 		}
 		static inline std::string& value(Object* ob) {
 			return *(std::string*)Object::castTo(ob, &INSTANCE)->value.asPtr;
@@ -76,7 +76,7 @@ namespace iconus {
 	public:
 		using Handler = std::function<Object*(Session&, Scope&, Object*, Map<std::string,Object*>&, Vector<Object*>&, Map<std::string,Object*>&)>;
 		
-		class Instance {
+		class Instance : public gc {
 		public:
 			inline Instance(const Function& fn, Handler handler) : handler(handler), fn(fn) {}
 			
@@ -109,10 +109,10 @@ namespace iconus {
 			return new Object(&INSTANCE, args);
 		}
 		template<typename T> static Object* create(T args) {
-			return create(new Deque<Object*>(args));
+			return create(gcAlloc<Deque<Object*>>(args));
 		}
 		template<typename T> static Object* create(T begin, T end) {
-			return create(new Deque<Object*>(begin, end));
+			return create(gcAlloc<Deque<Object*>>(begin, end));
 		}
 		static inline Deque<Object*>& value(Object* ob) {
 			return *(Deque<Object*>*)Object::castTo(ob, &INSTANCE)->value.asPtr;
