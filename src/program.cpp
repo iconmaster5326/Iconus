@@ -10,6 +10,7 @@
 #include "program.hpp"
 #include "classes.hpp"
 #include "error.hpp"
+#include "session.hpp"
 
 using namespace std;
 using namespace iconus;
@@ -111,19 +112,15 @@ Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self, Session
 	return result;
 }
 
-bool iconus::Object::adaptableTo(Session& session, Class* target) {
-	return clazz->adaptors.find(target) != clazz->adaptors.end();
+bool iconus::Object::adaptableTo(Session& session, Class* to) {
+	return session.getAdaptor(clazz, to) != nullptr;
 }
 
-Object* iconus::Object::adapt(Session& session, Class* target) {
-	if (clazz == target) {
-		return this;
+Object* iconus::Object::adapt(Session& session, Class* to) {
+	Adaptor adaptor = session.getAdaptor(clazz, to);
+	if (adaptor) {
+		return adaptor(session, this);
 	} else {
-		auto it = clazz->adaptors.find(target);
-		if (it == clazz->adaptors.end()) {
-			throw Error("Cannot adapt object of class "+clazz->name()+" to class "+target->name());
-		} else {
-			return it->second(session, this);
-		}
+		throw Error("Cannot adapt object of class "+clazz->name()+" to class "+to->name());
 	}
 }

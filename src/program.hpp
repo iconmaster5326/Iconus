@@ -36,10 +36,6 @@ namespace iconus {
 		// optional to implement fields
 		virtual Vector<Object*> fieldValues(Object* self, Session& session);
 		virtual Vector<std::pair<Object*,Object*> > fields(Object* self, Session& session);
-		
-		// adaptors
-		using Adaptor = std::function<Object*(Session&, Object*)>;
-		Map<Class*, Adaptor> adaptors;
 	};
 	
 	class Object : public gc {

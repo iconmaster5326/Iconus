@@ -51,3 +51,40 @@ Object* iconus::Session::parseWord(std::string word) {
 	
 	return nullptr;
 }
+
+static Adaptor getAdaptor(Session& session, Class* from, Class* to, Set<Class*>& checked) {
+	if (from == to) return [](auto& session, auto ob) {
+		return ob;
+	};
+	if (checked.find(from) != checked.end()) return nullptr;
+	checked.insert(from);
+	
+	auto it = session.adaptors.find(from);
+	if (it == session.adaptors.end()) {
+		return nullptr;
+	} else {
+		Map<Class*, Adaptor>& adaptors = it->second;
+		auto it = adaptors.find(to);
+		if (it == adaptors.end()) {
+			for (auto& pair : adaptors) {
+				Adaptor adaptor1 = pair.second;
+				Adaptor adaptor2 = getAdaptor(session, pair.first, to, checked);
+				
+				if (adaptor2) {
+					return [adaptor1,adaptor2](auto& session, auto ob) {
+						return adaptor1(session, adaptor2(session, ob));
+					};
+				}
+			}
+			
+			return nullptr;
+		} else {
+			return it->second;
+		}
+	}
+}
+
+Adaptor iconus::Session::getAdaptor(Class* from, Class* to) {
+	Set<Class*> checked;
+	return ::getAdaptor(*this, from, to, checked);
+}

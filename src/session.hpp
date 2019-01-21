@@ -16,6 +16,8 @@
 #include <functional>
 
 namespace iconus {
+	using Adaptor = std::function<Object*(Session&, Object*)>;
+	
 	class WordParser {
 	public:
 		using Filter = std::function<bool(Session&, const std::string&)>;
@@ -34,10 +36,12 @@ namespace iconus {
 		Object* evaluate(const std::string& input);
 		std::string render(Object* object);
 		Object* parseWord(std::string word);
+		Adaptor getAdaptor(Class* from, Class* to);
 		
 		Scope globalScope;
 		Vector<Renderer> renderers;
 		Vector<WordParser> parsers;
+		Map<Class*, Map<Class*, Adaptor>> adaptors;
 	private:
 		void addGlobalScope();
 		void addDefaultRenderers();
