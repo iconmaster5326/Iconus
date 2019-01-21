@@ -94,7 +94,7 @@ iconus::User::User(const std::string& name, const std::string& password) : name(
 				gid = entry.pw_gid;
 				break;
 			} else {
-				throw Error("User '"+name+"' not found");
+				throw Error("Cannot login as "+name+": User doesn't exist or password is incorrect");
 			}
 		} else {
 			throw Error("Cannot login as "+name+": User doesn't exist or password is incorrect");
@@ -110,12 +110,12 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	// assume effective credentials of user
 	status = seteuid(uid);
 	if (status < 0) {
-		throw Error("Couldn't set uid");
+		throw Error("Couldn't do action as user");
 	}
 	
 	status = setegid(gid);
 	if (status < 0) {
-		throw Error("Couldn't set gid");
+		throw Error("Couldn't do action as user");
 	}
 	
 	path oldPath{current_path()};
@@ -127,14 +127,12 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	// re-assume credentials of server
 	status = seteuid(REAL_UID);
 	if (status < 0) {
-		// should always be fatal if we can't get back into root status
 		cerr << "FATAL ERROR: Couldn't reset uid" << endl;
 		exit(1);
 	}
 	
 	status = setegid(REAL_GID);
 	if (status < 0) {
-		// should always be fatal if we can't get back into root status
 		cerr << "FATAL ERROR: Couldn't reset gid" << endl;
 		exit(1);
 	}
