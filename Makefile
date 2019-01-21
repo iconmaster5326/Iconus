@@ -13,7 +13,7 @@ PLUGINS := $(wildcard plugins/*)
 PLUGIN_DLS := $(patsubst plugins/%,%.icolib,$(PLUGINS))
 
 CXXFLAGS := -g -std=c++14 -I. -Isrc -ISimple-Web-Server -ISimple-WebSocket-Server
-LINKFLAGS := -lcrypto -lpthread -lboost_system -lboost_thread -lgc -lgccpp -ldl
+LINKFLAGS := -lcrypto -lpthread -lboost_system -lboost_thread -lboost_filesystem -lgc -lgccpp -ldl
 PLUGIN_FLAGS := -fPIC -shared
 
 CURL := curl

@@ -7,6 +7,7 @@
 
 #include <string>
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 #include "server.hpp"
 #include "render.hpp"
@@ -16,12 +17,16 @@
 
 using namespace std;
 using namespace iconus;
+using namespace boost::filesystem;
 
 #include "build/index.cxx"
 static string html((const char*)src_index_html, src_index_html_len);
 
 int main(int argc, const char** argv) {
-	for (int i = 0; i < argc; i++) {
+	path exe_path{argv[0]};
+	Plugin::loadPlugin(exe_path.parent_path().string());
+	
+	for (int i = 1; i < argc; i++) {
 		string arg(argv[i]);
 		if (arg == "-p") {
 			i++;

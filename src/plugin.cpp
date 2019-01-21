@@ -9,9 +9,11 @@
 #include "error.hpp"
 
 #include <dlfcn.h>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace iconus;
+using namespace boost::filesystem;
 
 Vector<Plugin> iconus::Plugin::plugins{};
 
@@ -29,9 +31,25 @@ iconus::Plugin::Plugin(const std::string& filename) : handle(dlopen(filename.c_s
 	name = fn();
 }
 
+static bool endsWith(const string& fullString, const string& ending) {
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
+    }
+}
+
 void iconus::Plugin::loadPlugin(const std::string& filename) {
-	// TODO: directories
-	plugins.push_back(Plugin(filename));
+	path p{filename};
+	if (is_directory(status(p))) {
+		for (directory_iterator it{p}; it != directory_iterator{}; it++) {
+			if (is_directory(it->status()) || endsWith(it->path().string(), ".icolib")) {
+				loadPlugin(it->path().string());
+			}
+		}
+	} else {
+		plugins.push_back(Plugin(filename));
+	}
 }
 
 void iconus::Plugin::initGlobalScope(GlobalScope& scope) {
