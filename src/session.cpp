@@ -18,10 +18,6 @@ using namespace std;
 using namespace iconus;
 
 iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE) {
-	addDefaultRenderers();
-	addDefaultWordParsers();
-	addDefaultAdaptors();
-	
 	for (Plugin& p : Plugin::plugins) {
 		try {
 			p.initSession(*this);

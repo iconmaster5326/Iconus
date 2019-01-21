@@ -32,7 +32,6 @@ namespace iconus {
 	class GlobalScope : public Scope {
 	public:
 		static GlobalScope INSTANCE;
-		GlobalScope();
 		bool canSet(const std::string& name) override;
 	};
 	
@@ -49,10 +48,6 @@ namespace iconus {
 		Vector<Renderer> renderers;
 		Vector<WordParser> parsers;
 		Map<Class*, Map<Class*, Adaptor>> adaptors;
-	private:
-		void addDefaultRenderers();
-		void addDefaultWordParsers();
-		void addDefaultAdaptors();
 	};
 }
 

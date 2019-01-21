@@ -14,12 +14,12 @@ $(PLUGIN_ICOLIB): $(PLUGIN_O_FILES)
 
 $(PLUGIN_D_FILES): | $(BUILD_DIR)
 $(PLUGIN_D_FILES): $(BUILD_DIR)/%.d: %.cpp
-	$(CXX) -MM -MT '$(patsubst %.d,%.o,$@) $@' $(PLUGIN_CXXFLAGS) $< > $@
+	$(CXX) -MM -MT '$(patsubst %.d,%.o,$@) $@' -DICONUS_PLUGIN $(PLUGIN_CXXFLAGS) $< > $@
 include $(PLUGIN_D_FILES)
 
 $(PLUGIN_O_FILES): | $(BUILD_DIR)
 $(PLUGIN_O_FILES): $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.d
-	$(CXX) $(PLUGIN_FLAGS) $(PLUGIN_CXXFLAGS) -c -o $@ $(patsubst $(BUILD_DIR)/%.d,%.cpp,$<)
+	$(CXX) $(PLUGIN_FLAGS) -DICONUS_PLUGIN $(PLUGIN_CXXFLAGS) -c -o $@ $(patsubst $(BUILD_DIR)/%.d,%.cpp,$<)
 
 $(BUILD_DIR): | $(BASE_DIR)/build
 	mkdir $(BUILD_DIR)

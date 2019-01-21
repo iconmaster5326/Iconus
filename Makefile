@@ -13,7 +13,7 @@ PLUGINS := $(wildcard plugins/*)
 PLUGIN_DLS := $(patsubst plugins/%,%.icolib,$(PLUGINS))
 
 CXXFLAGS := -g -std=c++14 -I. -Isrc -ISimple-Web-Server -ISimple-WebSocket-Server
-LINKFLAGS := -lcrypto -lpthread -lboost_system -lboost_thread -lboost_filesystem -lgc -lgccpp -ldl
+LINKFLAGS := -rdynamic -lcrypto -lpthread -lboost_system -lboost_thread -lboost_filesystem -lgc -lgccpp -ldl
 PLUGIN_FLAGS := -fPIC -shared
 
 CURL := curl
@@ -52,8 +52,8 @@ build/index.cxx: src/index.html | build
 
 # plugins
 export
-$(PLUGIN_DLS): $(PLUGINS)
-	cd $< && $(MAKE)
+$(PLUGIN_DLS): $(wildcard $(patsubst %,%/*,$(PLUGINS)))
+	cd $(dir $<) && $(MAKE)
 
 # dependencies
 SWS_VER := v3.0.0-rc3
