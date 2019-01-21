@@ -51,8 +51,9 @@ build/index.cxx: src/index.html | build
 	xxd -i src/index.html > build/index.cxx
 
 # plugins
-$(PLUGIN_DLS): %.icolib: plugins/% $(HXX_FILES) $(wildcard $(foreach plugin,$(PLUGINS),$(plugin)/*))
-	$(CXX) $(PLUGIN_FLAGS) $(CXXFLAGS) -o $@ $(<)/*.cpp $(LINKFLAGS)
+export
+$(PLUGIN_DLS): $(PLUGINS)
+	cd $< && $(MAKE)
 
 # dependencies
 SWS_VER := v3.0.0-rc3
@@ -83,6 +84,6 @@ clean:
 	rm -rf build
 
 spotless: clean
-	rm -rf $(EXE_FILES) $(patsubst %,%.exe,$(EXE_FILES))
+	rm -rf $(EXE_FILES) $(patsubst %,%.exe,$(EXE_FILES)) $(PLUGIN_DLS)
 
 .PHONY: clean spotless all
