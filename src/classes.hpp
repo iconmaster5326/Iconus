@@ -125,11 +125,8 @@ namespace iconus {
 		static inline Object* create(Deque<Object*>* args) {
 			return new Object(&INSTANCE, args);
 		}
-		template<typename T> static Object* create(T args) {
-			return create(gcAlloc<Deque<Object*>>(args));
-		}
-		template<typename T> static Object* create(T begin, T end) {
-			return create(gcAlloc<Deque<Object*>>(begin, end));
+		template<typename... Args> static Object* create(Args... args) {
+			return create(gcAlloc<Deque<Object*>>(args...));
 		}
 		static inline Deque<Object*>& value(Session& session, Object* ob) {
 			return *(Deque<Object*>*)ob->adapt(session, &INSTANCE)->value.asPtr;

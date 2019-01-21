@@ -10,6 +10,7 @@
 
 #include "program.hpp"
 #include "render.hpp"
+#include "user.hpp"
 
 #include <string>
 
@@ -44,6 +45,7 @@ namespace iconus {
 		Object* parseWord(std::string word);
 		Adaptor getAdaptor(Class* from, Class* to);
 		
+		User user;
 		Scope sessionScope;
 		Vector<Renderer> renderers;
 		Vector<WordParser> parsers;

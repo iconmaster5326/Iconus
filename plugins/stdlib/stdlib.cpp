@@ -12,9 +12,11 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace iconus;
+using namespace boost::filesystem;
 
 extern "C" string iconus_getName() {
 	return "Standard Library";
@@ -78,7 +80,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
-	scope.vars["scope.vars"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["vars"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"", "", "",
 			{}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
@@ -111,6 +113,22 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			{}, {},
 			[](auto& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassClass::create(input->clazz);
+			}
+	));
+	
+	scope.vars["ls"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"", "", "",
+			{}, {},
+			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		Object* result = ClassList::create();
+		Deque<Object*>& items = ClassList::value(session, result);
+		session.user.doAsUser([&]() {
+			path p{"."};
+			for (directory_iterator it{p}; it != directory_iterator{}; it++) {
+				items.push_back(ClassString::create(it->path().string()));
+			}
+		});
+		return result;
 			}
 	));
 }
