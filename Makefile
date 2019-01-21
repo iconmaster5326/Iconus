@@ -51,8 +51,7 @@ build/index.cxx: src/index.html | build
 	xxd -i src/index.html > build/index.cxx
 
 # plugins
-$(PLUGIN_DLS): | $(HXX_FILES) json.hpp
-$(PLUGIN_DLS): %.icolib: plugins/%
+$(PLUGIN_DLS): %.icolib: plugins/% $(HXX_FILES) $(wildcard $(foreach plugin,$(PLUGINS),$(plugin)/*))
 	$(CXX) $(PLUGIN_FLAGS) $(CXXFLAGS) -o $@ $(<)/*.cpp $(LINKFLAGS)
 
 # dependencies
