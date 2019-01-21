@@ -52,8 +52,8 @@ build/index.cxx: src/index.html | build
 
 # plugins
 $(PLUGIN_DLS): | $(HXX_FILES) json.hpp
-$(PLUGIN_DLS): %.icolib: $(wildcard plugins/%/*)
-	$(CXX) $(PLUGIN_FLAGS) $(CXXFLAGS) -o $@ $(filter %.cpp,$<) $(LINKFLAGS)
+$(PLUGIN_DLS): %.icolib: plugins/%
+	$(CXX) $(PLUGIN_FLAGS) $(CXXFLAGS) -o $@ $(<)/*.cpp $(LINKFLAGS)
 
 # dependencies
 SWS_VER := v3.0.0-rc3

@@ -8,8 +8,6 @@
 #ifndef SRC_PLUGIN_HPP_
 #define SRC_PLUGIN_HPP_
 
-#include <string>
-
 #include "session.hpp"
 
 namespace iconus {
