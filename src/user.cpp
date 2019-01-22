@@ -119,35 +119,20 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	cout << nOldGroups << endl;
 	status = initgroups(name.c_str(), gid);
 	if (status < 0) {
-		throw Error("Couldn't do action as user: Setting supplementary groups failed: " + string(strerror(errno)));
+		cerr << "FATAL ERROR: Couldn't set supplementary groups: " << strerror(errno) << endl;
+		exit(1);
 	}
 	
 	status = setresgid(gid, gid, REAL_GID);
 	if (status < 0) {
-		status = setgroups(nOldGroups, oldGroups);
-		if (status < 0) {
-			cerr << "FATAL ERROR: Couldn't reset supplementary groups: " << strerror(errno) << endl;
-			exit(1);
-		}
-		
-		throw Error("Couldn't do action as user: Setting GID failed: " + string(strerror(errno)));
+		cerr << "FATAL ERROR: Couldn't set GID: " << strerror(errno) << endl;
+		exit(1);
 	}
 	
 	status = setresuid(uid, uid, REAL_UID);
 	if (status < 0) {
-		status = setresgid(REAL_GID, REAL_GID, REAL_GID);
-		if (status < 0) {
-			cerr << "FATAL ERROR: Couldn't reset gid: " << strerror(errno) << endl;
-			exit(1);
-		}
-		
-		status = setgroups(nOldGroups, oldGroups);
-		if (status < 0) {
-			cerr << "FATAL ERROR: Couldn't reset supplementary groups: " << strerror(errno) << endl;
-			exit(1);
-		}
-		
-		throw Error("Couldn't do action as user: Setting UID failed: " + string(strerror(errno)));
+		cerr << "FATAL ERROR: Couldn't set UID: " << strerror(errno) << endl;
+		exit(1);
 	}
 	
 	path oldPath{current_path()};
