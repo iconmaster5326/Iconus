@@ -10,6 +10,7 @@
 
 #include <unistd.h>
 #include <pwd.h>
+
 #include <cstdlib>
 #include <cerrno>
 #include <cstring>
@@ -21,8 +22,8 @@ using namespace iconus;
 using namespace boost::filesystem;
 
 std::mutex iconus::User::MUTEX{};
-uid_t iconus::User::REAL_UID = geteuid();
-gid_t iconus::User::REAL_GID = getegid();
+uid_t iconus::User::REAL_UID = getuid();
+gid_t iconus::User::REAL_GID = getgid();
 
 extern "C" {
 	#include <stdlib.h>
@@ -108,20 +109,20 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	int status;
 	
 	// assume effective credentials of user
-	status = seteuid(uid);
+	status = setresgid(gid, gid, REAL_GID);
 	if (status < 0) {
-		throw Error("Couldn't do action as user: " + string(strerror(errno)));
+		throw Error("Couldn't do action as user: Setting GID failed: " + string(strerror(errno)));
 	}
 	
-	status = setegid(gid);
+	status = setresuid(uid, uid, REAL_UID);
 	if (status < 0) {
-		status = seteuid(REAL_UID);
+		status = setresgid(REAL_GID, REAL_GID, REAL_GID);
 		if (status < 0) {
-			cerr << "FATAL ERROR: Couldn't reset uid: " <<  strerror(errno) << endl;
+			cerr << "FATAL ERROR: Couldn't reset gid: " << strerror(errno) << endl;
 			exit(1);
 		}
 		
-		throw Error("Couldn't do action as user: " + string(strerror(errno)));
+		throw Error("Couldn't do action as user: Setting UID failed: " + string(strerror(errno)));
 	}
 	
 	path oldPath{current_path()};
@@ -131,13 +132,13 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	f();
 	
 	// re-assume credentials of server
-	status = seteuid(REAL_UID);
+	status = setresuid(REAL_UID, REAL_UID, REAL_UID);
 	if (status < 0) {
 		cerr << "FATAL ERROR: Couldn't reset uid: " <<  strerror(errno) << endl;
 		exit(1);
 	}
 	
-	status = setegid(REAL_GID);
+	status = setresgid(REAL_GID, REAL_GID, REAL_GID);
 	if (status < 0) {
 		cerr << "FATAL ERROR: Couldn't reset gid: " << strerror(errno) << endl;
 		exit(1);
