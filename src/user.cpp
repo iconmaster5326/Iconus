@@ -10,6 +10,7 @@
 
 #include <unistd.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include <cstdlib>
 #include <cerrno>
@@ -109,8 +110,26 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	int status;
 	
 	// assume effective credentials of user
+	long ngroups_max = sysconf(_SC_NGROUPS_MAX);
+	gid_t oldGroups[ngroups_max];
+	int nOldGroups = getgroups(ngroups_max, oldGroups);
+	if (nOldGroups < 0) {
+		throw Error("Couldn't do action as user: Getting supplementary groups failed: " + string(strerror(errno)));
+	}
+	cout << nOldGroups << endl;
+	status = initgroups(name.c_str(), gid);
+	if (status < 0) {
+		throw Error("Couldn't do action as user: Setting supplementary groups failed: " + string(strerror(errno)));
+	}
+	
 	status = setresgid(gid, gid, REAL_GID);
 	if (status < 0) {
+		status = setgroups(nOldGroups, oldGroups);
+		if (status < 0) {
+			cerr << "FATAL ERROR: Couldn't reset supplementary groups: " << strerror(errno) << endl;
+			exit(1);
+		}
+		
 		throw Error("Couldn't do action as user: Setting GID failed: " + string(strerror(errno)));
 	}
 	
@@ -122,29 +141,50 @@ void iconus::User::doAsUser(std::function<void()> f) {
 			exit(1);
 		}
 		
+		status = setgroups(nOldGroups, oldGroups);
+		if (status < 0) {
+			cerr << "FATAL ERROR: Couldn't reset supplementary groups: " << strerror(errno) << endl;
+			exit(1);
+		}
+		
 		throw Error("Couldn't do action as user: Setting UID failed: " + string(strerror(errno)));
 	}
 	
 	path oldPath{current_path()};
 	current_path(path{cwd});
 	
+	const auto resetCreds = [&]() {
+		status = setresuid(REAL_UID, REAL_UID, REAL_UID);
+		if (status < 0) {
+			cerr << "FATAL ERROR: Couldn't reset uid: " <<  strerror(errno) << endl;
+			exit(1);
+		}
+		
+		status = setresgid(REAL_GID, REAL_GID, REAL_GID);
+		if (status < 0) {
+			cerr << "FATAL ERROR: Couldn't reset gid: " << strerror(errno) << endl;
+			exit(1);
+		}
+		
+		status = setgroups(nOldGroups, oldGroups);
+		if (status < 0) {
+			cerr << "FATAL ERROR: Couldn't reset supplementary groups: " << strerror(errno) << endl;
+			exit(1);
+		}
+		
+		current_path(oldPath);
+	};
+	
 	// run f
-	f();
+	try {
+		f();
+	} catch (...) {
+		resetCreds();
+		throw;
+	}
 	
 	// re-assume credentials of server
-	status = setresuid(REAL_UID, REAL_UID, REAL_UID);
-	if (status < 0) {
-		cerr << "FATAL ERROR: Couldn't reset uid: " <<  strerror(errno) << endl;
-		exit(1);
-	}
+	resetCreds();
 	
-	status = setresgid(REAL_GID, REAL_GID, REAL_GID);
-	if (status < 0) {
-		cerr << "FATAL ERROR: Couldn't reset gid: " << strerror(errno) << endl;
-		exit(1);
-	}
-	
-	current_path(oldPath);
-	
-	// the lock will expire here thanks to RAII, allowing for other users to do user operations
+	// mutex expires here, thanks to RAII
 }
