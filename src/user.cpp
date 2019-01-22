@@ -114,8 +114,10 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	gid_t oldGroups[ngroups_max];
 	int nOldGroups = getgroups(ngroups_max, oldGroups);
 	if (nOldGroups < 0) {
-		throw Error("Couldn't do action as user: Getting supplementary groups failed: " + string(strerror(errno)));
+		cerr << "FATAL ERROR: Couldn't get supplementary groups: " << strerror(errno) << endl;
+		exit(1);
 	}
+	
 	cout << nOldGroups << endl;
 	status = initgroups(name.c_str(), gid);
 	if (status < 0) {
