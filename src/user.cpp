@@ -64,7 +64,11 @@ extern "C" {
 		pam_handle_t *handle;
 		int authResult;
 	
-		pam_start("shutterd", user, &conv, &handle);
+		authResult = pam_start("shutterd", user, &conv, &handle);
+		if (authResult != PAM_SUCCESS) {
+			fprintf(stderr, "FATAL ERROR: PAM failed to initialize\n");
+			exit(1);
+		}
 		authResult = pam_authenticate(handle,
 				PAM_SILENT|PAM_DISALLOW_NULL_AUTHTOK);
 		pam_end(handle, authResult);
@@ -118,7 +122,6 @@ void iconus::User::doAsUser(std::function<void()> f) {
 		exit(1);
 	}
 	
-	cout << nOldGroups << endl;
 	status = initgroups(name.c_str(), gid);
 	if (status < 0) {
 		cerr << "FATAL ERROR: Couldn't set supplementary groups: " << strerror(errno) << endl;
