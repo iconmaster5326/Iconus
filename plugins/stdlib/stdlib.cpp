@@ -117,18 +117,22 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	));
 	
 	scope.vars["ls"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"", "", "",
+			"dir", "", "",
 			{}, {},
 			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		Object* result = ClassList::create();
-		Deque<Object*>& items = ClassList::value(session, result);
-		session.user.doAsUser([&]() {
-			path p{"."};
-			for (directory_iterator it{p}; it != directory_iterator{}; it++) {
-				items.push_back(ClassString::create(it->path().string()));
-			}
-		});
-		return result;
+		try {
+			Object* result = ClassList::create();
+			Deque<Object*>& items = ClassList::value(session, result);
+			session.user.doAsUser([&]() {
+				path p{input == &ClassNil::NIL ? "." : ClassString::value(session, input)};
+				for (directory_iterator it{p}; it != directory_iterator{}; it++) {
+					items.push_back(ClassString::create(it->path().string()));
+				}
+			});
+			return result;
+		} catch (const filesystem_error& e) {
+			throw Error(e.what());
+		}
 			}
 	));
 	
