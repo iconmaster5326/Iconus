@@ -14,6 +14,12 @@
 #include <sstream>
 #include <boost/filesystem.hpp>
 
+#include <sys/capability.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <cerrno>
+
 using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
@@ -142,6 +148,69 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		session.user = User(ClassString::value(session, args["user"]), ClassString::value(session, args["pass"]));
 		return &ClassNil::NIL;
+			}
+	));
+	
+	scope.vars["system"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"", "args", "",
+			{Arg("name")}, {},
+			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		Object* result;
+		session.user.doAsUser([&]() {
+			int link[2];
+			pid_t pid;
+			int status;
+			
+			status = pipe(link);
+			if (status < 0) {
+				throw Error("system: could not open pipe: "+string(strerror(errno)));
+			}
+			
+			pid = fork();
+			if (pid == -1) {
+				throw Error("system: could not fork: "+string(strerror(errno)));
+			} else if (pid == 0) {
+				// child: drop all capabilities and run program
+				dup2(link[1], STDOUT_FILENO);
+				dup2(link[1], STDERR_FILENO);
+				
+			    close(link[0]);
+			    close(link[1]);
+			    
+			    const char* argv[varargs.size()+2];
+			    argv[0] = ClassString::value(session, args["name"]).c_str();
+			    int i = 1;
+			    for (Object* arg : varargs) {
+			    	argv[i] = ClassString::value(session, arg).c_str();
+			    	i++;
+			    }
+			    argv[varargs.size()+1] = nullptr;
+			    
+			    execvp(argv[0], (char* const*) argv);
+			    cerr << "system: error in child process: " << strerror(errno) << endl;
+			} else {
+				// parent: wait for child to complete and get output
+				close(link[1]);
+				
+				const size_t nBuffer = 1024;
+				char buffer[nBuffer];
+				string s;
+				
+				int bytesRead;
+				do {
+					bytesRead = read(link[0], buffer, nBuffer);
+					s += string(buffer, bytesRead);
+				} while (bytesRead > 0);
+				
+				if (bytesRead < 0) {
+					throw Error("system: could not read output: "+string(strerror(errno)));
+				}
+				
+				waitpid(pid, nullptr, 0);
+				result = ClassString::create(s);
+			}
+		});
+		return result;
 			}
 	));
 }
