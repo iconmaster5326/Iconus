@@ -19,6 +19,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <cerrno>
+#include <cstdlib>
 
 using namespace std;
 using namespace iconus;
@@ -171,6 +172,20 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				throw Error("system: could not fork: "+string(strerror(errno)));
 			} else if (pid == 0) {
 				// child: drop all capabilities and run program
+				int status;
+				
+				cap_t caps = cap_get_proc();
+				status = cap_clear(caps);
+				if (status < 0) {
+					cerr << "system: error in clearing capabilities: " << strerror(errno) << endl;
+					exit(1);
+				}
+				status = cap_set_proc(caps);
+				if (status < 0) {
+					cerr << "system: error in setting capabilities: " << strerror(errno) << endl;
+					exit(1);
+				}
+				
 				dup2(link[1], STDOUT_FILENO);
 				dup2(link[1], STDERR_FILENO);
 				
@@ -188,6 +203,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			    
 			    execvp(argv[0], (char* const*) argv);
 			    cerr << "system: error in child process: " << strerror(errno) << endl;
+			    exit(1);
 			} else {
 				// parent: wait for child to complete and get output
 				close(link[1]);
