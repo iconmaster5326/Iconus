@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
+#include <sys/capability.h>
 
 #include <cstdlib>
 #include <cerrno>
@@ -22,9 +23,52 @@ using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
 
+static std::string getOurUsername() {
+	struct passwd entry;
+	struct passwd* entryP;
+	size_t buflen = 1024;
+	char* buffer = new char[buflen];
+	
+	while (true) {
+		int status = getpwuid_r(getuid(), &entry, buffer, buflen, &entryP);
+		if (status == ERANGE) {
+			buflen *= 2;
+			delete[] buffer;
+			buffer = new char[buflen];
+		} else if (status == 0) {
+			if (entryP) {
+				return string(entry.pw_name);
+			} else {
+				return "";
+			}
+		} else {
+			return "";
+		}
+	}
+}
+
+static bool canSetUids() {
+	bool canSetUids = false;
+	cap_t caps = cap_get_proc();
+	if (caps) {
+		cap_flag_value_t value;
+		if (cap_get_flag(caps, CAP_SETUID, CAP_PERMITTED, &value) == 0) {
+			if (value) {
+				canSetUids = true;
+			}
+		}
+		
+		cap_free(caps);
+	}
+	
+	return canSetUids;
+}
+
 std::mutex iconus::User::MUTEX{};
 uid_t iconus::User::REAL_UID = getuid();
 gid_t iconus::User::REAL_GID = getgid();
+std::string iconus::User::GUEST_USERNAME{getOurUsername()};
+bool iconus::User::IS_ROOT = canSetUids();
 
 extern "C" {
 	#include <stdlib.h>
@@ -78,8 +122,10 @@ extern "C" {
 }
 
 iconus::User::User(const std::string& name, const std::string& password) : name(name) {
-	if (!checkAuthentication(name.c_str(), password.c_str())) {
-		throw Error("Cannot login as "+name+": User doesn't exist or password is incorrect");
+	if (name != GUEST_USERNAME) {
+		if (!checkAuthentication(name.c_str(), password.c_str())) {
+			throw Error("Cannot login as "+name+": User doesn't exist or password is incorrect");
+		}
 	}
 	
 	struct passwd entry;
@@ -112,6 +158,16 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	// lock mutex so no other thread can mess up uids and gids
 	lock_guard<mutex> lock{MUTEX};
 	int status;
+	
+	// if we're not root, we can't change to the uids of any other user but ourselves, so just run f
+	if (!IS_ROOT) {
+		if (uid != REAL_UID || gid != REAL_GID) {
+			throw Error("cannot execute operation as user "+name+": Iconus not running as root");
+		}
+		
+		f();
+		return;
+	}
 	
 	// assume effective credentials of user
 	long ngroups_max = sysconf(_SC_NGROUPS_MAX);

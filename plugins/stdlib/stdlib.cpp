@@ -143,15 +143,6 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
-	scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"", "", "",
-			{Arg("user"),Arg("pass")}, {},
-			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		session.user = User(ClassString::value(session, args["user"]), ClassString::value(session, args["pass"]));
-		return &ClassNil::NIL;
-			}
-	));
-	
 	scope.vars["system"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 			"", "args", "",
 			{Arg("name")}, {},
@@ -175,6 +166,10 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				int status;
 				
 				cap_t caps = cap_get_proc();
+				if (!caps) {
+					cerr << "system: error in initializing capabilities: " << strerror(errno) << endl;
+					exit(1);
+				}
 				status = cap_clear(caps);
 				if (status < 0) {
 					cerr << "system: error in clearing capabilities: " << strerror(errno) << endl;
@@ -185,6 +180,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					cerr << "system: error in setting capabilities: " << strerror(errno) << endl;
 					exit(1);
 				}
+				cap_free(caps);
 				
 				dup2(link[1], STDOUT_FILENO);
 				dup2(link[1], STDERR_FILENO);
@@ -229,6 +225,17 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		return result;
 			}
 	));
+	
+	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
+		scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+				"", "", "",
+				{Arg("user"),Arg("pass")}, {},
+				[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+			session.user = User(ClassString::value(session, args["user"]), ClassString::value(session, args["pass"]));
+			return &ClassNil::NIL;
+				}
+		));
+	}
 }
 
 extern "C" void iconus_initSession(Session& session) {
