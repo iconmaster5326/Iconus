@@ -17,13 +17,15 @@
 #include <fstream>
 #include <sstream>
 #include <boost/filesystem.hpp>
+#include <cerrno>
+#include <cstdlib>
 
 #include <sys/capability.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <cerrno>
-#include <cstdlib>
+#include <poll.h>
+#include <fcntl.h>
 
 using namespace std;
 using namespace iconus;
@@ -174,11 +176,21 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		Object* result;
 		session.user.doAsUser([&]() {
-			int link[2];
+			int stdoutLink[2];
+			int stderrLink[2];
+			int errorLink[2];
 			pid_t pid;
 			int status;
 			
-			status = pipe(link);
+			status = pipe(stdoutLink);
+			if (status < 0) {
+				throw Error("system: could not open pipe: "+string(strerror(errno)));
+			}
+			status = pipe(stderrLink);
+			if (status < 0) {
+				throw Error("system: could not open pipe: "+string(strerror(errno)));
+			}
+			status = pipe(errorLink);
 			if (status < 0) {
 				throw Error("system: could not open pipe: "+string(strerror(errno)));
 			}
@@ -192,26 +204,33 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				
 				cap_t caps = cap_get_proc();
 				if (!caps) {
-					cerr << "system: error in initializing capabilities: " << strerror(errno) << endl;
+					string errStr = "system: error in initializing capabilities: " + string(strerror(errno));
+					write(errorLink[1], (const void*) errStr.c_str(), errStr.size());
+					fsync(errorLink[1]);
 					exit(1);
 				}
 				status = cap_clear(caps);
 				if (status < 0) {
-					cerr << "system: error in clearing capabilities: " << strerror(errno) << endl;
+					string errStr = "system: error in clearing capabilities: " + string(strerror(errno));
+					write(errorLink[1], (const void*) errStr.c_str(), errStr.size());
+					fsync(errorLink[1]);
 					exit(1);
 				}
 				status = cap_set_proc(caps);
 				if (status < 0) {
-					cerr << "system: error in setting capabilities: " << strerror(errno) << endl;
+					string errStr = "system: error in setting capabilities: " + string(strerror(errno));
+					write(errorLink[1], (const void*) errStr.c_str(), errStr.size());
+					fsync(errorLink[1]);
 					exit(1);
 				}
 				cap_free(caps);
 				
-				dup2(link[1], STDOUT_FILENO);
-				dup2(link[1], STDERR_FILENO);
+				dup2(stdoutLink[1], STDOUT_FILENO);
+				dup2(stderrLink[1], STDERR_FILENO);
 				
-			    close(link[0]);
-			    close(link[1]);
+			    close(stdoutLink[0]); close(stdoutLink[1]);
+			    close(stderrLink[0]); close(stderrLink[1]);
+			    close(errorLink[0]);
 			    
 			    const char* argv[varargs.size()+2];
 			    argv[0] = ClassString::value(session, args["name"]).c_str();
@@ -223,28 +242,92 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			    argv[varargs.size()+1] = nullptr;
 			    
 			    execvp(argv[0], (char* const*) argv);
-			    cerr << "system: error in child process: " << strerror(errno) << endl;
+			    
+				string errStr = "system: error in running program: " + string(strerror(errno));
+				write(errorLink[1], (const void*) errStr.c_str(), errStr.size());
+				fsync(errorLink[1]);
 			    exit(1);
 			} else {
 				// parent: wait for child to complete and get output
-				close(link[1]);
+				close(stdoutLink[1]);
+				close(stderrLink[1]);
+				close(errorLink[1]);
 				
-				const size_t nBuffer = 1024;
-				char buffer[nBuffer];
-				string s;
+				ClassSystemOutput::Instance* output = new ClassSystemOutput::Instance();
+				const int nFds = 3;
+				struct pollfd fds[nFds] {
+					{stdoutLink[0], POLLIN, 0},
+					{stderrLink[0], POLLIN, 0},
+					{errorLink[0], POLLIN, 0}
+				};
 				
-				int bytesRead;
-				do {
-					bytesRead = read(link[0], buffer, nBuffer);
-					s += string(buffer, bytesRead);
-				} while (bytesRead > 0);
+				constexpr int readLineEOF = 0;
+				constexpr int readLinePartial = 1;
+				constexpr int readLineFull = 2;
 				
-				if (bytesRead < 0) {
-					throw Error("system: could not read output: "+string(strerror(errno)));
+				const auto readLine = [readLineEOF,readLinePartial,readLineFull](int fd, string& s) {
+					int nRead;
+					while (true) {
+						char c;
+						errno = 0;
+						nRead = read(fd, &c, 1);
+						
+						if (errno == EAGAIN || errno == EWOULDBLOCK) {
+							return readLinePartial;
+						} else if (nRead <= 0) {
+							return readLineEOF;
+						} else if (c == '\n') {
+							return readLineFull;
+						} else {
+							s += c;
+						}
+					}
+				};
+				
+				fcntl(stdoutLink[1], F_SETFL, fcntl(stdoutLink[1], F_GETFL) | O_NONBLOCK);
+				fcntl(stderrLink[1], F_SETFL, fcntl(stderrLink[1], F_GETFL) | O_NONBLOCK);
+				
+				int retCode;
+				string outS, errS;
+				while (true) {
+					status = poll(fds, nFds, -1);
+					if (status < 0) continue;
+					
+					if (fds[0].revents & POLLIN) { // stdoutLink
+						int readLineRet;
+						do {
+							readLineRet = readLine(stdoutLink[0], outS);
+							if (readLineRet != readLinePartial) {
+								output->lines.emplace_back(false, outS);
+								outS = "";
+							}
+						} while (readLineRet != readLineFull);
+					} else if (fds[1].revents & POLLIN) { // stderrLink
+						int readLineRet;
+						do {
+							readLineRet = readLine(stderrLink[0], errS);
+							if (readLineRet != readLinePartial) {
+								output->lines.emplace_back(true, errS);
+								errS = "";
+							}
+						} while (readLineRet != readLineFull);
+					} else if (fds[1].revents & POLLIN) { // errorLink
+						string s;
+						int readLineRet;
+						do {
+							readLineRet = readLine(errorLink[0], s);
+							if (readLineRet != readLinePartial) {
+								throw Error(s);
+							}
+						} while (true);
+					} else {
+						pid_t isDone = waitpid(pid, &retCode, WNOHANG);
+						if (isDone > 0) break;
+					}
 				}
 				
-				waitpid(pid, nullptr, 0);
-				result = ClassString::create(s);
+				output->retCode = retCode;
+				result = ClassSystemOutput::create(output);
 			}
 		});
 		return result;
@@ -302,6 +385,27 @@ extern "C" void iconus_initSession(Session& session) {
 	////////////////////////////
 	// renderers
 	////////////////////////////
+	
+	session.renderers.emplace_back("system output", [](Session& session, Object* ob) {
+			return ob->clazz == &ClassSystemOutput::INSTANCE;
+		}, [](Session& session, Object* ob) {
+			ClassSystemOutput::Instance& value = ClassSystemOutput::value(session, ob);
+			ostringstream sb;
+			sb << "<pre>";
+			
+			for (const auto& line : value.lines) {
+				if (line.isErr) {
+					sb << "<div style=\"color: red;\">" << escapeHTML(line.text) << "</div>" << endl;
+				} else {
+					sb << escapeHTML(line.text) << endl;
+				}
+			}
+			
+			sb << "</pre>(exited with code ";
+			sb << value.retCode;
+			sb << ")";
+			return sb.str();
+	});
 	
 	session.renderers.emplace_back("cat result", [](Session& session, Object* ob) {
 		return ob->clazz == &ClassRawString::INSTANCE;

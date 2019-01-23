@@ -38,7 +38,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Session& session) override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
@@ -54,6 +53,45 @@ namespace iconus {
 		}
 		
 		std::string name() override;
+	};
+	
+	class ClassSystemOutput : public Class {
+	public:
+		class Instance : public gc {
+		public:
+			class Line : public gc {
+			public:
+				bool isErr;
+				std::string text;
+				
+				inline Line(bool isErr, const std::string& text) : isErr(isErr), text(text) {}
+			};
+			
+			int retCode;
+			Vector<Line> lines;
+			
+			inline Instance() : retCode(0) {}
+			template<typename... Args> inline Instance(int retCode, Args... args) : retCode(retCode), lines(args...) {}
+		};
+		
+		static ClassSystemOutput INSTANCE;
+		static inline Object* create(Instance* i) {
+			return new Object(&INSTANCE, i);
+		}
+		static inline Object* create(const Instance& i) {
+			return new Object(&INSTANCE, new Instance(i));
+		}
+		template<typename... Args> static inline Object* create(Args... args) {
+			return new Object(&INSTANCE, new Instance(args...));
+		}
+		
+		static inline Instance& value(Session& session, Object* ob) {
+			return *(Instance*)ob->adapt(session, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
 	};
 }
 
