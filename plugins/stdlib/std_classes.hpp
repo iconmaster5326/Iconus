@@ -42,6 +42,19 @@ namespace iconus {
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
+	
+	class ClassRawString : public ClassString {
+	public:
+		static ClassRawString INSTANCE;
+		static inline Object* create(const std::string& s) {
+			return new Object(&INSTANCE, gcAlloc<std::string>(s));
+		}
+		static inline std::string& value(Session& session, Object* ob) {
+			return *(std::string*)ob->adapt(session, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
+	};
 }
 
 #endif /* PLUGINS_STDLIB_STD_CLASSES_HPP_ */

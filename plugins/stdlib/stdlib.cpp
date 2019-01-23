@@ -303,6 +303,12 @@ extern "C" void iconus_initSession(Session& session) {
 	// renderers
 	////////////////////////////
 	
+	session.renderers.emplace_back("cat result", [](Session& session, Object* ob) {
+		return ob->clazz == &ClassRawString::INSTANCE;
+	}, [](Session& session, Object* ob) {
+		return "<pre>" + escapeHTML(ClassRawString::value(session, ob)) + "</pre>";
+	});
+	
 	session.renderers.emplace_back("image", [](Session& session, Object* ob) {
 		return ob->clazz == &ClassImage::INSTANCE;
 	}, [](Session& session, Object* ob) {
@@ -366,6 +372,13 @@ extern "C" void iconus_initSession(Session& session) {
 		return ClassNumber::create(stod(value));
 	};
 	
+	session.adaptors[&ClassString::INSTANCE][&ClassRawString::INSTANCE] = [](Session& session, Object* from) {
+		return new Object(&ClassRawString::INSTANCE, from->value.asPtr);
+	};
+	session.adaptors[&ClassRawString::INSTANCE][&ClassString::INSTANCE] = [](Session& session, Object* from) {
+		return new Object(&ClassString::INSTANCE, from->value.asPtr);
+	};
+	
 	////////////////////////////
 	// cat handlers
 	////////////////////////////
@@ -386,6 +399,6 @@ extern "C" void iconus_initSession(Session& session) {
 		if (in.fail()) throw Error("cat: could not open file '"+file+"'");
 		string result{static_cast<std::stringstream const&>(std::stringstream() << in.rdbuf()).str()};
 		if (in.fail()) throw Error("cat: could not read file '"+file+"'");
-		return ClassString::create(result);
+		return ClassRawString::create(result);
 	});
 }
