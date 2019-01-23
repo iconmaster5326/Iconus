@@ -11,6 +11,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <boost/filesystem.hpp>
 
@@ -134,6 +135,27 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				path p{input == &ClassNil::NIL ? "." : ClassString::value(session, input)};
 				for (directory_iterator it{p}; it != directory_iterator{}; it++) {
 					items.push_back(ClassString::create(it->path().string()));
+				}
+			});
+			return result;
+		} catch (const filesystem_error& e) {
+			throw Error(e.what());
+		}
+			}
+	));
+	
+	scope.vars["cat"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"file", "", "",
+			{}, {},
+			[](Session& session, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		try {
+			Object* result;
+			session.user.doAsUser([&]() {
+				path p{ClassString::value(session, input)};
+				if (exists(status(p))) {
+					result = session.cat(p.string());
+				} else {
+					throw Error("cat: file '"+p.string()+"' not found");
 				}
 			});
 			return result;
@@ -334,4 +356,17 @@ extern "C" void iconus_initSession(Session& session) {
 		const string& value = ClassString::value(session, from);
 		return ClassNumber::create(stod(value));
 	};
+	
+	////////////////////////////
+	// cat handlers
+	////////////////////////////
+	session.catHandlers.emplace_back([](Session& session, const string& file) {
+		return true;
+	}, [](Session& session, const string& file) {
+		std::ifstream in{file};
+		if (in.bad() || in.fail()) throw Error("cat: could not open file '"+file+"'");
+		string result{static_cast<std::stringstream const&>(std::stringstream() << in.rdbuf()).str()};
+		if (in.bad() || in.fail()) throw Error("cat: could not read file '"+file+"'");
+		return ClassString::create(result);
+	});
 }

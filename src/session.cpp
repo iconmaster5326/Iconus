@@ -99,3 +99,13 @@ GlobalScope GlobalScope::INSTANCE{};
 bool iconus::GlobalScope::canSet(const std::string& name) {
 	return false;
 }
+
+Object* iconus::Session::cat(const std::string& file) {
+	for (const CatHandler& catter : catHandlers) {
+		if (catter.filter(*this, file)) {
+			return catter.handler(*this, file);
+		}
+	}
+	
+	throw runtime_error("no catter defined for file!");
+}

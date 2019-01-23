@@ -10,7 +10,6 @@
 #include <boost/filesystem.hpp>
 
 #include "server.hpp"
-#include "render.hpp"
 #include "plugin.hpp"
 #include "error.hpp"
 #include "session.hpp"
