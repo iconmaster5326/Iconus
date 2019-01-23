@@ -167,21 +167,21 @@ namespace iconus {
 		bool equals(const Object* self, const Object* other) const override;
 	};
 	
-//	class ClassUser : public Class {
-//	public:
-//		class Instance : public gc {
-//			Map<Object*,Object*> fields;
-//		};
-//		
-//		std::string name() override;
-//		std::string toString(Object* self, Session& session) override;
-//		
-//		std::string className;
-//		Map<Object*,Object*> fieldGetters;
-//		Map<Object*,Object*> fieldSetters;
-//		
-//		inline ClassUser(const std::string& name) : className(name) {}
-//	};
+	class ClassImage : public Class {
+	public:
+		static ClassImage INSTANCE;
+		static inline Object* create(const std::string& s) {
+			return new Object(&INSTANCE, gcAlloc<std::string>(s));
+		}
+		static inline std::string& value(Session& session, Object* ob) {
+			return *(std::string*)ob->adapt(session, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
+		std::string toString(Object* self, Session& session) override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
+	};
 }
 
 #endif /* SRC_CLASSES_HPP_ */

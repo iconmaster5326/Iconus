@@ -8,6 +8,7 @@
 #include "session.hpp"
 #include "classes.hpp"
 #include "error.hpp"
+#include "base64.hpp"
 
 #include <string>
 #include <iostream>
@@ -300,6 +301,12 @@ extern "C" void iconus_initSession(Session& session) {
 	// renderers
 	////////////////////////////
 	
+	session.renderers.emplace_back("image", [](Session& session, Object* ob) {
+		return ob->clazz == &ClassImage::INSTANCE;
+	}, [](Session& session, Object* ob) {
+		return "<img src=\""+ClassImage::value(session, ob)+"\">";
+	});
+	
 	session.renderers.emplace_back("numbered list", [](Session& session, Object* ob) {
 		return ob->clazz == &ClassList::INSTANCE;
 	}, [](Session& session, Object* ob) {
@@ -361,12 +368,22 @@ extern "C" void iconus_initSession(Session& session) {
 	// cat handlers
 	////////////////////////////
 	session.catHandlers.emplace_back([](Session& session, const string& file) {
+		return file.substr(file.size()-4) == ".png";
+	}, [](Session& session, const string& file) {
+		std::ifstream in{file, ios::in | ios::binary};
+		if (!in.eof() && in.fail()) throw Error("cat: could not open file '"+file+"'");
+		Base64Buffer buf{Base64Buffer::fromStream(in)};
+		if (!in.eof() && in.fail()) throw Error("cat: could not read file '"+file+"'");
+		return ClassImage::create("data:image/png;base64,"+base64encode(buf));
+	});
+	
+	session.catHandlers.emplace_back([](Session& session, const string& file) {
 		return true;
 	}, [](Session& session, const string& file) {
 		std::ifstream in{file};
-		if (in.bad() || in.fail()) throw Error("cat: could not open file '"+file+"'");
+		if (in.fail()) throw Error("cat: could not open file '"+file+"'");
 		string result{static_cast<std::stringstream const&>(std::stringstream() << in.rdbuf()).str()};
-		if (in.bad() || in.fail()) throw Error("cat: could not read file '"+file+"'");
+		if (in.fail()) throw Error("cat: could not read file '"+file+"'");
 		return ClassString::create(result);
 	});
 }
