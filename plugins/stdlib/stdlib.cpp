@@ -9,6 +9,7 @@
 #include "classes.hpp"
 #include "error.hpp"
 #include "base64.hpp"
+#include "util.hpp"
 
 #include <string>
 #include <iostream>
@@ -338,7 +339,7 @@ extern "C" void iconus_initSession(Session& session) {
 	session.renderers.emplace_back("raw string", [](Session& session, Object* ob) {
 		return true;
 	}, [](Session& session, Object* ob) {
-		return ob->toString(session);
+		return escapeHTML(ob->toString(session));
 	});
 	
 	////////////////////////////

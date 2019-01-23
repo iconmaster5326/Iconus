@@ -57,7 +57,7 @@ namespace iconus {
 							{"type", "result"},
 							{"result", session->render(session->evaluate(message["command"].get<string>()))},
 					};
-					connection->send(response.dump());
+					connection->send(response.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
 				}
 			};
 			
