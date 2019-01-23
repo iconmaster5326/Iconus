@@ -5,8 +5,9 @@
  *      Author: iconmaster
  */
 
+#include "std_classes.hpp"
+
 #include "session.hpp"
-#include "classes.hpp"
 #include "error.hpp"
 #include "base64.hpp"
 #include "util.hpp"
