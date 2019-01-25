@@ -54,9 +54,10 @@ namespace iconus {
 				nlohmann::json message = nlohmann::json::parse(input);
 				string type = message["type"].get<string>();
 				if (type == "eval") {
-					Execution exe(*session);
+					Execution exe(*session, string_generator()(message["tag"].get<string>()));
 					nlohmann::json response = {
 							{"type", "result"},
+							{"tag", message["tag"].get<string>()},
 							{"result", session->render(session->evaluate(message["command"].get<string>(), exe))},
 					};
 					connection->send(response.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));

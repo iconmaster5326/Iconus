@@ -29,9 +29,12 @@
 		function register() {
 			input.addEventListener("keyup", function(event) {
 				event.preventDefault();
+				
 				if (event.keyCode === 13) {
+					var tag = newUUID();
 					var iif = JSON.stringify({
 						"type": "eval",
+						"tag": tag,
 						"command": input.value
 					});
 					console.log("SENDING: "+iif)
