@@ -52,7 +52,7 @@ build/index.cxx: src/index.html | build
 
 # plugins
 export
-$(PLUGIN_DLS): $(wildcard $(patsubst %,%/*,$(PLUGINS)))
+$(PLUGIN_DLS): $(wildcard $(patsubst %,%/*,$(PLUGINS))) $(HXX_FILES)
 	cd $(dir $<) && $(MAKE)
 
 # dependencies
