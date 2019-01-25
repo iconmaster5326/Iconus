@@ -13,14 +13,15 @@
 		
 		messageHandlers[id] = function(message) {
 			if (message.done) {
-				elem.removeChild(getSpinner());
-				elem.appendChild(document.createTextNode("(process exited with code "+message.code+")"));
+				elem.replaceChild(document.createTextNode("(process exited with code "+message.code+")"), getSpinner());
 				delete messageHandlers[id];
 			} else if (message.error) {
 				var div = document.createElement("div");
 				div.setAttribute("style", "color: red;");
 				dib.innerHTML = "<b>error:</b> "+message.error;
-				elem.replaceChild(getPre(), div);
+				elem.replaceChild(div, getPre());
+				elem.removeChild(getSpinner());
+				delete messageHandlers[id];
 			} else {
 				var div = document.createElement("div");
 				if (message.stderr) {
