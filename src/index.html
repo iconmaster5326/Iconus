@@ -1,5 +1,9 @@
 <html>
 <head>
+<title>Iconus</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 <script>
 	function newUUID() {
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -55,7 +59,7 @@
 
 					var result = document.createElement("p");
 					result.setAttribute("id","output");
-					result.innerHTML = "...";
+					result.innerHTML = "<i class=\"fa fa-spinner fa-spin\" style=\"font-size:24px\" />";
 					content.appendChild(result);
 					
 					resultHandlers[tag] = function(toRender) {
