@@ -188,6 +188,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			int stdoutLink[2];
 			int stderrLink[2];
 			int errorLink[2];
+			int stdinLink[2];
 			pid_t pid;
 			int status;
 			
@@ -200,6 +201,10 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				throw Error("system: could not open pipe: "+string(strerror(errno)));
 			}
 			status = pipe(errorLink);
+			if (status < 0) {
+				throw Error("system: could not open pipe: "+string(strerror(errno)));
+			}
+			status = pipe(stdinLink);
 			if (status < 0) {
 				throw Error("system: could not open pipe: "+string(strerror(errno)));
 			}
@@ -234,9 +239,11 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				}
 				cap_free(caps);
 				
+				dup2(stdinLink[0], STDIN_FILENO);
 				dup2(stdoutLink[1], STDOUT_FILENO);
 				dup2(stderrLink[1], STDERR_FILENO);
 				
+				close(stdinLink[0]); close(stdinLink[1]);
 			    close(stdoutLink[0]); close(stdoutLink[1]);
 			    close(stderrLink[0]); close(stderrLink[1]);
 			    close(errorLink[0]);
@@ -258,6 +265,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			    exit(1);
 			} else {
 				// parent: wait for child to complete and get output
+				close(stdinLink[0]);
 				close(stdoutLink[1]);
 				close(stderrLink[1]);
 				close(errorLink[1]);
@@ -300,7 +308,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					struct pollfd fds[nFds] {
 						{stdoutLink[0], POLLIN, 0},
 						{stderrLink[0], POLLIN, 0},
-						{errorLink[0], POLLIN, 0}
+						{errorLink[0], POLLIN, 0},
 					};
 					
 					while (true) {
@@ -318,7 +326,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 									Map<string,string> message{{"line",to_string(output->lines.size()-1)}, {"text", output->lines.back().text}};
 									exe.sendMessage(output->id, message);
 								}
-							} while (readLineRet != readLineFull);
+							} while (readLineRet == readLineFull);
 						} else if (fds[1].revents & POLLIN) { // stderrLink
 							int readLineRet;
 							do {
@@ -326,12 +334,12 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 								if (readLineRet != readLinePartial) {
 									output->lines.emplace_back(true, errS);
 									errS = "";
+									
+									Map<string,string> message{{"line",to_string(output->lines.size()-1)}, {"text", output->lines.back().text}, {"stderr", "true"}};
+									exe.sendMessage(output->id, message);
 								}
-							} while (readLineRet != readLineFull);
-							
-							Map<string,string> message{{"line",to_string(output->lines.size()-1)}, {"text", output->lines.back().text}, {"stderr", "true"}};
-							exe.sendMessage(output->id, message);
-						} else if (fds[1].revents & POLLIN) { // errorLink
+							} while (readLineRet == readLineFull);
+						} else if (fds[2].revents & POLLIN) { // errorLink
 							string s;
 							int readLineRet;
 							do {
