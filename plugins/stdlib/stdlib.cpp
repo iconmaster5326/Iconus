@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <signal.h>
 
 using namespace std;
 using namespace iconus;
@@ -316,11 +317,16 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					while (true) {
 						status = poll(fds, nFds, 0);
 						if (!inputMap.empty()) {
-							string& s = inputMap["input"];
-							write(stdinLink[1], (const void*) s.c_str(), s.size());
-							
-							inputMap.clear();
-							exe.getMessage(output->id, inputMap);
+							auto doKill = inputMap.find("kill");
+							if (doKill != inputMap.end()) {
+								kill(pid, SIGKILL);
+							} else {
+								string& s = inputMap["input"];
+								write(stdinLink[1], (const void*) s.c_str(), s.size());
+								
+								inputMap.clear();
+								exe.getMessage(output->id, inputMap);
+							}
 						}
 						if (status < 0) continue;
 						
@@ -448,8 +454,11 @@ extern "C" void iconus_initSession(Execution& exe) {
 				sb << value.retCode;
 				sb << ")";
 			} else {
+				sb << "<div id=\"sysOutControlPanel\">";
 				sb << "<i id=\"spinner\" class=\"fa fa-spinner fa-spin\" style=\"font-size:24px\"></i>";
 				sb << "<input type=\"text\" id=\"systemInput\" />";
+				sb << "<button type=\"button\" id=\"sysOutKill\" onclick=\"onSystemOutputKill('" << to_string(value.id) << "')\">Kill</button>";
+				sb << "</div>";
 			}
 			
 			sb << "</div>";
