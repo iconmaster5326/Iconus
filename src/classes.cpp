@@ -22,7 +22,7 @@ std::string iconus::ClassNil::name() {
 	return "nil";
 }
 
-std::string iconus::ClassNil::toString(Object* self, Session& session) {
+std::string iconus::ClassNil::toString(Object* self, Execution& exe) {
 	return "nil";
 }
 
@@ -32,7 +32,7 @@ std::string iconus::ClassString::name() {
 	return "string";
 }
 
-std::string iconus::ClassString::toString(Object* self, Session& session) {
+std::string iconus::ClassString::toString(Object* self, Execution& exe) {
 	string* value = (string*) self->value.asPtr;
 	return *value;
 }
@@ -43,20 +43,20 @@ std::string iconus::ClassSystemFunction::name() {
 	return "function";
 }
 
-bool iconus::ClassSystemFunction::executable(Object* self, Session& session) {
+bool iconus::ClassSystemFunction::executable(Object* self, Execution& exe) {
 	return true;
 }
 
-Object* iconus::ClassSystemFunction::execute(Object* self, Session& session, Scope& scope, Object* input,
+Object* iconus::ClassSystemFunction::execute(Object* self, Execution& exe, Scope& scope, Object* input,
 		Vector<Object*>& args,
 		Map<std::string, Object*>& flags) {
 	Handler* handler = (Handler*) self->value.asPtr;
-	return (*handler)(session, scope, input, args, flags);
+	return (*handler)(exe, scope, input, args, flags);
 }
 
 iconus::ClassManagedFunction iconus::ClassManagedFunction::INSTANCE{};
 
-Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
+Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		Scope& scope, Object* input, Vector<Object*>& args,
 		Map<std::string, Object*>& flags) {
 	Instance* instance = (Instance*) self->value.asPtr;
@@ -79,7 +79,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		if (it == flags.end()) {
 			if (argAt == args.end()) {
 				if (arg.defaultValue) {
-					mappedArgs[arg.name] = arg.defaultValue->evaluate(session, scope, input);
+					mappedArgs[arg.name] = arg.defaultValue->evaluate(exe, scope, input);
 				} else {
 					throw Error("Argument '"+arg.name+"' required");
 				}
@@ -98,7 +98,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 		if (it == flags.end()) {
 			if (argAt == args.end()) {
 				if (arg.defaultValue) {
-					mappedArgs[arg.name] = arg.defaultValue->evaluate(session, scope, input);
+					mappedArgs[arg.name] = arg.defaultValue->evaluate(exe, scope, input);
 				} else {
 					throw Error("Flag '"+arg.name+"' required");
 				}
@@ -160,7 +160,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Session& session,
 	}
 	
 	Vector<Object*> restArgs(argAt, args.end());
-	return instance->handler(session, scope, input, mappedArgs, restArgs, restFlags);
+	return instance->handler(exe, scope, input, mappedArgs, restArgs, restFlags);
 }
 
 iconus::ClassList iconus::ClassList::INSTANCE{};
@@ -169,7 +169,7 @@ std::string iconus::ClassList::name() {
 	return "list";
 }
 
-std::string iconus::ClassList::toString(Object* self, Session& session) {
+std::string iconus::ClassList::toString(Object* self, Execution& exe) {
 	ostringstream sb;
 	sb << '[';
 	
@@ -182,7 +182,7 @@ std::string iconus::ClassList::toString(Object* self, Session& session) {
 		} else {
 			sb << ", ";
 		}
-		sb << ob->toString(session);
+		sb << ob->toString(exe);
 	}
 	
 	sb << ']';
@@ -195,9 +195,9 @@ std::string iconus::ClassError::name() {
 	return "error";
 }
 
-std::string iconus::ClassError::toString(Object* self, Session& session) {
+std::string iconus::ClassError::toString(Object* self, Execution& exe) {
 	Object* what = (Object*) self->value.asPtr;
-	return "error: "+what->toString(session);
+	return "error: "+what->toString(exe);
 }
 
 iconus::ClassBool iconus::ClassBool::INSTANCE{};
@@ -208,7 +208,7 @@ std::string iconus::ClassBool::name() {
 	return "bool";
 }
 
-std::string iconus::ClassBool::toString(Object* self, Session& session) {
+std::string iconus::ClassBool::toString(Object* self, Execution& exe) {
 	if (self == &TRUE) {
 		return "true";
 	} else if (self == &FALSE) {
@@ -224,7 +224,7 @@ std::string iconus::ClassNumber::name() {
 	return "number";
 }
 
-std::string iconus::ClassNumber::toString(Object* self, Session& session) {
+std::string iconus::ClassNumber::toString(Object* self, Execution& exe) {
 	return to_string(self->value.asDouble);
 }
 
@@ -232,17 +232,17 @@ iconus::ClassUserFunction iconus::ClassUserFunction::INSTANCE{};
 
 Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& fn) {
 	Scope* oldScope = &scope;
-	return new Object(&ClassUserFunction::INSTANCE, new ClassManagedFunction::Instance(fn, [oldScope,op](auto& session, auto& evalScope, auto input, auto& args, auto& varargs, auto& varflags) {
+	return new Object(&ClassUserFunction::INSTANCE, new ClassManagedFunction::Instance(fn, [oldScope,op](auto& exe, auto& evalScope, auto input, auto& args, auto& varargs, auto& varflags) {
 		Scope* newScope = new Scope(oldScope, input);
 		for (const pair<string,Object*>& kv : args) {
 			newScope->setLocal(kv.first, kv.second);
 		}
-		return op->evaluate(session, *newScope, input);
+		return op->evaluate(exe, *newScope, input);
 	}));
 }
 
-Vector<Object*> iconus::ClassList::fieldNames(Object* self, Session& session) {
-	Deque<Object*>& list = ClassList::value(session, self);
+Vector<Object*> iconus::ClassList::fieldNames(Object* self, Execution& exe) {
+	Deque<Object*>& list = ClassList::value(exe, self);
 	Vector<Object*> result;
 	
 	for (int i = 0; i < list.size(); i++) {
@@ -252,39 +252,39 @@ Vector<Object*> iconus::ClassList::fieldNames(Object* self, Session& session) {
 	return result;
 }
 
-bool iconus::ClassList::hasField(Object* self, Session& session, Object* name) {
-	Deque<Object*>& list = ClassList::value(session, self);
-	int i = (int) ClassNumber::value(session, name);
+bool iconus::ClassList::hasField(Object* self, Execution& exe, Object* name) {
+	Deque<Object*>& list = ClassList::value(exe, self);
+	int i = (int) ClassNumber::value(exe, name);
 	
 	return i >= 0 && i < list.size();
 }
 
-Object* iconus::ClassList::getField(Object* self, Session& session, Object* name) {
-	Deque<Object*>& list = ClassList::value(session, self);
-	int i = (int) ClassNumber::value(session, name);
+Object* iconus::ClassList::getField(Object* self, Execution& exe, Object* name) {
+	Deque<Object*>& list = ClassList::value(exe, self);
+	int i = (int) ClassNumber::value(exe, name);
 	
 	if (i >= 0 && i < list.size()) {
 		return list[i];
 	} else {
-		return Class::getField(self, session, name);
+		return Class::getField(self, exe, name);
 	}
 }
 
-bool iconus::ClassList::canSetField(Object* self, Session& session, Object* name) {
-	Deque<Object*>& list = ClassList::value(session, self);
-	int i = (int) ClassNumber::value(session, name);
+bool iconus::ClassList::canSetField(Object* self, Execution& exe, Object* name) {
+	Deque<Object*>& list = ClassList::value(exe, self);
+	int i = (int) ClassNumber::value(exe, name);
 	
 	return i >= 0 && i < list.size();
 }
 
-void iconus::ClassList::setField(Object* self, Session& session, Object* name, Object* value) {
-	Deque<Object*>& list = ClassList::value(session, self);
-	int i = (int) ClassNumber::value(session, name);
+void iconus::ClassList::setField(Object* self, Execution& exe, Object* name, Object* value) {
+	Deque<Object*>& list = ClassList::value(exe, self);
+	int i = (int) ClassNumber::value(exe, name);
 	
 	if (i >= 0 && i < list.size()) {
 		list[i] = value;
 	} else {
-		Class::setField(self, session, name, value);
+		Class::setField(self, exe, name, value);
 	}
 }
 

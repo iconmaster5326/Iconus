@@ -17,12 +17,12 @@ namespace iconus {
 		static inline Object* create(Class* clazz) {
 			return new Object(&INSTANCE, clazz);
 		}
-		static inline Class* value(Session& session, Object* ob) {
-			return (Class*) ob->adapt(session, &INSTANCE)->value.asPtr;
+		static inline Class* value(Execution& exe, Object* ob) {
+			return (Class*) ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Session& session) override;
+		std::string toString(Object* self, Execution& exe) override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
@@ -33,8 +33,8 @@ namespace iconus {
 		static inline Object* create(const std::string& s) {
 			return new Object(&INSTANCE, gcAlloc<std::string>(s));
 		}
-		static inline std::string& value(Session& session, Object* ob) {
-			return *(std::string*)ob->adapt(session, &INSTANCE)->value.asPtr;
+		static inline std::string& value(Execution& exe, Object* ob) {
+			return *(std::string*)ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;
@@ -48,8 +48,8 @@ namespace iconus {
 		static inline Object* create(const std::string& s) {
 			return new Object(&INSTANCE, gcAlloc<std::string>(s));
 		}
-		static inline std::string& value(Session& session, Object* ob) {
-			return *(std::string*)ob->adapt(session, &INSTANCE)->value.asPtr;
+		static inline std::string& value(Execution& exe, Object* ob) {
+			return *(std::string*)ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;
@@ -85,8 +85,8 @@ namespace iconus {
 			return new Object(&INSTANCE, new Instance(args...));
 		}
 		
-		static inline Instance& value(Session& session, Object* ob) {
-			return *(Instance*)ob->adapt(session, &INSTANCE)->value.asPtr;
+		static inline Instance& value(Execution& exe, Object* ob) {
+			return *(Instance*)ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;

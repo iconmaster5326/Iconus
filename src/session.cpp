@@ -30,15 +30,15 @@ iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), defaultExecut
 Object* iconus::Session::evaluate(const std::string& input, Execution& exe) {
 	try {
 		Lexer lexer(input);
-		Op* op = parse(*this, lexer);
-		return op->evaluate(*this, sessionScope, &ClassNil::NIL);
+		Op* op = parse(exe, lexer);
+		return op->evaluate(exe, sessionScope, &ClassNil::NIL);
 	} catch (const Error& e) {
 		return e.value;
 	}
 }
 
-std::string iconus::Session::render(Object* ob) {
-	for (const Renderer& renderer : renderers) {
+std::string iconus::Execution::render(Object* ob) {
+	for (const Renderer& renderer : session.renderers) {
 		if (renderer.filter(*this, ob)) {
 			return renderer.handler(*this, ob);
 		}
@@ -47,8 +47,8 @@ std::string iconus::Session::render(Object* ob) {
 	throw runtime_error("no renderer defined for object!");
 }
 
-Object* iconus::Session::parseWord(std::string word) {
-	for (const WordParser& parser : parsers) {
+Object* iconus::Execution::parseWord(std::string word) {
+	for (const WordParser& parser : session.parsers) {
 		if (parser.filter(*this, word)) {
 			return parser.handler(*this, word);
 		}
@@ -89,9 +89,9 @@ static Adaptor getAdaptor(Session& session, Class* from, Class* to, Set<Class*>&
 	}
 }
 
-Adaptor iconus::Session::getAdaptor(Class* from, Class* to) {
+Adaptor iconus::Execution::getAdaptor(Class* from, Class* to) {
 	Set<Class*> checked;
-	return ::getAdaptor(*this, from, to, checked);
+	return ::getAdaptor(session, from, to, checked);
 }
 
 GlobalScope GlobalScope::INSTANCE{};
@@ -100,8 +100,8 @@ bool iconus::GlobalScope::canSet(const std::string& name) {
 	return false;
 }
 
-Object* iconus::Session::cat(const std::string& file) {
-	for (const CatHandler& catter : catHandlers) {
+Object* iconus::Execution::cat(const std::string& file) {
+	for (const CatHandler& catter : session.catHandlers) {
 		if (catter.filter(*this, file)) {
 			return catter.handler(*this, file);
 		}

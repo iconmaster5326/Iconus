@@ -18,14 +18,14 @@
 #include <boost/uuid/uuid_generators.hpp>
 
 namespace iconus {
-	class Session;
+	class Session; class Execution;
 	
-	using Adaptor = std::function<Object*(Session&, Object*)>;
+	using Adaptor = std::function<Object*(Execution&, Object*)>;
 	
 	class CatHandler {
 	public:
-		using Filter = std::function<bool(Session&, const std::string&)>;
-		using Handler = std::function<Object*(Session&, const std::string&)>;
+		using Filter = std::function<bool(Execution&, const std::string&)>;
+		using Handler = std::function<Object*(Execution&, const std::string&)>;
 		
 		inline CatHandler(Filter filter, Handler handler) : filter(filter), handler(handler) {}
 		
@@ -35,8 +35,8 @@ namespace iconus {
 	
 	class WordParser {
 	public:
-		using Filter = std::function<bool(Session&, const std::string&)>;
-		using Handler = std::function<Object*(Session&, const std::string&)>;
+		using Filter = std::function<bool(Execution&, const std::string&)>;
+		using Handler = std::function<Object*(Execution&, const std::string&)>;
 		
 		inline WordParser(Filter filter, Handler handler) : filter(filter), handler(handler) {}
 		
@@ -46,8 +46,8 @@ namespace iconus {
 	
 	class Renderer {
 	public:
-		using Filter = std::function<bool(Session&, Object*)>;
-		using Handler = std::function<std::string(Session&, Object*)>;
+		using Filter = std::function<bool(Execution&, Object*)>;
+		using Handler = std::function<std::string(Execution&, Object*)>;
 		
 		inline Renderer(const std::string& name, Filter filter, Handler handler) : name(name), filter(filter), handler(handler) {}
 		
@@ -67,6 +67,11 @@ namespace iconus {
 		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()) {}
 		inline Execution(Session& session, boost::uuids::uuid tag) : session(session), tag(tag) {}
 		
+		std::string render(Object* object);
+		Object* parseWord(std::string word);
+		Adaptor getAdaptor(Class* from, Class* to);
+		Object* cat(const std::string& file);
+		
 		Session& session;
 		boost::uuids::uuid tag;
 	};
@@ -76,10 +81,6 @@ namespace iconus {
 		Session();
 		
 		Object* evaluate(const std::string& input, Execution& exe);
-		std::string render(Object* object);
-		Object* parseWord(std::string word);
-		Adaptor getAdaptor(Class* from, Class* to);
-		Object* cat(const std::string& file);
 		
 		Execution defaultExecution;
 		User user;

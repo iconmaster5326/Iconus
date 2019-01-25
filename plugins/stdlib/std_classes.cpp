@@ -21,7 +21,7 @@ std::string iconus::ClassClass::name() {
 	return "class";
 }
 
-std::string iconus::ClassClass::toString(Object* self, Session& session) {
+std::string iconus::ClassClass::toString(Object* self, Execution& exe) {
 	Class* value = (Class*) self->value.asPtr;
 	return "class "+value->name();
 }

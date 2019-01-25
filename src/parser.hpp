@@ -13,7 +13,7 @@
 #include "op.hpp"
 
 namespace iconus {
-	Op* parse(Session& session, Lexer& input);
+	Op* parse(Execution& exe, Lexer& input);
 }
 
 #endif /* SRC_PARSER_HPP_ */

@@ -23,17 +23,17 @@ std::string iconus::Class::name() {
 	return nullptr;
 }
 
-std::string iconus::Class::toString(Object* self, Session& session) {
+std::string iconus::Class::toString(Object* self, Execution& exe) {
 	ostringstream sb;
 	sb << name() << '@' << ((void*)self);
 	return sb.str();
 }
 
-bool iconus::Class::executable(Object* self, Session& session) {
+bool iconus::Class::executable(Object* self, Execution& exe) {
 	return false;
 }
 
-Object* iconus::Class::execute(Object* self, Session& session, Scope& scope, Object* input,
+Object* iconus::Class::execute(Object* self, Execution& exe, Scope& scope, Object* input,
 		Vector<Object*>& args,
 		Map<std::string, Object*>& flags) {
 	throw Error("cannot execute an object of class "+name());
@@ -80,24 +80,24 @@ bool iconus::Scope::canSet(const std::string& name) {
 	return true;
 }
 
-Vector<Object*> iconus::Class::fieldNames(Object* self, Session& session) {
+Vector<Object*> iconus::Class::fieldNames(Object* self, Execution& exe) {
 	return Vector<Object*>();
 }
 
-bool iconus::Class::hasField(Object* self, Session& session, Object* name) {
+bool iconus::Class::hasField(Object* self, Execution& exe, Object* name) {
 	return false;
 }
 
-Object* iconus::Class::getField(Object* self, Session& session, Object* name) {
+Object* iconus::Class::getField(Object* self, Execution& exe, Object* name) {
 	return &ClassNil::NIL;
 }
 
-bool iconus::Class::canSetField(Object* self, Session& session, Object* name) {
+bool iconus::Class::canSetField(Object* self, Execution& exe, Object* name) {
 	return false;
 }
 
-void iconus::Class::setField(Object* self, Session& session, Object* name, Object* value) {
-	throw Error("Cannot set field '"+name->toString(session)+"' on object of class "+self->clazz->name());
+void iconus::Class::setField(Object* self, Execution& exe, Object* name, Object* value) {
+	throw Error("Cannot set field '"+name->toString(exe)+"' on object of class "+self->clazz->name());
 }
 
 iconus::Scope::Scope() : parent(nullptr), input(&ClassNil::NIL) {}
@@ -105,30 +105,30 @@ iconus::Scope::Scope(Scope* parent) : parent(parent), input(&ClassNil::NIL) {}
 iconus::Scope::Scope(Scope* parent, Object* input) : parent(parent), input(input) {}
 iconus::Scope::~Scope() {}
 
-Vector<Object*> iconus::Class::fieldValues(Object* self, Session& session) {
+Vector<Object*> iconus::Class::fieldValues(Object* self, Execution& exe) {
 	Vector<Object*> result;
-	for (Object* name : fieldNames(self, session)) {
-		result.push_back(getField(self, session, name));
+	for (Object* name : fieldNames(self, exe)) {
+		result.push_back(getField(self, exe, name));
 	}
 	return result;
 }
 
-Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self, Session& session) {
+Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self, Execution& exe) {
 	Vector<pair<Object*, Object*> > result;
-	for (Object* name : fieldNames(self, session)) {
-		result.push_back(make_pair(name, getField(self, session, name)));
+	for (Object* name : fieldNames(self, exe)) {
+		result.push_back(make_pair(name, getField(self, exe, name)));
 	}
 	return result;
 }
 
-bool iconus::Object::adaptableTo(Session& session, Class* to) {
-	return session.getAdaptor(clazz, to) != nullptr;
+bool iconus::Object::adaptableTo(Execution& exe, Class* to) {
+	return exe.getAdaptor(clazz, to) != nullptr;
 }
 
-Object* iconus::Object::adapt(Session& session, Class* to) {
-	Adaptor adaptor = session.getAdaptor(clazz, to);
+Object* iconus::Object::adapt(Execution& exe, Class* to) {
+	Adaptor adaptor = exe.getAdaptor(clazz, to);
 	if (adaptor) {
-		return adaptor(session, this);
+		return adaptor(exe, this);
 	} else {
 		throw Error("Cannot adapt object of class "+clazz->name()+" to class "+to->name());
 	}

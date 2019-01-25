@@ -14,32 +14,32 @@
 #include "gc.hpp"
 
 namespace iconus {
-	class Object; class Scope; class Session;
+	class Object; class Scope; class Session; class Execution;
 	
 	class Class : public gc {
 	public:
 		virtual ~Class();
 		virtual std::string name();
-		virtual std::string toString(Object* self, Session& session);
+		virtual std::string toString(Object* self, Execution& exe);
 		
 		// C++ properties; session is not available due to use in std::hash, etc.
 		virtual std::size_t hash(const Object* self) const;
 		virtual bool equals(const Object* self, const Object* other) const;
 		
 		// execution
-		virtual bool executable(Object* self, Session& session);
-		virtual Object* execute(Object* self, Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags);
+		virtual bool executable(Object* self, Execution& exe);
+		virtual Object* execute(Object* self, Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags);
 		
 		// necesary to implement fields
-		virtual Vector<Object*> fieldNames(Object* self, Session& session);
-		virtual bool hasField(Object* self, Session& session, Object* name);
-		virtual Object* getField(Object* self, Session& session, Object* name);
-		virtual bool canSetField(Object* self, Session& session, Object* name);
-		virtual void setField(Object* self, Session& session, Object* name, Object* value);
+		virtual Vector<Object*> fieldNames(Object* self, Execution& exe);
+		virtual bool hasField(Object* self, Execution& exe, Object* name);
+		virtual Object* getField(Object* self, Execution& exe, Object* name);
+		virtual bool canSetField(Object* self, Execution& exe, Object* name);
+		virtual void setField(Object* self, Execution& exe, Object* name, Object* value);
 		
 		// optional to implement fields
-		virtual Vector<Object*> fieldValues(Object* self, Session& session);
-		virtual Vector<std::pair<Object*,Object*> > fields(Object* self, Session& session);
+		virtual Vector<Object*> fieldValues(Object* self, Execution& exe);
+		virtual Vector<std::pair<Object*,Object*> > fields(Object* self, Execution& exe);
 	};
 	
 	class Object : public gc {
@@ -48,8 +48,8 @@ namespace iconus {
 		inline Object(Class* clazz, double value) : clazz(clazz), value{.asDouble = value} {}
 		inline Object(Class* clazz, void* value) : clazz(clazz), value{.asPtr = value} {}
 		
-		inline std::string toString(Session& session) {
-			return clazz->toString(this, session);
+		inline std::string toString(Execution& exe) {
+			return clazz->toString(this, exe);
 		}
 		
 		inline std::size_t hash() const {
@@ -59,37 +59,37 @@ namespace iconus {
 			return clazz->equals(this, other);
 		}
 		
-		inline bool executable(Session& session)  {
-			return clazz->executable(this, session);
+		inline bool executable(Execution& exe)  {
+			return clazz->executable(this, exe);
 		}
-		inline Object* execute(Session& session, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) {
-			return clazz->execute(this, session, scope, input, args, flags);
-		}
-		
-		inline Vector<Object*> fieldNames(Session& session) {
-			return clazz->fieldNames(this, session);
-		}
-		inline Vector<Object*> fieldValues(Session& session) {
-			return clazz->fieldValues(this, session);
-		}
-		inline Vector<std::pair<Object*,Object*> > fields(Session& session) {
-			return clazz->fields(this, session);
-		}
-		inline bool hasField(Session& session, Object* name) {
-			return clazz->hasField(this, session, name);
-		}
-		inline Object* getField(Session& session, Object* name) {
-			return clazz->getField(this, session, name);
-		}
-		inline bool canSetField(Session& session, Object* name) {
-			return clazz->canSetField(this, session, name);
-		}
-		inline void setField(Session& session, Object* name, Object* value) {
-			clazz->setField(this, session, name, value);
+		inline Object* execute(Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) {
+			return clazz->execute(this, exe, scope, input, args, flags);
 		}
 		
-		bool adaptableTo(Session& session, Class* clazz);
-		Object* adapt(Session& session, Class* clazz);
+		inline Vector<Object*> fieldNames(Execution& exe) {
+			return clazz->fieldNames(this, exe);
+		}
+		inline Vector<Object*> fieldValues(Execution& exe) {
+			return clazz->fieldValues(this, exe);
+		}
+		inline Vector<std::pair<Object*,Object*> > fields(Execution& exe) {
+			return clazz->fields(this, exe);
+		}
+		inline bool hasField(Execution& exe, Object* name) {
+			return clazz->hasField(this, exe, name);
+		}
+		inline Object* getField(Execution& exe, Object* name) {
+			return clazz->getField(this, exe, name);
+		}
+		inline bool canSetField(Execution& exe, Object* name) {
+			return clazz->canSetField(this, exe, name);
+		}
+		inline void setField(Execution& exe, Object* name, Object* value) {
+			clazz->setField(this, exe, name, value);
+		}
+		
+		bool adaptableTo(Execution& exe, Class* clazz);
+		Object* adapt(Execution& exe, Class* clazz);
 		
 		Class* clazz;
 		union {
