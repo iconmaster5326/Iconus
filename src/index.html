@@ -14,6 +14,24 @@
 		input.removeAttribute("disabled");
 		input.focus();
 	};
+	
+	resultHandlers = {};
+	conn.onmessage = function(event) {
+		console.log("GOT: " + event.data);
+		var message = JSON.parse(event.data);
+		
+		if (message.type == "result") {
+			if (resultHandlers[message.tag]) {
+				console.log("Calling handler for result " + message.tag);
+				resultHandlers[message.tag](message.result);
+				delete resultHandlers[message.tag];
+			} else {
+				console.log("WARNING: got result but tag not registered: " + message.tag);
+			}
+		} else {
+			console.log("WARNING: unknown message type " + message.type);
+		}
+	};
 </script>
 </head>
 <body>
@@ -32,13 +50,6 @@
 				
 				if (event.keyCode === 13) {
 					var tag = newUUID();
-					var iif = JSON.stringify({
-						"type": "eval",
-						"tag": tag,
-						"command": input.value
-					});
-					console.log("SENDING: "+iif)
-					conn.send(iif);
 					
 					input.replaceWith(input.value);
 
@@ -47,21 +58,27 @@
 					result.innerHTML = "...";
 					content.appendChild(result);
 					
-					conn.onmessage = function(event2) {
-						console.log("GOT: " + event2.data);
-						var response = JSON.parse(event2.data);
-						result.innerHTML = response.result;
-						
-						content.appendChild(document.createTextNode("> "));
-						
-						input = document.createElement("input");
-						input.setAttribute("id", "consoleInput");
-						input.setAttribute("type", "text");
-						content.appendChild(input);
-
-						input.focus();
-						register();
+					resultHandlers[tag] = function(toRender) {
+						result.innerHTML = toRender;
 					};
+					
+					var message = JSON.stringify({
+						"type": "eval",
+						"tag": tag,
+						"command": input.value
+					});
+					console.log("SENDING: "+message)
+					conn.send(message);
+					
+					content.appendChild(document.createTextNode("> "));
+					
+					input = document.createElement("input");
+					input.setAttribute("id", "consoleInput");
+					input.setAttribute("type", "text");
+					content.appendChild(input);
+					
+					input.focus();
+					register();
 				}
 			});
 		}
