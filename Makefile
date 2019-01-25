@@ -53,7 +53,7 @@ build/index.cxx: src/index.html | build
 # plugins
 export
 $(PLUGIN_DLS): $(wildcard $(patsubst %,%/*,$(PLUGINS))) $(HXX_FILES)
-	cd $(dir $<) && $(MAKE)
+	cd $(patsubst %.icolib,plugins/%,$@) && $(MAKE)
 
 # dependencies
 SWS_VER := v3.0.0-rc3
