@@ -23,12 +23,17 @@ iconus::Plugin::Plugin(const std::string& filename) : handle(dlopen(filename.c_s
 		throw Error("Unable to load plugin "+error);
 	}
 	
-	auto fn = (string(*)()) dlsym(handle, "iconus_getName");
-	if (!fn) {
+	auto nameFn = (string(*)()) dlsym(handle, "iconus_getName");
+	if (!nameFn) {
 		string error(dlerror());
 		throw Error("Unable to call iconus_getName in plugin "+error);
 	}
-	name = fn();
+	name = nameFn();
+	
+	auto htmlFn = (string(*)()) dlsym(handle, "iconus_initHTML");
+	if (htmlFn) { // initHTML is optional
+		initHTML = htmlFn();
+	}
 }
 
 static bool endsWith(const string& fullString, const string& ending) {

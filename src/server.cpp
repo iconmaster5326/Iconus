@@ -7,6 +7,7 @@
 
 #include "server.hpp"
 #include "session.hpp"
+#include "plugin.hpp"
 
 #include <iostream>
 #include "server_http.hpp"
@@ -20,15 +21,13 @@ using HttpServer = Server<HTTP>; // TODO: use HTTPS and WSS
 using WsServer = SocketServer<WS>;
 
 namespace iconus {
-	/*
 	static void find_and_replace(string& s, const string& from, const string& to) {
 		size_t n = s.find(from, 0);
 		while (n != string::npos) {
 			s.replace(n, from.size(), to);
-			n = s.find(from, n);
+			n = s.find(from, n + to.size());
 		}
 	}
-	*/
 
 	void startServer(const std::string& addr, unsigned short port, const std::string& html) {
 		HttpServer server;
@@ -37,7 +36,14 @@ namespace iconus {
 		
 		server.default_resource["GET"] = [&html](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
 			cout << "Serving HTML..." << endl;
-			response->write(StatusCode::success_ok, html);
+			
+			string processedHTML{html};
+			for (Plugin& plugin : Plugin::plugins) {
+				find_and_replace(processedHTML, "@HEADER@", "\n" + plugin.initHTML + "\n@HEADER@");
+			}
+			find_and_replace(processedHTML, "@HEADER@", "");
+			
+			response->write(StatusCode::success_ok, processedHTML);
 		};
 		
 		server.on_upgrade = [](unique_ptr<HTTP>& socket, shared_ptr<HttpServer::Request> request) {

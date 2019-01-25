@@ -12,31 +12,38 @@
 		});
 	}
 	
-	conn = new WebSocket("ws://" + location.host);
-	conn.onopen = function(event) {
-		var input = document.getElementById("consoleInput");
-		input.removeAttribute("disabled");
-		input.focus();
-	};
-	
 	resultHandlers = {};
-	conn.onmessage = function(event) {
-		console.log("GOT: " + event.data);
-		var message = JSON.parse(event.data);
+	
+	window.onload = function() {
+		conn = new WebSocket("ws://" + location.host);
 		
-		if (message.type == "result") {
-			if (resultHandlers[message.tag]) {
-				console.log("Calling handler for result " + message.tag);
-				resultHandlers[message.tag](message.result);
-				delete resultHandlers[message.tag];
+		conn.onopen = function(event) {
+			var input = document.getElementById("consoleInput");
+			input.removeAttribute("disabled");
+			input.focus();
+		};
+		
+		conn.onmessage = function(event) {
+			console.log("GOT: " + event.data);
+			var message = JSON.parse(event.data);
+			
+			if (message.type == "result") {
+				if (resultHandlers[message.tag]) {
+					console.log("Calling handler for result " + message.tag);
+					resultHandlers[message.tag](message.result);
+					delete resultHandlers[message.tag];
+				} else {
+					console.log("WARNING: got result but tag not registered: " + message.tag);
+				}
 			} else {
-				console.log("WARNING: got result but tag not registered: " + message.tag);
+				console.log("WARNING: unknown message type " + message.type);
 			}
-		} else {
-			console.log("WARNING: unknown message type " + message.type);
-		}
+		};
 	};
 </script>
+
+@HEADER@
+
 </head>
 <body>
 	<h1>Iconus</h1>

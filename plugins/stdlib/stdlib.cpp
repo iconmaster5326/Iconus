@@ -31,8 +31,15 @@ using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
 
+#include "build/stdlib/header.cxx"
+static string header((const char*)header_html, header_html_len);
+
 extern "C" string iconus_getName() {
 	return "Standard Library";
+}
+
+extern "C" string iconus_initHTML() {
+	return header;
 }
 
 extern "C" void iconus_initGlobalScope(GlobalScope& scope) {

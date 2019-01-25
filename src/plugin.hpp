@@ -42,6 +42,7 @@ namespace iconus {
 		}
 		
 		std::string name; // iconus_getName
+		std::string initHTML;  // iconus_initHTML
 		void initGlobalScope(GlobalScope& scope); // iconus_initGlobalScope
 		void initSession(Session& session); // iconus_initSession
 	private:

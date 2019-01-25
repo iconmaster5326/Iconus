@@ -12,7 +12,10 @@ PLUGIN_CXXFLAGS := -I. $(patsubst -I%,-I$(BASE_DIR)/%,$(CXXFLAGS))
 $(PLUGIN_ICOLIB): $(PLUGIN_O_FILES)
 	$(CXX) $(PLUGIN_FLAGS) $(PLUGIN_CXXFLAGS) -o $(PLUGIN_ICOLIB) $(PLUGIN_O_FILES) $(LINKFLAGS)
 
-$(PLUGIN_D_FILES): | $(BUILD_DIR)
+$(BUILD_DIR)/header.cxx: header.html | $(BUILD_DIR)
+	xxd -i $< > $@
+
+$(PLUGIN_D_FILES): | $(BUILD_DIR) $(BUILD_DIR)/header.cxx
 $(PLUGIN_D_FILES): $(BUILD_DIR)/%.d: %.cpp
 	$(CXX) -MM -MT '$(patsubst %.d,%.o,$@) $@' -DICONUS_PLUGIN $(PLUGIN_CXXFLAGS) $< > $@
 include $(PLUGIN_D_FILES)
