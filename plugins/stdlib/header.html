@@ -11,9 +11,14 @@
 			return $(elem).find("pre").get()[0];
 		}
 		
+		var getInput = function() {
+			return $(elem).find("#systemInput").get()[0];
+		}
+		
 		messageHandlers[id] = function(message) {
 			if (message.done) {
 				elem.replaceChild(document.createTextNode("(process exited with code "+message.code+")"), getSpinner());
+				elem.removeChild(getInput());
 				delete messageHandlers[id];
 			} else if (message.error) {
 				var div = document.createElement("div");
@@ -21,6 +26,7 @@
 				div.innerHTML = "<b>error:</b> "+message.error;
 				elem.replaceChild(div, getPre());
 				elem.removeChild(getSpinner());
+				elem.removeChild(getInput());
 				delete messageHandlers[id];
 			} else {
 				var div = document.createElement("div");
@@ -32,5 +38,19 @@
 				getPre().appendChild(div);
 			}
 		};
+		
+		getInput().addEventListener("keyup", function(event) {
+			event.preventDefault();
+			if (event.keyCode === 13) {
+				var message = JSON.stringify({
+					"type": "message",
+					"tag": id,
+					"input": getInput().value+"\n"
+				});
+				console.log("SENDING: "+message);
+				conn.send(message);
+				getInput().value = "";
+			}
+		});
 	}
 </script>

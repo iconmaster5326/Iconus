@@ -311,8 +311,17 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 						{errorLink[0], POLLIN, 0},
 					};
 					
+					Map<string,string> inputMap;
+					exe.getMessage(output->id, inputMap);
 					while (true) {
-						status = poll(fds, nFds, -1);
+						status = poll(fds, nFds, 0);
+						if (!inputMap.empty()) {
+							string& s = inputMap["input"];
+							write(stdinLink[1], (const void*) s.c_str(), s.size());
+							
+							inputMap.clear();
+							exe.getMessage(output->id, inputMap);
+						}
 						if (status < 0) continue;
 						
 						if (fds[0].revents & POLLIN) { // stdoutLink
@@ -439,7 +448,8 @@ extern "C" void iconus_initSession(Execution& exe) {
 				sb << value.retCode;
 				sb << ")";
 			} else {
-				sb << "<i id=\"spinner\" class=\"fa fa-spinner fa-spin\" style=\"font-size:24px\" />";
+				sb << "<i id=\"spinner\" class=\"fa fa-spinner fa-spin\" style=\"font-size:24px\"></i>";
+				sb << "<input type=\"text\" id=\"systemInput\" />";
 			}
 			
 			sb << "</div>";

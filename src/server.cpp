@@ -30,6 +30,8 @@ namespace iconus {
 			n = s.find(from, n + to.size());
 		}
 	}
+	
+	static Map<string, function<void(nlohmann::json&)>> messageHandlers;
 
 	void startServer(const std::string& addr, unsigned short port, const std::string& html) {
 		HttpServer server;
@@ -61,9 +63,11 @@ namespace iconus {
 				cout << "GOT: " << input << endl;
 				nlohmann::json message = nlohmann::json::parse(input);
 				string type = message["type"].get<string>();
-				string tag = message["tag"].get<string>();
 				if (type == "eval") {
-					Execution exe(*session, string_generator()(tag), [connection](uuid id, auto& map) {
+					string tag = message["tag"].get<string>();
+					Execution* exe = new Execution(*session, string_generator()(tag));
+					
+					exe->sendMessage = [connection](uuid& id, auto& map) {
 						nlohmann::json message = {
 								{"type", "message"},
 								{"tag", to_string(id)},
@@ -74,14 +78,34 @@ namespace iconus {
 						}
 						
 						connection->send(message.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
-					});
+					};
+					
+					exe->getMessage = [connection](uuid& id, auto& map) {
+						messageHandlers[to_string(id)] = [&id,&map](nlohmann::json& message) {
+							for (auto& pair : message.get<nlohmann::json::object_t>()) {
+								map[pair.first] = pair.second.get<string>();
+							}
+							
+							messageHandlers.erase(to_string(id));
+						};
+					};
 					
 					nlohmann::json response = {
 							{"type", "result"},
 							{"tag", tag},
-							{"result", exe.render(session->evaluate(message["command"].get<string>(), exe))},
+							{"result", exe->render(session->evaluate(message["command"].get<string>(), *exe))},
 					};
 					connection->send(response.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
+				} else if (type == "message") {
+					string tag = message["tag"].get<string>();
+					auto it = messageHandlers.find(tag);
+					if (it == messageHandlers.end()) {
+						cout << "WARNING: Incoming message to non-registered object " << tag << " recieved" << endl;
+					} else {
+						it->second(message);
+					}
+				} else {
+					cout << "WARNING: unknown command type "+type+" recieved";
 				}
 			};
 			

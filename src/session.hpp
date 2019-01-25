@@ -62,12 +62,12 @@ namespace iconus {
 		bool canSet(const std::string& name) override;
 	};
 	
-	class Execution {
+	class Execution : public gc {
 	public:
-		using MessageHandler = std::function<void(boost::uuids::uuid, Map<std::string, std::string>&)>;
+		using MessageHandler = std::function<void(boost::uuids::uuid&, Map<std::string, std::string>&)>;
 		
-		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()), sendMessage(nullptr) {}
-		inline Execution(Session& session, boost::uuids::uuid tag, MessageHandler sendMessage) : session(session), tag(tag), sendMessage(sendMessage) {}
+		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()), sendMessage(nullptr), getMessage(nullptr) {}
+		inline Execution(Session& session, boost::uuids::uuid tag) : session(session), tag(tag), sendMessage(nullptr), getMessage(nullptr) {}
 		
 		std::string render(Object* object);
 		Object* parseWord(std::string word);
@@ -77,6 +77,7 @@ namespace iconus {
 		Session& session;
 		boost::uuids::uuid tag;
 		MessageHandler sendMessage;
+		MessageHandler getMessage;
 	};
 	
 	class Session {
