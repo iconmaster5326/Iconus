@@ -64,8 +64,10 @@ namespace iconus {
 	
 	class Execution {
 	public:
-		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()) {}
-		inline Execution(Session& session, boost::uuids::uuid tag) : session(session), tag(tag) {}
+		using MessageHandler = std::function<void(boost::uuids::uuid, Map<std::string, std::string>&)>;
+		
+		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()), sendMessage(nullptr) {}
+		inline Execution(Session& session, boost::uuids::uuid tag, MessageHandler sendMessage) : session(session), tag(tag), sendMessage(sendMessage) {}
 		
 		std::string render(Object* object);
 		Object* parseWord(std::string word);
@@ -74,6 +76,7 @@ namespace iconus {
 		
 		Session& session;
 		boost::uuids::uuid tag;
+		MessageHandler sendMessage;
 	};
 	
 	class Session {

@@ -3,6 +3,7 @@
 <title>Iconus</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <script>
 	function newUUID() {
@@ -13,6 +14,7 @@
 	}
 	
 	resultHandlers = {};
+	messageHandlers = {};
 	
 	window.onload = function() {
 		conn = new WebSocket("ws://" + location.host);
@@ -34,6 +36,13 @@
 					delete resultHandlers[message.tag];
 				} else {
 					console.log("WARNING: got result but tag not registered: " + message.tag);
+				}
+			} else if (message.type == "message") {
+				if (messageHandlers[message.tag]) {
+					console.log("Calling handler for message " + message.tag);
+					messageHandlers[message.tag](message);
+				} else {
+					console.log("WARNING: got message but tag not registered: " + message.tag);
 				}
 			} else {
 				console.log("WARNING: unknown message type " + message.type);

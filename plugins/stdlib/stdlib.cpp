@@ -19,6 +19,8 @@
 #include <boost/filesystem.hpp>
 #include <cerrno>
 #include <cstdlib>
+#include <thread>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <sys/capability.h>
 #include <sys/types.h>
@@ -261,12 +263,6 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				close(errorLink[1]);
 				
 				ClassSystemOutput::Instance* output = new ClassSystemOutput::Instance();
-				const int nFds = 3;
-				struct pollfd fds[nFds] {
-					{stdoutLink[0], POLLIN, 0},
-					{stderrLink[0], POLLIN, 0},
-					{errorLink[0], POLLIN, 0}
-				};
 				
 				constexpr int readLineEOF = 0;
 				constexpr int readLinePartial = 1;
@@ -291,50 +287,74 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					}
 				};
 				
-				fcntl(stdoutLink[1], F_SETFL, fcntl(stdoutLink[1], F_GETFL) | O_NONBLOCK);
-				fcntl(stderrLink[1], F_SETFL, fcntl(stderrLink[1], F_GETFL) | O_NONBLOCK);
+				fcntl(stdoutLink[0], F_SETFL, fcntl(stdoutLink[0], F_GETFL) | O_NONBLOCK);
+				fcntl(stderrLink[0], F_SETFL, fcntl(stderrLink[0], F_GETFL) | O_NONBLOCK);
 				
-				int retCode;
-				string outS, errS;
-				while (true) {
-					status = poll(fds, nFds, -1);
-					if (status < 0) continue;
-					
-					if (fds[0].revents & POLLIN) { // stdoutLink
-						int readLineRet;
-						do {
-							readLineRet = readLine(stdoutLink[0], outS);
-							if (readLineRet != readLinePartial) {
-								output->lines.emplace_back(false, outS);
-								outS = "";
-							}
-						} while (readLineRet != readLineFull);
-					} else if (fds[1].revents & POLLIN) { // stderrLink
-						int readLineRet;
-						do {
-							readLineRet = readLine(stderrLink[0], errS);
-							if (readLineRet != readLinePartial) {
-								output->lines.emplace_back(true, errS);
-								errS = "";
-							}
-						} while (readLineRet != readLineFull);
-					} else if (fds[1].revents & POLLIN) { // errorLink
-						string s;
-						int readLineRet;
-						do {
-							readLineRet = readLine(errorLink[0], s);
-							if (readLineRet != readLinePartial) {
-								throw Error(s);
-							}
-						} while (true);
-					} else {
-						pid_t isDone = waitpid(pid, &retCode, WNOHANG);
-						if (isDone > 0) break;
-					}
-				}
-				
-				output->retCode = retCode;
 				result = ClassSystemOutput::create(output);
+				thread outputThread([=]() {
+					int retCode, status;
+					string outS{};
+					string errS{};
+					
+					const int nFds = 3;
+					struct pollfd fds[nFds] {
+						{stdoutLink[0], POLLIN, 0},
+						{stderrLink[0], POLLIN, 0},
+						{errorLink[0], POLLIN, 0}
+					};
+					
+					while (true) {
+						status = poll(fds, nFds, -1);
+						if (status < 0) continue;
+						
+						if (fds[0].revents & POLLIN) { // stdoutLink
+							int readLineRet;
+							do {
+								readLineRet = readLine(stdoutLink[0], outS);
+								if (readLineRet != readLinePartial) {
+									output->lines.emplace_back(false, outS);
+									outS = "";
+									
+									Map<string,string> message{{"line",to_string(output->lines.size()-1)}, {"text", output->lines.back().text}};
+									exe.sendMessage(output->id, message);
+								}
+							} while (readLineRet != readLineFull);
+						} else if (fds[1].revents & POLLIN) { // stderrLink
+							int readLineRet;
+							do {
+								readLineRet = readLine(stderrLink[0], errS);
+								if (readLineRet != readLinePartial) {
+									output->lines.emplace_back(true, errS);
+									errS = "";
+								}
+							} while (readLineRet != readLineFull);
+							
+							Map<string,string> message{{"line",to_string(output->lines.size()-1)}, {"text", output->lines.back().text}, {"stderr", "true"}};
+							exe.sendMessage(output->id, message);
+						} else if (fds[1].revents & POLLIN) { // errorLink
+							string s;
+							int readLineRet;
+							do {
+								readLineRet = readLine(errorLink[0], s);
+								if (readLineRet != readLinePartial) {
+									Map<string,string> message{{"error", escapeHTML(s)}};
+									exe.sendMessage(output->id, message);
+									return;
+								}
+							} while (true);
+						} else {
+							pid_t isDone = waitpid(pid, &retCode, WNOHANG);
+							if (isDone > 0) break;
+						}
+					}
+					
+					output->retCode = retCode;
+					output->done = true;
+					
+					Map<string,string> message{{"done","true"}, {"code", to_string(retCode)}};
+					exe.sendMessage(output->id, message);
+				});
+				outputThread.detach();
 			}
 		});
 		return result;
@@ -398,19 +418,23 @@ extern "C" void iconus_initSession(Execution& exe) {
 		}, [](Execution& exe, Object* ob) {
 			ClassSystemOutput::Instance& value = ClassSystemOutput::value(exe, ob);
 			ostringstream sb;
-			sb << "<pre>";
+			sb << "<div><img src onerror=\"onSystemOutputLoad('" << to_string(value.id) << "', this)\"><pre>";
 			
 			for (const auto& line : value.lines) {
-				if (line.isErr) {
-					sb << "<div style=\"color: red;\">" << escapeHTML(line.text) << "</div>" << endl;
-				} else {
-					sb << escapeHTML(line.text) << endl;
-				}
+				sb << "<div" << (line.isErr ? " style=\"color: red;\"" : "") << ">" << escapeHTML(line.text) << endl << "</div>";
 			}
 			
-			sb << "</pre>(exited with code ";
-			sb << value.retCode;
-			sb << ")";
+			sb << "</pre>";
+			
+			if (value.done) {
+				sb << "(exited with code ";
+				sb << value.retCode;
+				sb << ")";
+			} else {
+				sb << "<i id=\"spinner\" class=\"fa fa-spinner fa-spin\" style=\"font-size:24px\" />";
+			}
+			
+			sb << "</div>";
 			return sb.str();
 	});
 	

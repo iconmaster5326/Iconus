@@ -1,3 +1,35 @@
 <script>
-	
+	function onSystemOutputLoad(id, imgElem) {
+		var elem = imgElem.parentElement;
+		elem.removeChild(imgElem);
+		
+		var getSpinner = function() {
+			return $(elem).find("#spinner").get()[0];
+		}
+		
+		var getPre = function() {
+			return $(elem).find("pre").get()[0];
+		}
+		
+		messageHandlers[id] = function(message) {
+			if (message.done) {
+				elem.removeChild(getSpinner());
+				elem.appendChild(document.createTextNode("(process exited with code "+message.code+")"));
+				delete messageHandlers[id];
+			} else if (message.error) {
+				var div = document.createElement("div");
+				div.setAttribute("style", "color: red;");
+				dib.innerHTML = "<b>error:</b> "+message.error;
+				elem.replaceChild(getPre(), div);
+			} else {
+				var div = document.createElement("div");
+				if (message.stderr) {
+					div.setAttribute("style", "color: red;");
+				}
+				
+				div.appendChild(document.createTextNode(message.text+"\n"));
+				getPre().appendChild(div);
+			}
+		};
+	}
 </script>

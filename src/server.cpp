@@ -10,6 +10,8 @@
 #include "plugin.hpp"
 
 #include <iostream>
+#include <boost/uuid/uuid_io.hpp>
+
 #include "server_http.hpp"
 #include "server_ws.hpp"
 #include "json.hpp"
@@ -59,11 +61,24 @@ namespace iconus {
 				cout << "GOT: " << input << endl;
 				nlohmann::json message = nlohmann::json::parse(input);
 				string type = message["type"].get<string>();
+				string tag = message["tag"].get<string>();
 				if (type == "eval") {
-					Execution exe(*session, string_generator()(message["tag"].get<string>()));
+					Execution exe(*session, string_generator()(tag), [connection](uuid id, auto& map) {
+						nlohmann::json message = {
+								{"type", "message"},
+								{"tag", to_string(id)},
+						};
+						
+						for (auto& pair : map) {
+							message[pair.first] = pair.second;
+						}
+						
+						connection->send(message.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
+					});
+					
 					nlohmann::json response = {
 							{"type", "result"},
-							{"tag", message["tag"].get<string>()},
+							{"tag", tag},
 							{"result", exe.render(session->evaluate(message["command"].get<string>(), exe))},
 					};
 					connection->send(response.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));

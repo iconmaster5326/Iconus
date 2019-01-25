@@ -10,6 +10,9 @@
 
 #include "classes.hpp"
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+
 namespace iconus {
 	class ClassClass : public Class {
 	public:
@@ -67,11 +70,13 @@ namespace iconus {
 				inline Line(bool isErr, const std::string& text) : isErr(isErr), text(text) {}
 			};
 			
+			bool done;
 			int retCode;
 			Vector<Line> lines;
+			boost::uuids::uuid id;
 			
-			inline Instance() : retCode(0) {}
-			template<typename... Args> inline Instance(int retCode, Args... args) : retCode(retCode), lines(args...) {}
+			inline Instance() : retCode(0), done(false), id(boost::uuids::random_generator()()) {}
+			template<typename... Args> inline Instance(int retCode, Args... args) : done(true), retCode(retCode), lines(args...), id(boost::uuids::random_generator()()) {}
 		};
 		
 		static ClassSystemOutput INSTANCE;
