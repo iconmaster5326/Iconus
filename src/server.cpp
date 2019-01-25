@@ -14,6 +14,7 @@
 #include "json.hpp"
 
 using namespace std;
+using namespace boost::uuids;
 using namespace SimpleWeb;
 using HttpServer = Server<HTTP>; // TODO: use HTTPS and WSS
 using WsServer = SocketServer<WS>;
@@ -53,9 +54,10 @@ namespace iconus {
 				nlohmann::json message = nlohmann::json::parse(input);
 				string type = message["type"].get<string>();
 				if (type == "eval") {
+					Execution exe(*session);
 					nlohmann::json response = {
 							{"type", "result"},
-							{"result", session->render(session->evaluate(message["command"].get<string>()))},
+							{"result", session->render(session->evaluate(message["command"].get<string>(), exe))},
 					};
 					connection->send(response.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
 				}

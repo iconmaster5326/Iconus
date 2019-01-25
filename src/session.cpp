@@ -17,7 +17,7 @@
 using namespace std;
 using namespace iconus;
 
-iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE) {
+iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), defaultExecution(*this) {
 	for (Plugin& p : Plugin::plugins) {
 		try {
 			p.initSession(*this);
@@ -27,7 +27,7 @@ iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE) {
 	}
 }
 
-Object* iconus::Session::evaluate(const std::string& input) {
+Object* iconus::Session::evaluate(const std::string& input, Execution& exe) {
 	try {
 		Lexer lexer(input);
 		Op* op = parse(*this, lexer);

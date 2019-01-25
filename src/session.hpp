@@ -12,10 +12,14 @@
 #include "user.hpp"
 
 #include <string>
-
 #include <functional>
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+
 namespace iconus {
+	class Session;
+	
 	using Adaptor = std::function<Object*(Session&, Object*)>;
 	
 	class CatHandler {
@@ -58,16 +62,26 @@ namespace iconus {
 		bool canSet(const std::string& name) override;
 	};
 	
+	class Execution {
+	public:
+		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()) {}
+		inline Execution(Session& session, boost::uuids::uuid tag) : session(session), tag(tag) {}
+		
+		Session& session;
+		boost::uuids::uuid tag;
+	};
+	
 	class Session {
 	public:
 		Session();
 		
-		Object* evaluate(const std::string& input);
+		Object* evaluate(const std::string& input, Execution& exe);
 		std::string render(Object* object);
 		Object* parseWord(std::string word);
 		Adaptor getAdaptor(Class* from, Class* to);
 		Object* cat(const std::string& file);
 		
+		Execution defaultExecution;
 		User user;
 		Scope sessionScope;
 		Vector<Renderer> renderers;
