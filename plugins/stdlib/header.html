@@ -26,12 +26,19 @@
 				
 				div.appendChild(document.createTextNode(message.text+"\n"));
 				pre.appendChild(div);
+				
+				scrollDown();
 			}
 		};
 		
 		input.addEventListener("keyup", function(event) {
 			event.preventDefault();
 			if (event.keyCode === 13) {
+				var div = document.createElement("div");
+				div.setAttribute("style", "color: green;");
+				div.appendChild(document.createTextNode(input.value+"\n"));
+				pre.appendChild(div);
+				
 				var message = JSON.stringify({
 					"type": "message",
 					"tag": id,

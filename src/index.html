@@ -13,6 +13,10 @@
 		});
 	}
 	
+	function scrollDown() {
+		window.scrollTo(0,document.body.scrollHeight);
+	}
+	
 	resultHandlers = {};
 	messageHandlers = {};
 	
@@ -80,6 +84,7 @@
 					
 					resultHandlers[tag] = function(toRender) {
 						result.innerHTML = toRender;
+						scrollDown();
 					};
 					
 					var message = JSON.stringify({
@@ -98,6 +103,7 @@
 					content.appendChild(input);
 					
 					input.focus();
+					scrollDown();
 					register();
 				}
 			});
