@@ -225,7 +225,11 @@ std::string iconus::ClassNumber::name() {
 }
 
 std::string iconus::ClassNumber::toString(Object* self, Execution& exe) {
-	return to_string(self->value.asDouble);
+	string s = to_string(self->value.asDouble);
+	while (s.back() == '0' || s.back() == '.') {
+		s.pop_back();
+	}
+	return s.empty() ? "0" : s;
 }
 
 iconus::ClassUserFunction iconus::ClassUserFunction::INSTANCE{};
