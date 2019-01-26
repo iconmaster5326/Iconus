@@ -245,7 +245,13 @@ extern "C" void iconus_initSession(Execution& exe) {
 	};
 	
 	exe.session.adaptors[&ClassString::INSTANCE][&ClassNumber::INSTANCE] = [](Execution& exe, Object* from) {
-		const string& value = ClassString::value(exe, from);
-		return ClassNumber::create(stod(value));
+		try {
+			const string& value = ClassString::value(exe, from);
+			return ClassNumber::create(stod(value));
+		} catch (const invalid_argument& e) {
+			throw Error("Cannot adapt string to number: String is not a number");
+		} catch (const out_of_range& e) {
+			throw Error("Cannot adapt string to number: Number is out of range");
+		}
 	};
 }
