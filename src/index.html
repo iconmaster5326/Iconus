@@ -52,6 +52,13 @@
 				console.log("WARNING: unknown message type " + message.type);
 			}
 		};
+		
+		conn.onclose = function(event) {
+			$("#consoleInput").prop('disabled', true);
+			var div = document.createElement("div");
+			div.innerHTML = "Connection to server lost. <a href=\"javascript:location.reload();\">Try to reconnect?</a>";
+			content.appendChild(div);
+		};
 	};
 </script>
 
