@@ -22,48 +22,46 @@ extern "C" string iconus_getName() {
 	return "Standard Library";
 }
 
+using Arg = Function::Arg;
+constexpr Function::Role INPUT = Function::Role::INPUT;
+constexpr Function::Role VARARG = Function::Role::VARARG;
+constexpr Function::Role VARFLAG = Function::Role::VARFLAG;
+
 extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
 	////////////////////////////
 	
-	using Arg = Function::Arg;
-	
 	scope.vars["echo"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"input", "", "",
-			{}, {},
+			{Arg("i", INPUT)}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input;
 			}
 	));
 	
 	scope.vars["list"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"", "args", "",
-			{}, {},
+			{Arg("args", VARARG)}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassList::create(varargs.begin(), varargs.end());
 			}
 	));
 	
 	scope.vars["apply"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"", "args", "flags",
-			{Arg("fn")}, {},
+			{Arg("fn"), Arg("args", VARARG)}, {Arg("flags", VARFLAG)},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return args["fn"]->execute(exe, scope, input, varargs, varflags);
 			}
 	));
 	
 	scope.vars["get"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"i", "", "",
-			{Arg("k")}, {},
+			{Arg("i", INPUT), Arg("k")}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input->getField(exe, args["k"]);
 			}
 	));
 	
 	scope.vars["set"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"i", "", "",
-			{Arg("k"), Arg("v")}, {},
+			{Arg("i", INPUT), Arg("k"), Arg("v")}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		input->setField(exe, args["k"], args["v"]);
 		return input;
@@ -71,8 +69,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	));
 	
 	scope.vars["local"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"i", "", "",
-			{Arg("v")}, {},
+			{Arg("i", INPUT), Arg("v")}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		string name = ClassString::value(exe, args["v"]);
 		scope.setLocal(name, input);
@@ -80,53 +77,29 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
-	scope.vars["vars"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"", "", "",
-			{}, {},
-			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		Deque<Object*> result;
-		for (auto& pair : scope.vars) {
-			result.push_back(ClassString::create(pair.first));
-		}
-		return ClassList::create(result);
-			}
-	));
-	
-	scope.vars["bool"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"i", "", "",
-			{}, {},
-			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		return input->adapt(exe, &ClassBool::INSTANCE);
-			}
-	));
-	
 	scope.vars["=="] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"a", "", "",
-			{Arg("b")}, {},
+			{Arg("a", INPUT), Arg("b")}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassBool::create(args["a"]->equals(args["b"]));
 			}
 	));
 	
 	scope.vars["get-class"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"i", "", "",
-			{}, {},
+			{Arg("i", INPUT)}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassClass::create(input->clazz);
 			}
 	));
 	
 	scope.vars["to"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"i", "", "",
-			{Arg("c")}, {},
+			{Arg("i", INPUT), Arg("c")}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input->adapt(exe, ClassClass::value(exe, args["c"]));
 			}
 	));
 	
 	scope.vars["is"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"i", "", "",
-			{Arg("c")}, {},
+			{Arg("i", INPUT), Arg("c")}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassBool::create(input->adaptableTo(exe, ClassClass::value(exe, args["c"])));
 			}
@@ -134,7 +107,6 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-				"", "", "",
 				{Arg("user"),Arg("pass")}, {},
 				[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 			exe.session.user = User(ClassString::value(exe, args["user"]), ClassString::value(exe, args["pass"]));

@@ -25,16 +25,17 @@ extern "C" string iconus_getName() {
 	return "Filesystem";
 }
 
+using Arg = Function::Arg;
+constexpr Function::Role INPUT = Function::Role::INPUT;
+constexpr Function::Role VARARG = Function::Role::VARARG;
+constexpr Function::Role VARFLAG = Function::Role::VARFLAG;
+
 extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
 	////////////////////////////
-	
-	using Arg = Function::Arg;
-	
 	scope.vars["ls"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"dir", "", "",
-			{}, {},
+			{Arg("dir", INPUT)}, {},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		try {
 			Object* result = ClassList::create();
@@ -53,8 +54,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	));
 	
 	scope.vars["cat"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"file", "", "",
-			{}, {},
+			{Arg("file", INPUT)}, {},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		try {
 			Object* result;

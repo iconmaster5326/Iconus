@@ -43,16 +43,17 @@ extern "C" string iconus_initHTML() {
 	return header;
 }
 
+using Arg = Function::Arg;
+constexpr Function::Role INPUT = Function::Role::INPUT;
+constexpr Function::Role VARARG = Function::Role::VARARG;
+constexpr Function::Role VARFLAG = Function::Role::VARFLAG;
+
 extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
 	////////////////////////////
-	
-	using Arg = Function::Arg;
-	
 	scope.vars["system"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
-			"", "args", "",
-			{Arg("name")}, {},
+			{Arg("name"), Arg("args", VARARG)}, {},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		Object* result;
 		exe.session.user.doAsUser([&]() {

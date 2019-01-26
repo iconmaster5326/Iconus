@@ -18,27 +18,36 @@ namespace iconus {
 	
 	class Function {
 	public:
+		enum class Role {
+			NONE,
+			INPUT,
+			VARARG,
+			VARFLAG,
+		};
+		
 		class Arg {
 		public:
 			std::string name;
 			Op* defaultValue; // null if required argument
+			Role role;
 			
-			inline Arg(std::string name) : name(name), defaultValue(nullptr) {}
-			inline Arg(std::string name, Op* defaultValue) : name(name), defaultValue(defaultValue) {}
+			inline Arg(std::string name) : name(name), defaultValue(nullptr), role(Role::NONE) {}
+			inline Arg(std::string name, Op* defaultValue) : name(name), defaultValue(defaultValue), role(Role::NONE) {}
+			inline Arg(std::string name, Role role) : name(name), defaultValue(nullptr), role(role) {}
+			inline Arg(std::string name, Op* defaultValue, Role role) : name(name), defaultValue(defaultValue), role(role) {}
 		};
 		
-		std::string input, vararg, varflag;
 		Vector<Arg> args;
 		Vector<Arg> flags;
 		
 		inline Function() {}
 		
-		inline Function(std::string input, std::string vararg, std::string varflag, const Vector<Arg>& args, const Vector<Arg>& flags) :
-				input(input), vararg(vararg), varflag(varflag), args(args), flags(flags)
+		inline Function(const Vector<Arg>& args, const Vector<Arg>& flags) :
+				args(args), flags(flags)
 		{}
 		
-		inline Function(std::string input, std::string vararg, std::string varflag, std::initializer_list<Arg> args, std::initializer_list<Arg> flags) :
-				input(input), vararg(vararg), varflag(varflag), args(args), flags(flags)
+		inline Function(std::initializer_list<Arg> args, std::initializer_list<Arg> flags) :
+				args(args), flags(flags)
 		{}
 	};
 }

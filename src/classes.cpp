@@ -10,7 +10,7 @@
 #include "session.hpp"
 
 #include <sstream>
-
+#include <iostream>
 
 using namespace std;
 using namespace iconus;
@@ -59,108 +59,153 @@ iconus::ClassManagedFunction iconus::ClassManagedFunction::INSTANCE{};
 Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		Scope& scope, Object* input, Vector<Object*>& args,
 		Map<std::string, Object*>& flags) {
+	using Arg = Function::Arg;
+	using Role = Function::Role;
+	
+	// INVARIANTS:
+	// There will only be 0 or 1 input, vararg, and varflag args, each.
+	// There will never be both an input arg and a vararg. (there may, however, be an input flag and a vararg).
+	// Inputs, varargs, and varflags will never have default values.
+	// Varargs may only appear in the args. Varflags may only appear in the flags. Input may appear in either.
+	
+	// RESULTS:
+	// Args fill up from left to right.
+	// Varargs is non-greedy; that is, will leave values for required parameters to thier right.
+	// Optional values around varargs get thier values filled (from left to right) before varargs does.
+	// The input arg will always be matched last.
+	// Flags and args always get thier values assigned before varflags.
+	// If the input was matched, it will change the input as well as assign the variable, and vice versa if not matched.
+	// Flags go to args before args do.
+	// Required args fill up left to right before optional ones, but arg order is maintained.
+	
 	Instance* instance = (Instance*) self->value.asPtr;
 	Map<std::string, Object*> mappedArgs;
-	auto argAt = args.begin();
-	Map<std::string, Object*> restFlags(flags);
+	Map<std::string, Object*> varflags;
 	
-	bool inputExplicit = false;
-	if (!instance->fn.input.empty()) {
-		auto it = flags.find(instance->fn.input);
+	bool inputIsArg;
+	Arg* inputArg = nullptr;
+	Arg* varargArg = nullptr;
+	Arg* varflagArg = nullptr;
+	
+	for (Arg& arg : instance->fn.args) {
+		switch (arg.role) {
+		case Role::INPUT: inputArg = &arg; inputIsArg = true; break;
+		case Role::VARARG: varargArg = &arg; break;
+		}
+	}
+	for (Arg& arg : instance->fn.flags) {
+		switch (arg.role) {
+		case Role::INPUT: inputArg = &arg; inputIsArg = false; break;
+		case Role::VARFLAG: varflagArg = &arg; break;
+		}
+	}
+	
+	for (Arg& arg : instance->fn.args) {
+		auto it = flags.find(arg.name);
 		if (it != flags.end()) {
-			input = it->second;
-			inputExplicit = true;
-			restFlags.erase(instance->fn.input);
-		}
-	}
-	
-	for (const Function::Arg& arg : instance->fn.args) {
-		auto it = flags.find(arg.name);
-		if (it == flags.end()) {
-			if (argAt == args.end()) {
-				if (arg.defaultValue) {
-					mappedArgs[arg.name] = arg.defaultValue->evaluate(exe, scope, input);
-				} else {
-					throw Error("Argument '"+arg.name+"' required");
-				}
-			} else {
-				mappedArgs[arg.name] = *argAt;
-				argAt++;
-			}
-		} else {
 			mappedArgs[arg.name] = it->second;
-			restFlags.erase(arg.name);
+			if (arg.role == Role::INPUT) input = it->second;
+			// TODO: what if varargs and varflags
+			flags.erase(arg.name);
 		}
 	}
-	
-	for (const Function::Arg& arg : instance->fn.flags) {
+	for (Arg& arg : instance->fn.flags) {
 		auto it = flags.find(arg.name);
-		if (it == flags.end()) {
-			if (argAt == args.end()) {
-				if (arg.defaultValue) {
-					mappedArgs[arg.name] = arg.defaultValue->evaluate(exe, scope, input);
-				} else {
-					throw Error("Flag '"+arg.name+"' required");
-				}
-			} else {
-				throw Error("Flag '"+arg.name+"' required");
-			}
-		} else {
+		if (it != flags.end()) {
 			mappedArgs[arg.name] = it->second;
-			restFlags.erase(arg.name);
+			flags.erase(arg.name);
+		} else if (arg.defaultValue) {
+			mappedArgs[arg.name] = arg.defaultValue->evaluate(exe, scope, input);
+			flags.erase(arg.name);
+		} else if (arg.role == Role::NONE) {
+			throw Error("Flag '"+arg.name+"' required");
 		}
 	}
 	
-	if (instance->fn.vararg.empty()) {
-		if (argAt != args.end()) {
-			Object* lastArg = *argAt;
+	int requiredArgs = 0;
+	int optionalArgs = 0;
+	for (Arg& arg : instance->fn.args) {
+		if (arg.role != Role::NONE || mappedArgs.find(arg.name) != mappedArgs.end()) continue;
+		if (arg.defaultValue) {
+			optionalArgs++;
+		} else {
+			requiredArgs++;
+		}
+	}
+	
+	int overflow1 = args.size() - requiredArgs;
+	int overflow2 = overflow1 - optionalArgs;
+	
+	if (overflow1 < 0) throw Error("Not enough arguments given");
+	if ((inputArg && overflow2 > 1) || (!inputArg && !varargArg && overflow2 > 0)) throw Error("Too many arguments given");
+	
+	Vector<Arg*> postArgs; bool post = false;
+	int optionalsToHave = overflow1;
+	
+	int argAt = 0;
+	int preI, postI;
+	for (Arg& arg : instance->fn.args) {
+		if (arg.role != Role::NONE) {
+			preI = argAt;
+			post = true;
+			continue;
+		}
+		
+		if (mappedArgs.find(arg.name) != mappedArgs.end()) continue;
+		
+		if (arg.defaultValue && optionalsToHave <= 0) {
+			mappedArgs[arg.name] = arg.defaultValue->evaluate(exe, scope, input);
+			continue;
+		}
+		
+		if (post) {
+			postArgs.push_back(&arg);
+		} else {
+			mappedArgs[arg.name] = args[argAt];
 			argAt++;
-			if (!instance->fn.input.empty() && !inputExplicit && argAt == args.end()) {
-				input = lastArg;
-			} else {
-				throw Error("Too many positional arguments");
-			}
+			if (arg.defaultValue) optionalsToHave--;
 		}
-	} else {
-		auto it = flags.find(instance->fn.vararg);
-		if (it == flags.end()) {
-			mappedArgs[instance->fn.vararg] = ClassList::create(argAt, args.end());
+	}
+	
+	// TODO: parser so input can be in middle / at end
+	// TODO: parser so that varargs / varflags
+	// TODO: test with varargs/input in the middle
+	// TODO: test EVERYTHING flag related
+	
+	postI = argAt = args.size() - postArgs.size();
+	for (Arg* arg : postArgs) {
+		if (mappedArgs.find(arg->name) != mappedArgs.end()) continue;
+		
+		if (arg->defaultValue && optionalsToHave <= 0) {
+			mappedArgs[arg->name] = arg->defaultValue->evaluate(exe, scope, input);
+			continue;
+		}
+		
+		mappedArgs[arg->name] = args[argAt];
+		argAt++;
+		
+		if (arg->defaultValue) optionalsToHave--;
+	}
+	
+	Vector<Object*> varargs;
+	if (inputArg) {
+		if (optionalsToHave == 1) {
+			input = mappedArgs[inputArg->name] = args[preI];
 		} else {
-			mappedArgs[instance->fn.vararg] = it->second;
-			restFlags.erase(instance->fn.vararg);
-			// TODO: unpack list given
-			
-			if (argAt != args.end()) {
-				throw Error("Positional arguments given after vararg argument explicity specified");
-			}
+			mappedArgs[inputArg->name] = input;
 		}
+	} else if (varargArg) {
+		varargs.insert(varargs.begin(), args.begin()+preI, args.begin()+postI);
+		// TODO: assign to mappedArgs
 	}
 	
-	if (instance->fn.varflag.empty()) {
-		if (!restFlags.empty()) {
-			throw Error("Unknown flag '"+restFlags.begin()->first+"'");
-		}
-	} else {
-		auto it = flags.find(instance->fn.varflag);
-		if (it == flags.end()) {
-			// TODO
-		} else {
-			mappedArgs[instance->fn.varflag] = it->second;
-			restFlags.erase(instance->fn.varflag);
-			// TODO: unpack list given
-			
-			if (!restFlags.empty()) {
-				throw Error("More flags given after varflag argument explicity specified");
-			}
-		}
+	if (varflagArg) {
+		// TODO: assign to mappedArgs
+	} else if (!flags.empty()) {
+		throw Error("Too many flags given");
 	}
 	
-	if (!instance->fn.input.empty()) {
-		mappedArgs[instance->fn.input] = input;
-	}
-	
-	Vector<Object*> restArgs(argAt, args.end());
-	return instance->handler(exe, scope, input, mappedArgs, restArgs, restFlags);
+	return instance->handler(exe, scope, input, mappedArgs, varargs, flags);
 }
 
 iconus::ClassList iconus::ClassList::INSTANCE{};
@@ -226,8 +271,12 @@ std::string iconus::ClassNumber::name() {
 
 std::string iconus::ClassNumber::toString(Object* self, Execution& exe) {
 	string s = to_string(self->value.asDouble);
-	while (s.back() == '0' || s.back() == '.') {
-		s.pop_back();
+	if (s.find('.') != string::npos) {
+		while (s.back() == '0' || s.back() == '.') {
+			char c = s.back();
+			s.pop_back();
+			if (c == '.') break;
+		}
 	}
 	return s.empty() ? "0" : s;
 }

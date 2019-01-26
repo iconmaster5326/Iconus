@@ -9,8 +9,6 @@
 #include "classes.hpp"
 #include "error.hpp"
 
-
-
 using namespace std;
 using namespace iconus;
 
@@ -79,8 +77,7 @@ namespace iconus {
 					tokens.pop_front();
 					if (!lambda->fn.args.empty()) {
 						if (lambda->fn.args.size() > 1) throw Error("can only have 1 variable before the | in arguments specification");
-						lambda->fn.input = lambda->fn.args.front().name;
-						lambda->fn.args.pop_back();
+						lambda->fn.args.front().role = Function::Role::INPUT;
 					}
 				} break;
 				case Token::Type::FLAG: {

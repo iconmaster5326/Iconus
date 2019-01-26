@@ -97,12 +97,12 @@ namespace iconus {
 		public:
 			inline Instance(const Function& fn, Handler handler) : handler(handler), fn(fn) {}
 			
-			inline Instance(std::string input, std::string vararg, std::string varflag, const Vector<Function::Arg>& args, const Vector<Function::Arg>& flags, Handler handler) :
-				handler(handler), fn(input, vararg, varflag, args, flags)
+			inline Instance(const Vector<Function::Arg>& args, const Vector<Function::Arg>& flags, Handler handler) :
+				handler(handler), fn(args, flags)
 			{}
 			
-			inline Instance(std::string input, std::string vararg, std::string varflag, std::initializer_list<Function::Arg> args, std::initializer_list<Function::Arg> flags, Handler handler) :
-				handler(handler), fn(input, vararg, varflag, args, flags)
+			inline Instance(std::initializer_list<Function::Arg> args, std::initializer_list<Function::Arg> flags, Handler handler) :
+				handler(handler), fn(args, flags)
 			{}
 			
 			Handler handler;
