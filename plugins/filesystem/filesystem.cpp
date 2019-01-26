@@ -5,7 +5,6 @@
  *      Author: iconmaster
  */
 
-#include "lib_classes.hpp"
 #include "session.hpp"
 #include "error.hpp"
 #include "base64.hpp"
@@ -16,6 +15,7 @@
 #include <fstream>
 #include <sstream>
 #include <boost/filesystem.hpp>
+#include "../filesystem/lib_classes.hpp"
 
 using namespace std;
 using namespace iconus;

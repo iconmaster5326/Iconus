@@ -5,8 +5,8 @@
  *      Author: iconmaster
  */
 
-#ifndef PLUGINS_FILES_LIB_CLASSES_HPP_
-#define PLUGINS_FILES_LIB_CLASSES_HPP_
+#ifndef PLUGINS_FILESYSTEM_LIB_CLASSES_HPP_
+#define PLUGINS_FILESYSTEM_LIB_CLASSES_HPP_
 
 #include "classes.hpp"
 
@@ -40,4 +40,4 @@ namespace iconus {
 	};
 }
 
-#endif /* PLUGINS_FILES_LIB_CLASSES_HPP_ */
+#endif /* PLUGINS_FILESYSTEM_LIB_CLASSES_HPP_ */
