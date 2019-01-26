@@ -11,6 +11,7 @@
 #include "classes.hpp"
 #include "error.hpp"
 #include "plugin.hpp"
+#include "util.hpp"
 
 #include <iostream>
 
@@ -44,7 +45,7 @@ std::string iconus::Execution::render(Object* ob) {
 		}
 	}
 	
-	throw runtime_error("no renderer defined for object!");
+	return escapeHTML(ob->toString(*this));
 }
 
 Object* iconus::Execution::parseWord(std::string word) {
