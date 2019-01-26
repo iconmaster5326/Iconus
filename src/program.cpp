@@ -85,6 +85,12 @@ Vector<Object*> iconus::Class::fieldNames(Object* self, Execution& exe) {
 }
 
 bool iconus::Class::hasField(Object* self, Execution& exe, Object* name) {
+	Vector<Object*> names = fieldNames(self, exe);
+	for (Object* ob : names) {
+		if (ob->equals(name)) {
+			return true;
+		}
+	}
 	return false;
 }
 

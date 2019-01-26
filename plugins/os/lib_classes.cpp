@@ -45,3 +45,43 @@ bool iconus::ClassSystemOutput::equals(const Object* self,
 	
 	return true;
 }
+
+Vector<Object*> iconus::ClassSystemOutput::fieldNames(Object* self, Execution& exe) {
+	Instance& a = *(Instance*)self->value.asPtr;
+	if (a.done) {
+		return Vector<Object*>{ClassString::create("done"), ClassString::create("output"), ClassString::create("stderr"), ClassString::create("stdout"), ClassString::create("code")};
+	} else {
+		return Vector<Object*>{ClassString::create("done"), ClassString::create("output"), ClassString::create("stderr"), ClassString::create("stdout")};
+	}
+}
+
+Object* iconus::ClassSystemOutput::getField(Object* self, Execution& exe, Object* name) {
+	Instance& a = *(Instance*)self->value.asPtr;
+	string field = ClassString::value(exe, name);
+	
+	if (field == "done") {
+		return ClassBool::create(a.done);
+	} else if (field == "output") {
+		ostringstream sb;
+		for (const Instance::Line& line : a.lines) {
+			sb << line.text << endl;
+		}
+		return ClassString::create(sb.str());
+	} else if (field == "stdout") {
+		ostringstream sb;
+		for (const Instance::Line& line : a.lines) {
+			if (!line.isErr) sb << line.text << endl;
+		}
+		return ClassString::create(sb.str());
+	} else if (field == "stderr") {
+		ostringstream sb;
+		for (const Instance::Line& line : a.lines) {
+			if (line.isErr) sb << line.text << endl;
+		}
+		return ClassString::create(sb.str());
+	} else if (field == "code" && a.done) {
+		return ClassNumber::create(a.retCode);
+	}
+	
+	return &ClassNil::NIL;
+}

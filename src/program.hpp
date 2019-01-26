@@ -32,12 +32,12 @@ namespace iconus {
 		
 		// necesary to implement fields
 		virtual Vector<Object*> fieldNames(Object* self, Execution& exe);
-		virtual bool hasField(Object* self, Execution& exe, Object* name);
 		virtual Object* getField(Object* self, Execution& exe, Object* name);
 		virtual bool canSetField(Object* self, Execution& exe, Object* name);
 		virtual void setField(Object* self, Execution& exe, Object* name, Object* value);
 		
 		// optional to implement fields
+		virtual bool hasField(Object* self, Execution& exe, Object* name);
 		virtual Vector<Object*> fieldValues(Object* self, Execution& exe);
 		virtual Vector<std::pair<Object*,Object*> > fields(Object* self, Execution& exe);
 	};
