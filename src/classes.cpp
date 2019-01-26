@@ -330,3 +330,22 @@ bool iconus::ClassList::equals(const Object* self, const Object* other) const {
 	}
 	return true;
 }
+
+iconus::ClassClass iconus::ClassClass::INSTANCE{};
+
+std::string iconus::ClassClass::name() {
+	return "class";
+}
+
+std::string iconus::ClassClass::toString(Object* self, Execution& exe) {
+	Class* value = (Class*) self->value.asPtr;
+	return "class "+value->name();
+}
+
+std::size_t iconus::ClassClass::hash(const Object* self) const {
+	return (size_t) self->value.asPtr;
+}
+
+bool iconus::ClassClass::equals(const Object* self, const Object* other) const {
+	return self->value.asPtr == other->value.asPtr;
+}

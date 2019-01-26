@@ -5,8 +5,7 @@
  *      Author: iconmaster
  */
 
-#include "std_classes.hpp"
-
+#include "classes.hpp"
 #include "session.hpp"
 #include "error.hpp"
 #include "util.hpp"
@@ -14,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 using namespace std;
 using namespace iconus;
@@ -116,6 +116,22 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
+	scope.vars["to"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"i", "", "",
+			{Arg("c")}, {},
+			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		return input->adapt(exe, ClassClass::value(exe, args["c"]));
+			}
+	));
+	
+	scope.vars["is"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			"i", "", "",
+			{Arg("c")}, {},
+			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		return ClassBool::create(input->adaptableTo(exe, ClassClass::value(exe, args["c"])));
+			}
+	));
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 				"", "", "",
@@ -126,6 +142,20 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				}
 		));
 	}
+	
+	////////////////////////////
+	// constants
+	////////////////////////////
+	scope.vars["<nil>"] = ClassClass::create(&ClassNil::INSTANCE);
+	scope.vars["<bool>"] = ClassClass::create(&ClassBool::INSTANCE);
+	scope.vars["<number>"] = ClassClass::create(&ClassNumber::INSTANCE);
+	scope.vars["<string>"] = ClassClass::create(&ClassString::INSTANCE);
+	scope.vars["<list>"] = ClassClass::create(&ClassList::INSTANCE);
+	scope.vars["<error>"] = ClassClass::create(&ClassError::INSTANCE);
+	scope.vars["<class>"] = ClassClass::create(&ClassClass::INSTANCE);
+	
+	scope.vars["PI"] = ClassNumber::create(3.14159265358979323846);
+	scope.vars["E"] = ClassNumber::create(2.71828182845904523536);
 }
 
 extern "C" void iconus_initSession(Execution& exe) {

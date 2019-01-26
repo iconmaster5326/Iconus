@@ -72,6 +72,12 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		}
 			}
 	));
+	
+	////////////////////////////
+	// constants
+	////////////////////////////
+	scope.vars["<raw-string>"] = ClassClass::create(&ClassRawString::INSTANCE);
+	scope.vars["<image>"] = ClassClass::create(&ClassImage::INSTANCE);
 }
 
 extern "C" void iconus_initSession(Execution& exe) {

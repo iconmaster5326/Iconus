@@ -253,6 +253,11 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		return result;
 			}
 	));
+	
+	////////////////////////////
+	// constants
+	////////////////////////////
+	scope.vars["<system-output>"] = ClassClass::create(&ClassSystemOutput::INSTANCE);
 }
 
 extern "C" void iconus_initSession(Execution& exe) {
