@@ -64,7 +64,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 	
 	// INVARIANTS:
 	// There will only be 0 or 1 input, vararg, and varflag args, each.
-	// There will never be both an input arg and a vararg. (there may, however, be an input flag and a vararg).
+	// There will never be both an input arg and a vararg. (there may, however, be an input flag and a varflag).
 	// Inputs, varargs, and varflags will never have default values.
 	// Varargs may only appear in the args. Varflags may only appear in the flags. Input may appear in either.
 	
@@ -100,12 +100,22 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		}
 	}
 	
+	Vector<Object*> varargs;
+	bool explicitVarargs;
+	bool explicitVarflags;
 	for (Arg& arg : instance->fn.args) {
 		auto it = flags.find(arg.name);
 		if (it != flags.end()) {
 			mappedArgs[arg.name] = it->second;
-			if (arg.role == Role::INPUT) input = it->second;
-			// TODO: what if varargs and varflags
+			if (arg.role == Role::INPUT) {
+				input = it->second;
+			} else if (arg.role == Role::VARARG) {
+				explicitVarargs = true;
+				auto& value = ClassList::value(exe, it->second);
+				varargs.insert(varargs.end(), value.begin(), value.end());
+			} else if (arg.role == Role::VARFLAG) {
+				// TODO
+			}
 			flags.erase(arg.name);
 		}
 	}
@@ -137,7 +147,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 	int overflow2 = overflow1 - optionalArgs;
 	
 	if (overflow1 < 0) throw Error("Not enough arguments given");
-	if ((inputArg && overflow2 > 1) || (!inputArg && !varargArg && overflow2 > 0)) throw Error("Too many arguments given");
+	if ((inputArg && overflow2 > 1) || (!inputArg && !varargArg && overflow2 > 0) || (explicitVarargs && overflow2 > 0)) throw Error("Too many arguments given");
 	
 	Vector<Arg*> postArgs; bool post = false;
 	int optionalsToHave = overflow1;
@@ -182,7 +192,6 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		if (arg->defaultValue) optionalsToHave--;
 	}
 	
-	Vector<Object*> varargs;
 	if (inputArg) {
 		if (optionalsToHave == 1) {
 			input = mappedArgs[inputArg->name] = args[preI];
@@ -191,7 +200,9 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		}
 	} else if (varargArg) {
 		varargs.insert(varargs.begin(), args.begin()+preI, args.begin()+postI);
-		// TODO: assign to mappedArgs
+		if (!explicitVarargs) {
+			mappedArgs[varargArg->name] = ClassList::create(varargs.begin(), varargs.end());
+		}
 	}
 	
 	if (varflagArg) {
