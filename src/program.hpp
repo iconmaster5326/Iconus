@@ -124,7 +124,7 @@ template<> struct std::hash<iconus::Object*> {
 
 template<> struct std::equal_to<iconus::Object*> {
 	constexpr bool operator()(const iconus::Object* a, const iconus::Object* b) const {
-		return a->value.asPtr == b->value.asPtr;
+		return a->equals((iconus::Object*)b);
 	};
 };
 
