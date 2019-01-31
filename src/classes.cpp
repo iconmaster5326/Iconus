@@ -418,9 +418,11 @@ bool iconus::ClassMap::equals(const Object* self, const Object* other) const {
 	if (a.size() != b.size()) return false;
 	for (auto& pair : a) {
 		if (b.find(pair.first) == b.end()) return false;
+		if (a[pair.first] != b[pair.first]) return false;
 	}
 	for (auto& pair : b) {
 		if (a.find(pair.first) == a.end()) return false;
+		if (a[pair.first] != b[pair.first]) return false;
 	}
 	return true;
 }
