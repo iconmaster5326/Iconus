@@ -105,6 +105,28 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
+	scope.vars["map"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			{Arg("args", VARARG)}, {},
+			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		Object* result = ClassMap::create();
+		auto& map = ClassMap::value(result);
+		for (auto it = varargs.begin(); it != varargs.end(); it++) {
+			Object* name = *it;
+			it++;
+			Object* value;
+			if (it == varargs.end()) {
+				value = &ClassNil::NIL;
+			} else {
+				value = *it;
+			}
+			
+			map[name] = value;
+			if (it == varargs.end()) break;
+		}
+		return result;
+			}
+	));
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 				{Arg("user"),Arg("pass")}, {},
@@ -125,6 +147,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	scope.vars["<list>"] = ClassClass::create(&ClassList::INSTANCE);
 	scope.vars["<error>"] = ClassClass::create(&ClassError::INSTANCE);
 	scope.vars["<class>"] = ClassClass::create(&ClassClass::INSTANCE);
+	scope.vars["<map>"] = ClassClass::create(&ClassMap::INSTANCE);
 	
 	scope.vars["PI"] = ClassNumber::create(3.14159265358979323846);
 	scope.vars["E"] = ClassNumber::create(2.71828182845904523536);
@@ -170,7 +193,22 @@ extern "C" void iconus_initSession(Execution& exe) {
 	// renderers
 	////////////////////////////
 	
-	exe.session.renderers.emplace_back("numbered list", [](Execution& exe, Object* ob) {
+	exe.session.renderers.emplace_back("map as table", [](Execution& exe, Object* ob) {
+		return ob->clazz == &ClassMap::INSTANCE;
+	}, [](Execution& exe, Object* ob) {
+		ostringstream sb;
+		sb << "<table>";
+		
+		auto& map = ClassMap::value(exe, ob);
+		for (auto& pair : map) {
+			sb << "<tr><td>" << exe.render(pair.first) << "</td><td>" << exe.render(pair.second) << "</td></tr>";
+		}
+		
+		sb << "</table>";
+		return sb.str();
+	});
+	
+	exe.session.renderers.emplace_back("ordered list", [](Execution& exe, Object* ob) {
 		return ob->clazz == &ClassList::INSTANCE;
 	}, [](Execution& exe, Object* ob) {
 		ostringstream sb;

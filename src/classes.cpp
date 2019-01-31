@@ -393,3 +393,62 @@ std::size_t iconus::ClassClass::hash(const Object* self) const {
 bool iconus::ClassClass::equals(const Object* self, const Object* other) const {
 	return self->value.asPtr == other->value.asPtr;
 }
+
+iconus::ClassMap iconus::ClassMap::INSTANCE{};
+
+std::string iconus::ClassMap::name() {
+	return "map";
+}
+
+std::string iconus::ClassMap::toString(Object* self, Execution& exe) {
+	return "(map...)";
+}
+
+std::size_t iconus::ClassMap::hash(const Object* self) const {
+	size_t hash = 1;
+	for (auto& pair : ClassMap::value(self)) {
+		hash *= pair.first->hash() * pair.second->hash();
+	}
+	return hash;
+}
+
+bool iconus::ClassMap::equals(const Object* self, const Object* other) const {
+	auto& a = ClassMap::value(self);
+	auto& b = ClassMap::value(other);
+	if (a.size() != b.size()) return false;
+	for (auto& pair : a) {
+		if (b.find(pair.first) == b.end()) return false;
+	}
+	for (auto& pair : b) {
+		if (a.find(pair.first) == a.end()) return false;
+	}
+	return true;
+}
+
+Vector<Object*> iconus::ClassMap::fieldNames(Object* self, Execution& exe) {
+	Vector<Object*> result;
+	for (auto& pair : ClassMap::value(exe, self)) {
+		result.push_back(pair.first);
+	}
+	return result;
+}
+
+Object* iconus::ClassMap::getField(Object* self, Execution& exe, Object* name) {
+	auto& map = ClassMap::value(exe, self);
+	auto it = map.find(name);
+	if (it == map.end()) {
+		return &ClassNil::NIL;
+	} else {
+		return it->second;
+	}
+}
+
+bool iconus::ClassMap::canSetField(Object* self, Execution& exe, Object* name) {
+	return true;
+}
+
+void iconus::ClassMap::setField(Object* self, Execution& exe, Object* name,
+		Object* value) {
+	auto& map = ClassMap::value(exe, self);
+	map[name] = value;
+}

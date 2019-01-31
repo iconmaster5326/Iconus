@@ -166,6 +166,33 @@ namespace iconus {
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
+	
+	class ClassMap : public Class {
+	public:
+		static ClassMap INSTANCE;
+		static inline Object* create(Map<Object*,Object*>* args) {
+			return new Object(&INSTANCE, args);
+		}
+		template<typename... Args> static Object* create(Args... args) {
+			return create(gcAlloc<Map<Object*,Object*>>(args...));
+		}
+		static inline Map<Object*,Object*>& value(const Object* ob) {
+			return *(Map<Object*,Object*>*)ob->value.asPtr;
+		}
+		static inline Map<Object*,Object*>& value(Execution& exe, Object* ob) {
+			return *(Map<Object*,Object*>*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
+		std::string toString(Object* self, Execution& exe) override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
+		
+		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
+		Object* getField(Object* self, Execution& exe, Object* name) override;
+		bool canSetField(Object* self, Execution& exe, Object* name) override;
+		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
+	};
 }
 
 #endif /* SRC_CLASSES_HPP_ */
