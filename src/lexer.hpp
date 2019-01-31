@@ -31,6 +31,7 @@ namespace iconus {
 			RBRACE,
 			LBRACKET, // []
 			RBRACKET,
+			ELLIPSES, // a literal set of three dots
 		};
 		
 		Type type;

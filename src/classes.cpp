@@ -167,8 +167,6 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		}
 	}
 	
-	// TODO: parser so that varargs / varflags
-	// TODO: test with varargs in the middle
 	// TODO: test EVERYTHING flag related
 	
 	postI = argAt = args.size() - postArgs.size();

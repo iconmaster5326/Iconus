@@ -144,7 +144,12 @@ namespace iconus {
 				*input >> c;
 				c = input->peek();
 			}
-			return Token{Token::Type::WORD, word.str()};
+			
+			string s = word.str();
+			if (s == "...")
+				return Token{Token::Type::ELLIPSES, s};
+			else
+				return Token{Token::Type::WORD, s};
 		}
 	}
 
