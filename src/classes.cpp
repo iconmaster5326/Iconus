@@ -167,9 +167,8 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		}
 	}
 	
-	// TODO: parser so input can be in middle / at end
 	// TODO: parser so that varargs / varflags
-	// TODO: test with varargs/input in the middle
+	// TODO: test with varargs in the middle
 	// TODO: test EVERYTHING flag related
 	
 	postI = argAt = args.size() - postArgs.size();

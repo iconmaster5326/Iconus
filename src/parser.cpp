@@ -61,6 +61,7 @@ namespace iconus {
 		}
 		
 		subTokens.pop_back();
+		bool gotInput = false;
 		
 		List<Token>& restTokens = tokens;
 		{
@@ -78,6 +79,8 @@ namespace iconus {
 					if (!lambda->fn.args.empty()) {
 						if (lambda->fn.args.size() > 1) throw Error("can only have 1 variable before the | in arguments specification");
 						lambda->fn.args.front().role = Function::Role::INPUT;
+						if (gotInput) throw Error("Can only have 1 argument labelled as an input argument");
+						gotInput = true;
 					}
 				} break;
 				case Token::Type::FLAG: {
@@ -85,6 +88,8 @@ namespace iconus {
 					tokens.pop_front();
 				} break;
 				case Token::Type::LPAREN: {
+					bool isInput = false;
+				getExtArg:
 					tokens.pop_front();
 					switch (tokens.front().type) {
 					case Token::Type::WORD: {
@@ -92,12 +97,19 @@ namespace iconus {
 						
 						tokens.pop_front();
 						if (tokens.empty()) throw Error("expected ')'; not found");
+						Op* value = nullptr;
+						if (!isInput) {
+							if (tokens.front().type != Token::Type::RPAREN) {
+								value = parseArg(exe, tokens);
+							} else {
+								value = new OpConst(&ClassNil::NIL);
+							}
+						}
 						
-						Op* value = parseArg(exe, tokens);
 						if (tokens.empty() || tokens.front().type != Token::Type::RPAREN) throw Error("expected ')'; found: "+tokens.front().value);
 						tokens.pop_front();
 						
-						lambda->fn.args.emplace_back(name, value);
+						lambda->fn.args.emplace_back(name, value, isInput ? Function::Role::INPUT : Function::Role::NONE);
 					} break;
 					case Token::Type::FLAG: {
 						string name = tokens.front().value;
@@ -105,12 +117,25 @@ namespace iconus {
 						tokens.pop_front();
 						if (tokens.empty()) throw Error("expected ')'; not found");
 						
-						Op* value = parseArg(exe, tokens);
+						Op* value = nullptr;
+						if (!isInput) {
+							if (tokens.front().type != Token::Type::RPAREN) {
+								value = parseArg(exe, tokens);
+							} else {
+								value = new OpConst(&ClassNil::NIL);
+							}
+						}
+						
 						if (tokens.empty() || tokens.front().type != Token::Type::RPAREN) throw Error("expected ')'; found: "+tokens.front().value);
 						tokens.pop_front();
 						
-						lambda->fn.flags.emplace_back(name, value);
+						lambda->fn.flags.emplace_back(name, value, isInput ? Function::Role::INPUT : Function::Role::NONE);
 					} break;
+					case Token::Type::PIPE: {
+						if (gotInput) throw Error("Can only have 1 argument labelled as an input argument");
+						gotInput = isInput = true;
+						goto getExtArg;
+					}
 					default: throw Error("Token invalid in extended argument specification: "+tokens.front().value);
 					}
 				} break;
