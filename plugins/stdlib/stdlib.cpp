@@ -127,6 +127,18 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
+	scope.vars[">map"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+			{Arg("i", INPUT)}, {},
+			[](auto& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Object* result = ClassMap::create();
+		auto& map = ClassMap::value(result);
+		for (auto& pair : input->fields(exe)) {
+			map[pair.first] = pair.second;
+		}
+		return result;
+			}
+	));
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
 				{Arg("user"),Arg("pass")}, {},
