@@ -167,8 +167,6 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		}
 	}
 	
-	// TODO: test EVERYTHING flag related
-	
 	postI = argAt = args.size() - postArgs.size();
 	for (Arg* arg : postArgs) {
 		if (mappedArgs.find(arg->name) != mappedArgs.end()) continue;
