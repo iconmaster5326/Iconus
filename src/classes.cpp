@@ -23,7 +23,7 @@ std::string iconus::ClassNil::name() {
 }
 
 std::string iconus::ClassNil::toString(Object* self, Execution& exe) {
-	return "nil";
+	return "";
 }
 
 iconus::ClassString iconus::ClassString::INSTANCE{};
