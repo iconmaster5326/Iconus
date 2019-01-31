@@ -101,8 +101,9 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 	}
 	
 	Vector<Object*> varargs;
-	bool explicitVarargs;
-	bool explicitVarflags;
+	Map<Object*,Object*> givenVarflags;
+	bool explicitVarargs = false;
+	bool explicitVarflags = false;
 	for (Arg& arg : instance->fn.args) {
 		auto it = flags.find(arg.name);
 		if (it != flags.end()) {
@@ -113,8 +114,6 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 				explicitVarargs = true;
 				auto& value = ClassList::value(exe, it->second);
 				varargs.insert(varargs.end(), value.begin(), value.end());
-			} else if (arg.role == Role::VARFLAG) {
-				// TODO
 			}
 			flags.erase(arg.name);
 		}
@@ -123,6 +122,13 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		auto it = flags.find(arg.name);
 		if (it != flags.end()) {
 			mappedArgs[arg.name] = it->second;
+			
+			if (arg.role == Role::VARFLAG) {
+				explicitVarflags = true;
+				auto& value = ClassMap::value(exe, it->second);
+				givenVarflags.insert(value.begin(), value.end());
+			}
+			
 			flags.erase(arg.name);
 		} else if (arg.defaultValue) {
 			mappedArgs[arg.name] = arg.defaultValue->evaluate(exe, scope, input);
@@ -205,10 +211,23 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 		}
 	}
 	
-	if (varflagArg) {
-		// TODO: assign to mappedArgs
+	if (varflagArg && !explicitVarflags) {
+		Object* mapObj = ClassMap::create();
+		auto& map = ClassMap::value(mapObj);
+		
+		for (auto& pair : flags) {
+			map[ClassString::create(pair.first)] = pair.second;
+		}
+		
+		mappedArgs[varflagArg->name] = mapObj;
 	} else if (!flags.empty()) {
 		throw Error("Too many flags given");
+	}
+	
+	if (explicitVarflags) {
+		for (auto& pair : givenVarflags) {
+			flags[pair.first->toString(exe)] = pair.second;
+		}
 	}
 	
 	return instance->handler(exe, scope, input, mappedArgs, varargs, flags);
