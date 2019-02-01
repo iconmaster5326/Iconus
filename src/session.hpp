@@ -80,7 +80,7 @@ namespace iconus {
 		MessageHandler getMessage;
 	};
 	
-	class Session {
+	class Session { // TODO: inherit gc; it seems there's a bug in libgc causing all Sessions to get garbage collected early
 	public:
 		Session();
 		
@@ -93,6 +93,7 @@ namespace iconus {
 		Vector<WordParser> parsers;
 		Map<Class*, Map<Class*, Adaptor>> adaptors;
 		Vector<CatHandler> catHandlers;
+		bool closed;
 	};
 }
 

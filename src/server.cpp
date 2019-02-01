@@ -111,7 +111,7 @@ namespace iconus {
 			
 			endpoint.on_close = [wsServer,session](shared_ptr<WsServer::Connection> connection, int code, const string& reason) {
 				cout << "WebSocket closed. Reason: " << reason << endl;
-				delete session;
+				session->closed = true;
 				delete wsServer;
 			};
 			

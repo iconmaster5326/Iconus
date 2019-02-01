@@ -18,7 +18,7 @@
 using namespace std;
 using namespace iconus;
 
-iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), defaultExecution(*this) {
+iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), defaultExecution(*this), closed(false) {
 	for (Plugin& p : Plugin::plugins) {
 		try {
 			p.initSession(*this);

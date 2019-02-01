@@ -187,6 +187,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					exe.getMessage(output->id, inputMap);
 					while (true) {
 						status = poll(fds, nFds, 0);
+						if (exe.session.closed) return;
 						if (!inputMap.empty()) {
 							auto doKill = inputMap.find("kill");
 							if (doKill != inputMap.end()) {
