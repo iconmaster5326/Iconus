@@ -20,8 +20,15 @@ using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
 
+#include "build/filesystem/header.cxx"
+static string header((const char*)header_html, header_html_len);
+
 extern "C" string iconus_getName() {
 	return "Filesystem";
+}
+
+extern "C" string iconus_initHTML() {
+	return header;
 }
 
 using Arg = Function::Arg;
@@ -110,7 +117,7 @@ extern "C" void iconus_initSession(Execution& exe) {
 		return ob->clazz == &ClassFile::INSTANCE;
 	}, [](Execution& exe, Object* ob) {
 		path& p = ClassFile::value(exe, ob);
-		return "<a href=\"javascript:\">"+escapeHTML(p.string())+"</a>";
+		return "<a href=\"javascript:onFileClick('"+p.string()+"')\">"+escapeHTML(p.string())+"</a>";
 	});
 	
 	////////////////////////////

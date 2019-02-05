@@ -24,6 +24,7 @@
 	iconusHistoryIndex = 0;
 	
 	window.onload = function() {
+		mostRecentInput = document.getElementById("consoleInput");
 		conn = new WebSocket("ws://" + location.host);
 		
 		conn.onopen = function(event) {
@@ -114,6 +115,7 @@
 					input.setAttribute("id", "consoleInput");
 					input.setAttribute("type", "text");
 					content.appendChild(input);
+					mostRecentInput = input;
 					
 					input.focus();
 					scrollDown();
