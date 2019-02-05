@@ -252,9 +252,10 @@ extern "C" void iconus_initSession(Execution& exe) {
 	// adaptors
 	////////////////////////////
 	
+	if (exe.session.adaptors.find(&ClassString::INSTANCE) == exe.session.adaptors.end())
+			exe.session.adaptors[&ClassString::INSTANCE] = {};
 	exe.session.adaptors[&ClassNil::INSTANCE] = {};
 	exe.session.adaptors[&ClassNumber::INSTANCE] = {};
-	exe.session.adaptors[&ClassString::INSTANCE] = {};
 	exe.session.adaptors[&ClassBool::INSTANCE] = {};
 	exe.session.adaptors[&ClassClass::INSTANCE] = {};
 	

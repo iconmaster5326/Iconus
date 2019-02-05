@@ -9,13 +9,12 @@
 #include "error.hpp"
 #include "base64.hpp"
 #include "util.hpp"
+#include "lib_classes.hpp"
 
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <boost/filesystem.hpp>
-#include "../filesystem/lib_classes.hpp"
 
 using namespace std;
 using namespace iconus;
@@ -41,14 +40,20 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			Object* result = ClassList::create();
 			Deque<Object*>& items = ClassList::value(exe, result);
 			exe.session.user.doAsUser([&]() {
-				path p{input == &ClassNil::NIL ? "." : ClassString::value(exe, input)};
+				path p;
+				if (input == &ClassNil::NIL) {
+					p = current_path();
+				} else {
+					p = ClassFile::value(exe, input);
+				}
+				
 				for (directory_iterator it{p}; it != directory_iterator{}; it++) {
-					items.push_back(ClassString::create(it->path().string()));
+					items.push_back(ClassFile::create(it->path()));
 				}
 			});
 			return result;
 		} catch (const filesystem_error& e) {
-			throw Error(e.what());
+			throw Error(string(e.what()).substr(string("boost::filesystem::directory_iterator::construct: ").size()));
 		}
 			}
 	);
@@ -59,7 +64,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		try {
 			Object* result;
 			exe.session.user.doAsUser([&]() {
-				path p{ClassString::value(exe, input)};
+				path& p = ClassFile::value(exe, input);
 				if (exists(status(p))) {
 					result = exe.cat(p.string());
 				} else {
@@ -78,6 +83,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	scope.vars["<raw-string>"] = ClassClass::create(&ClassRawString::INSTANCE);
 	scope.vars["<image>"] = ClassClass::create(&ClassImage::INSTANCE);
+	scope.vars["<file>"] = ClassClass::create(&ClassFile::INSTANCE);
 }
 
 extern "C" void iconus_initSession(Execution& exe) {
@@ -100,16 +106,35 @@ extern "C" void iconus_initSession(Execution& exe) {
 		return "<img src=\""+ClassImage::value(exe, ob)+"\">";
 	});
 	
+	exe.session.renderers.emplace_back("filename", [](Execution& exe, Object* ob) {
+		return ob->clazz == &ClassFile::INSTANCE;
+	}, [](Execution& exe, Object* ob) {
+		path& p = ClassFile::value(exe, ob);
+		return "<a href=\"javascript:\">"+escapeHTML(p.string())+"</a>";
+	});
+	
 	////////////////////////////
 	// adaptors
 	////////////////////////////
+	if (exe.session.adaptors.find(&ClassString::INSTANCE) == exe.session.adaptors.end())
+		exe.session.adaptors[&ClassString::INSTANCE] = {};
 	exe.session.adaptors[&ClassRawString::INSTANCE] = {};
+	exe.session.adaptors[&ClassFile::INSTANCE] = {};
 	
 	exe.session.adaptors[&ClassString::INSTANCE][&ClassRawString::INSTANCE] = [](Execution& exe, Object* from) {
 		return new Object(&ClassRawString::INSTANCE, from->value.asPtr);
 	};
 	exe.session.adaptors[&ClassRawString::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
 		return new Object(&ClassString::INSTANCE, from->value.asPtr);
+	};
+	
+	exe.session.adaptors[&ClassFile::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		path& p = ClassFile::value(exe, from);
+		return ClassString::create(p.string());
+	};
+	exe.session.adaptors[&ClassString::INSTANCE][&ClassFile::INSTANCE] = [](Execution& exe, Object* from) {
+		path p{from->toString(exe)};
+		return ClassFile::create(p);
 	};
 	
 	////////////////////////////
