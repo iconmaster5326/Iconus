@@ -99,6 +99,7 @@ namespace iconus {
 		Map<std::string, Object*> vars;
 		Scope* parent;
 		Object* input;
+		Mutex mutex;
 		
 		Scope();
 		Scope(Scope* parent);

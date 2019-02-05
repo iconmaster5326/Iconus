@@ -8,7 +8,6 @@
 #ifndef SRC_GC_HPP_
 #define SRC_GC_HPP_
 
-
 #include <gc/gc_cpp.h>
 #include <gc/gc_allocator.h>
 
@@ -17,6 +16,8 @@
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
+#include <shared_mutex>
 
 namespace iconus {
 	template<typename T> using Vector = std::vector<T, traceable_allocator<T>>;
@@ -30,6 +31,16 @@ namespace iconus {
 		T* gcMem = allocator.allocate(1);
 	    return new(gcMem) T(args...);
 	}
+	
+#ifdef __ECLIPSE__ // __ECLIPSE__, so my IDE's indexer stops tripping over <shared_mutex>
+	using Mutex = std::mutex;
+	using ReadLock = std::unique_lock<Mutex>;
+	using WriteLock = std::unique_lock<Mutex>;
+#else
+	using Mutex = std::shared_timed_mutex;
+	using ReadLock = std::shared_lock<Mutex>;
+	using WriteLock = std::unique_lock<Mutex>;
+#endif
 }
 
 #endif /* SRC_GC_HPP_ */
