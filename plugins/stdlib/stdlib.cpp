@@ -32,80 +32,80 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	// functions
 	////////////////////////////
 	
-	scope.vars["echo"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["echo"] = ClassManagedFunction::create(
 			{Arg("i", INPUT)}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input;
 			}
-	));
+	);
 	
-	scope.vars["list"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["list"] = ClassManagedFunction::create(
 			{Arg("args", VARARG)}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassList::create(varargs.begin(), varargs.end());
 			}
-	));
+	);
 	
-	scope.vars["apply"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["apply"] = ClassManagedFunction::create(
 			{Arg("fn"), Arg("args", VARARG)}, {Arg("flags", VARFLAG)},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return args["fn"]->execute(exe, scope, input, varargs, varflags);
 			}
-	));
+	);
 	
-	scope.vars["get"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["get"] = ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("k")}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input->getField(exe, args["k"]);
 			}
-	));
+	);
 	
-	scope.vars["set"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["set"] = ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("k"), Arg("v")}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		input->setField(exe, args["k"], args["v"]);
 		return input;
 			}
-	));
+	);
 	
-	scope.vars["local"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["local"] = ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("v")}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		string name = ClassString::value(exe, args["v"]);
 		scope.setLocal(name, input);
 		return input;
 			}
-	));
+	);
 	
-	scope.vars["=="] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["=="] = ClassManagedFunction::create(
 			{Arg("a", INPUT), Arg("b")}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassBool::create(args["a"]->equals(args["b"]));
 			}
-	));
+	);
 	
-	scope.vars["get-class"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["get-class"] = ClassManagedFunction::create(
 			{Arg("i", INPUT)}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassClass::create(input->clazz);
 			}
-	));
+	);
 	
-	scope.vars["to"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["to"] = ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("c")}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return input->adapt(exe, ClassClass::value(exe, args["c"]));
 			}
-	));
+	);
 	
-	scope.vars["is"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["is"] = ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("c")}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		return ClassBool::create(input->adaptableTo(exe, ClassClass::value(exe, args["c"])));
 			}
-	));
+	);
 	
-	scope.vars["map"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["map"] = ClassManagedFunction::create(
 			{Arg("args", VARARG)}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		Object* result = ClassMap::create();
@@ -125,9 +125,9 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		}
 		return result;
 			}
-	));
+	);
 	
-	scope.vars[">map"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars[">map"] = ClassManagedFunction::create(
 			{Arg("i", INPUT)}, {},
 			[](auto& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
 		Object* result = ClassMap::create();
@@ -137,16 +137,16 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		}
 		return result;
 			}
-	));
+	);
 	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
-		scope.vars["login"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},
 				[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 			exe.session.user = User(ClassString::value(exe, args["user"]), ClassString::value(exe, args["pass"]));
 			return &ClassNil::NIL;
 				}
-		));
+		);
 	}
 	
 	////////////////////////////

@@ -34,7 +34,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
 	////////////////////////////
-	scope.vars["ls"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["ls"] = ClassManagedFunction::create(
 			{Arg("dir", INPUT)}, {},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		try {
@@ -51,9 +51,9 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			throw Error(e.what());
 		}
 			}
-	));
+	);
 	
-	scope.vars["cat"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["cat"] = ClassManagedFunction::create(
 			{Arg("file", INPUT)}, {},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		try {
@@ -71,7 +71,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			throw Error(e.what());
 		}
 			}
-	));
+	);
 	
 	////////////////////////////
 	// constants

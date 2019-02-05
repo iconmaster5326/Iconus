@@ -110,6 +110,22 @@ namespace iconus {
 		};
 		
 		static ClassManagedFunction INSTANCE;
+		static inline Object* create(Instance* i) {
+			return new Object(&INSTANCE, i);
+		}
+		static inline Object* create(std::initializer_list<Function::Arg> args, std::initializer_list<Function::Arg> flags, Handler handler) {
+			return new Object(&INSTANCE, new Instance(args, flags, handler));
+		}
+		static inline Object* create(const Vector<Function::Arg>& args, const Vector<Function::Arg>& flags, Handler handler) {
+			return new Object(&INSTANCE, new Instance(args, flags, handler));
+		}
+		static inline Instance& value(const Object* ob) {
+			return *(Instance*)ob->value.asPtr;
+		}
+		static inline Instance& value(Execution& exe, Object* ob) {
+			return *(Instance*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
 		Object* execute(Object* self, Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
 	};
 	

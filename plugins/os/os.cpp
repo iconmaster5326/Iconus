@@ -52,7 +52,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
 	////////////////////////////
-	scope.vars["system"] = new Object(&ClassManagedFunction::INSTANCE, new ClassManagedFunction::Instance(
+	scope.vars["system"] = ClassManagedFunction::create(
 			{Arg("name"), Arg("args", VARARG)}, {},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		Object* result;
@@ -262,7 +262,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		});
 		return result;
 			}
-	));
+	);
 	
 	////////////////////////////
 	// constants
