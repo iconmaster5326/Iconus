@@ -67,26 +67,34 @@ namespace iconus {
 					string tag = message["tag"].get<string>();
 					Execution* exe = new Execution(*session, string_generator()(tag));
 					
-					exe->sendMessage = [connection](uuid& id, auto& map) {
-						nlohmann::json message = {
-								{"type", "message"},
-								{"tag", to_string(id)},
-						};
-						
-						for (auto& pair : map) {
-							message[pair.first] = pair.second;
-						}
-						
-						connection->send(message.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
-					};
-					
-					exe->getMessage = [connection](uuid& id, auto& map) {
-						messageHandlers[to_string(id)] = [&id,&map](nlohmann::json& message) {
-							for (auto& pair : message.get<nlohmann::json::object_t>()) {
-								map[pair.first] = pair.second.get<string>();
+					exe->sendMessage = [exe,connection](uuid& id, auto& map) {
+						if (find_if(exe->idsRendered.begin(), exe->idsRendered.end(), [&id](uuid* v) {
+							return *v == id;
+						}) != exe->idsRendered.end()) {
+							nlohmann::json message = {
+									{"type", "message"},
+									{"tag", to_string(id)},
+							};
+							
+							for (auto& pair : map) {
+								message[pair.first] = pair.second;
 							}
 							
-							messageHandlers.erase(to_string(id));
+							connection->send(message.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
+						}
+					};
+					
+					exe->getMessage = [exe,connection](uuid& id, auto& map) {
+						messageHandlers[to_string(id)] = [&](nlohmann::json& message) {
+							if (find_if(exe->idsRendered.begin(), exe->idsRendered.end(), [&id](uuid* v) {
+								return *v == id;
+							}) != exe->idsRendered.end()) {
+								for (auto& pair : message.get<nlohmann::json::object_t>()) {
+									map[pair.first] = pair.second.get<string>();
+								}
+								
+								messageHandlers.erase(to_string(id));
+							}
 						};
 					};
 					
@@ -96,6 +104,8 @@ namespace iconus {
 							{"result", exe->render(session->evaluate(message["command"].get<string>(), *exe))},
 					};
 					connection->send(response.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
+					
+					exe->completed = true;
 				} else if (type == "message") {
 					string tag = message["tag"].get<string>();
 					auto it = messageHandlers.find(tag);

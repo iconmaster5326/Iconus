@@ -66,8 +66,10 @@ namespace iconus {
 	public:
 		using MessageHandler = std::function<void(boost::uuids::uuid&, Map<std::string, std::string>&)>;
 		
-		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()), sendMessage(nullptr), getMessage(nullptr) {}
-		inline Execution(Session& session, boost::uuids::uuid tag) : session(session), tag(tag), sendMessage(nullptr), getMessage(nullptr) {}
+		inline Execution(Session& session) : session(session), tag(boost::uuids::nil_generator()()) {}
+		inline Execution(Session& session, boost::uuids::uuid tag) : session(session), tag(tag) {}
+		
+		Execution(const Execution&) = delete;
 		
 		std::string render(Object* object);
 		Object* parseWord(std::string word);
@@ -76,8 +78,10 @@ namespace iconus {
 		
 		Session& session;
 		boost::uuids::uuid tag;
-		MessageHandler sendMessage;
-		MessageHandler getMessage;
+		MessageHandler sendMessage = nullptr;
+		MessageHandler getMessage = nullptr;
+		bool completed = false;
+		Set<boost::uuids::uuid*> idsRendered;
 	};
 	
 	class Session { // TODO: inherit gc; it seems there's a bug in libgc causing all Sessions to get garbage collected early

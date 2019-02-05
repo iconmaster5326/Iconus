@@ -171,7 +171,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				fcntl(stderrLink[0], F_SETFL, fcntl(stderrLink[0], F_GETFL) | O_NONBLOCK);
 				
 				result = ClassSystemOutput::create(output);
-				thread outputThread([=]() {
+				thread outputThread([=,&exe]() {
 					int retCode, status;
 					string outS{};
 					string errS{};
@@ -184,9 +184,12 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					};
 					
 					Map<string,string> inputMap;
+					while (!exe.session.closed && !exe.completed) this_thread::yield();
+					
 					exe.getMessage(output->id, inputMap);
 					while (true) {
 						status = poll(fds, nFds, 0);
+						
 						if (exe.session.closed) {
 							kill(pid, SIGKILL);
 							return;
@@ -204,6 +207,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 								exe.getMessage(output->id, inputMap);
 							}
 						}
+						
 						if (status < 0) continue;
 						
 						if (fds[0].revents & POLLIN) { // stdoutLink
@@ -274,6 +278,8 @@ extern "C" void iconus_initSession(Execution& exe) {
 			return ob->clazz == &ClassSystemOutput::INSTANCE;
 		}, [](Execution& exe, Object* ob) {
 			ClassSystemOutput::Instance& value = ClassSystemOutput::value(exe, ob);
+			exe.idsRendered.insert(&value.id);
+			
 			ostringstream sb;
 			sb << "<div><img src onerror=\"onSystemOutputLoad('" << to_string(value.id) << "', this)\"><pre>";
 			

@@ -29,10 +29,10 @@ namespace iconus {
 			bool done;
 			int retCode;
 			Vector<Line> lines;
-			boost::uuids::uuid id;
+			boost::uuids::uuid id{boost::uuids::random_generator()()};
 			
-			inline Instance() : retCode(0), done(false), id(boost::uuids::random_generator()()) {}
-			template<typename... Args> inline Instance(int retCode, Args... args) : done(true), retCode(retCode), lines(args...), id(boost::uuids::random_generator()()) {}
+			inline Instance() : retCode(-1), done(false) {}
+			template<typename... Args> inline Instance(int retCode, Args... args) : done(true), retCode(retCode), lines(args...) {}
 		};
 		
 		static ClassSystemOutput INSTANCE;
