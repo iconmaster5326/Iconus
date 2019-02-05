@@ -87,6 +87,7 @@ namespace iconus {
 	class Session { // TODO: inherit gc; it seems there's a bug in libgc causing all Sessions to get garbage collected early
 	public:
 		Session();
+		Session(const Session&) = delete;
 		
 		Object* evaluate(const std::string& input, Execution& exe);
 		

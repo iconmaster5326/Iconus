@@ -107,6 +107,7 @@ namespace iconus {
 		Scope();
 		Scope(Scope* parent);
 		Scope(Scope* parent, Object* input);
+		Scope(const Scope&) = delete;
 		virtual ~Scope();
 		
 		virtual Object* get(const std::string& name);
