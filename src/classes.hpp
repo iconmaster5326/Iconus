@@ -22,7 +22,6 @@ namespace iconus {
 		static ClassNil INSTANCE;
 		static Object NIL;
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 	};
 	
 	class ClassBool : public Class {
@@ -44,7 +43,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 	};
 	
 	class ClassNumber : public Class {
@@ -58,7 +56,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
@@ -74,7 +71,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
@@ -149,7 +145,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 		
@@ -164,7 +159,6 @@ namespace iconus {
 	public:
 		static ClassError INSTANCE;
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 	};
 	
 	class ClassClass : public Class {
@@ -178,7 +172,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
@@ -200,7 +193,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::string toString(Object* self, Execution& exe) override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 		

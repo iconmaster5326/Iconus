@@ -45,7 +45,13 @@ std::string iconus::Execution::render(Object* ob) {
 		}
 	}
 	
-	return escapeHTML(ob->toString(*this));
+	try {
+		return escapeHTML(ob->toString(*this));
+	} catch (const Error& e) {
+		ostringstream sb;
+		sb << ob->clazz->name() << '@' << ((void*)ob);
+		return sb.str();
+	}
 }
 
 Object* iconus::Execution::parseWord(std::string word) {

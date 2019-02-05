@@ -22,19 +22,10 @@ std::string iconus::ClassNil::name() {
 	return "nil";
 }
 
-std::string iconus::ClassNil::toString(Object* self, Execution& exe) {
-	return "";
-}
-
 iconus::ClassString iconus::ClassString::INSTANCE{};
 
 std::string iconus::ClassString::name() {
 	return "string";
-}
-
-std::string iconus::ClassString::toString(Object* self, Execution& exe) {
-	string* value = (string*) self->value.asPtr;
-	return *value;
 }
 
 iconus::ClassSystemFunction iconus::ClassSystemFunction::INSTANCE{};
@@ -239,35 +230,10 @@ std::string iconus::ClassList::name() {
 	return "list";
 }
 
-std::string iconus::ClassList::toString(Object* self, Execution& exe) {
-	ostringstream sb;
-	sb << '[';
-	
-	Deque<Object*>& items = *((Deque<Object*>*)self->value.asPtr);
-	bool first = true;
-	
-	for (Object* ob : items) {
-		if (first) {
-			first = false;
-		} else {
-			sb << ", ";
-		}
-		sb << ob->toString(exe);
-	}
-	
-	sb << ']';
-	return sb.str();
-}
-
 iconus::ClassError iconus::ClassError::INSTANCE{};
 
 std::string iconus::ClassError::name() {
 	return "error";
-}
-
-std::string iconus::ClassError::toString(Object* self, Execution& exe) {
-	Object* what = (Object*) self->value.asPtr;
-	return "error: "+what->toString(exe);
 }
 
 iconus::ClassBool iconus::ClassBool::INSTANCE{};
@@ -278,32 +244,10 @@ std::string iconus::ClassBool::name() {
 	return "bool";
 }
 
-std::string iconus::ClassBool::toString(Object* self, Execution& exe) {
-	if (self == &TRUE) {
-		return "true";
-	} else if (self == &FALSE) {
-		return "false";
-	} else {
-		throw runtime_error("bool wansn't TRUE or FALSE");
-	}
-}
-
 iconus::ClassNumber iconus::ClassNumber::INSTANCE{};
 
 std::string iconus::ClassNumber::name() {
 	return "number";
-}
-
-std::string iconus::ClassNumber::toString(Object* self, Execution& exe) {
-	string s = to_string(self->value.asDouble);
-	if (s.find('.') != string::npos) {
-		while (s.back() == '0' || s.back() == '.') {
-			char c = s.back();
-			s.pop_back();
-			if (c == '.') break;
-		}
-	}
-	return s.empty() ? "0" : s;
 }
 
 iconus::ClassUserFunction iconus::ClassUserFunction::INSTANCE{};
@@ -411,11 +355,6 @@ std::string iconus::ClassClass::name() {
 	return "class";
 }
 
-std::string iconus::ClassClass::toString(Object* self, Execution& exe) {
-	Class* value = (Class*) self->value.asPtr;
-	return "class "+value->name();
-}
-
 std::size_t iconus::ClassClass::hash(const Object* self) const {
 	return (size_t) self->value.asPtr;
 }
@@ -428,10 +367,6 @@ iconus::ClassMap iconus::ClassMap::INSTANCE{};
 
 std::string iconus::ClassMap::name() {
 	return "map";
-}
-
-std::string iconus::ClassMap::toString(Object* self, Execution& exe) {
-	return "(map...)";
 }
 
 std::size_t iconus::ClassMap::hash(const Object* self) const {

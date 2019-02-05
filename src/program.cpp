@@ -23,12 +23,6 @@ std::string iconus::Class::name() {
 	return nullptr;
 }
 
-std::string iconus::Class::toString(Object* self, Execution& exe) {
-	ostringstream sb;
-	sb << name() << '@' << ((void*)self);
-	return sb.str();
-}
-
 bool iconus::Class::executable(Object* self, Execution& exe) {
 	return false;
 }
@@ -146,4 +140,8 @@ std::size_t iconus::Class::hash(const Object* self) const {
 
 bool iconus::Class::equals(const Object* self, const Object* other) const {
 	return self == other;
+}
+
+std::string iconus::Object::toString(Execution& exe) {
+	return ClassString::value(exe, this);
 }

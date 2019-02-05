@@ -20,7 +20,6 @@ namespace iconus {
 	public:
 		virtual ~Class();
 		virtual std::string name();
-		virtual std::string toString(Object* self, Execution& exe);
 		
 		// C++ properties; session is not available due to use in std::hash, etc.
 		virtual std::size_t hash(const Object* self) const;
@@ -47,10 +46,6 @@ namespace iconus {
 		inline Object(Class* clazz) : clazz(clazz) {}
 		inline Object(Class* clazz, double value) : clazz(clazz), value{.asDouble = value} {}
 		inline Object(Class* clazz, void* value) : clazz(clazz), value{.asPtr = value} {}
-		
-		inline std::string toString(Execution& exe) {
-			return clazz->toString(this, exe);
-		}
 		
 		inline std::size_t hash() const {
 			return clazz->hash(this);
@@ -90,6 +85,7 @@ namespace iconus {
 		
 		bool adaptableTo(Execution& exe, Class* clazz);
 		Object* adapt(Execution& exe, Class* clazz);
+		std::string toString(Execution& exe);
 		
 		Class* clazz;
 		union {

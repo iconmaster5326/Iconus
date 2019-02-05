@@ -252,13 +252,42 @@ extern "C" void iconus_initSession(Execution& exe) {
 	// adaptors
 	////////////////////////////
 	
+	exe.session.adaptors[&ClassNil::INSTANCE] = {};
 	exe.session.adaptors[&ClassNumber::INSTANCE] = {};
 	exe.session.adaptors[&ClassString::INSTANCE] = {};
 	exe.session.adaptors[&ClassBool::INSTANCE] = {};
+	exe.session.adaptors[&ClassClass::INSTANCE] = {};
+	
+	exe.session.adaptors[&ClassNil::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		return ClassString::create("");
+	};
+	
+	exe.session.adaptors[&ClassBool::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		if (from == &ClassBool::TRUE) {
+			return ClassString::create("true");
+		} else if (from == &ClassBool::FALSE) {
+			return ClassString::create("false");
+		} else {
+			throw runtime_error("bool wansn't TRUE or FALSE");
+		}
+	};
+	
+	exe.session.adaptors[&ClassClass::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		Class* value = ClassClass::value(exe, from);
+		return ClassString::create("<class "+value->name()+">");
+	};
 	
 	exe.session.adaptors[&ClassNumber::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
 		double value = ClassNumber::value(exe, from);
-		return ClassString::create(to_string(value));
+		string s = to_string(value);
+		if (s.find('.') != string::npos) {
+			while (s.back() == '0' || s.back() == '.') {
+				char c = s.back();
+				s.pop_back();
+				if (c == '.') break;
+			}
+		}
+		return ClassString::create(s.empty() ? "0" : s);
 	};
 	
 	exe.session.adaptors[&ClassNumber::INSTANCE][&ClassBool::INSTANCE] = [](Execution& exe, Object* from) {
