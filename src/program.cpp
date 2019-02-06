@@ -130,7 +130,7 @@ Vector<std::pair<Object*, Object*> > iconus::Class::fields(Object* self, Executi
 }
 
 bool iconus::Object::adaptableTo(Execution& exe, Class* to) {
-	return exe.getAdaptor(clazz, to) != nullptr;
+	return exe.adaptionDistance(clazz, to) != -1;
 }
 
 Object* iconus::Object::adapt(Execution& exe, Class* to) {
@@ -140,6 +140,10 @@ Object* iconus::Object::adapt(Execution& exe, Class* to) {
 	} else {
 		throw Error("Cannot adapt object of class "+clazz->name()+" to class "+to->name());
 	}
+}
+
+int iconus::Object::adaptionDistance(Execution& exe, Class* clazz) {
+	return exe.adaptionDistance(this->clazz, clazz);
 }
 
 std::size_t iconus::Class::hash(const Object* self) const {

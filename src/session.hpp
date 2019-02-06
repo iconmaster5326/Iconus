@@ -75,6 +75,7 @@ namespace iconus {
 		std::string render(Object* object);
 		Object* parseWord(std::string word);
 		Adaptor getAdaptor(Class* from, Class* to);
+		int adaptionDistance(Class* from, Class* to);
 		Object* cat(const std::string& file);
 		
 		Session& session;

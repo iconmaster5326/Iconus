@@ -101,6 +101,38 @@ Adaptor iconus::Execution::getAdaptor(Class* from, Class* to) {
 	return ::getAdaptor(session, from, to, checked);
 }
 
+static int adaptionDistance(Session& session, Class* from, Class* to, Set<Class*>& checked) {
+	if (from == to) return 0;
+	if (checked.find(from) != checked.end()) return -1;
+	checked.insert(from);
+	
+	auto it = session.adaptors.find(from);
+	if (it == session.adaptors.end()) {
+		return -1;
+	} else {
+		Map<Class*, Adaptor>& adaptors = it->second;
+		auto it = adaptors.find(to);
+		if (it == adaptors.end()) {
+			for (auto& pair : adaptors) {
+				int d = adaptionDistance(session, pair.first, to, checked);
+				if (d == -1)
+					return -1;
+				else
+					return d+1;
+			}
+			
+			return -1;
+		} else {
+			return 1;
+		}
+	}
+}
+
+int iconus::Execution::adaptionDistance(Class* from, Class* to) {
+	Set<Class*> checked;
+	return ::adaptionDistance(session, from, to, checked);
+}
+
 GlobalScope GlobalScope::INSTANCE{};
 
 bool iconus::GlobalScope::canSet(const std::string& name) {

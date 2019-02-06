@@ -87,6 +87,8 @@ namespace iconus {
 		
 		bool adaptableTo(Execution& exe, Class* clazz);
 		Object* adapt(Execution& exe, Class* clazz);
+		int adaptionDistance(Execution& exe, Class* clazz);
+		
 		std::string toString(Execution& exe);
 		
 		template<typename T> inline T get() {
