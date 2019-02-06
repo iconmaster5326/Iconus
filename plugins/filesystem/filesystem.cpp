@@ -143,7 +143,22 @@ extern "C" void iconus_initSession(Execution& exe) {
 	}, [](Execution& exe, Object* ob) {
 		Lock lock{ob->mutex};
 		path& p = ClassFile::value(exe, ob);
-		return "<a href=\"javascript:onFileClick('"+p.string()+"')\">"+escapeHTML(p.string())+"</a>";
+		string str;
+		
+		exe.session.user.doAsUser([&]() {
+			string absStr = p.string();
+			string curStr = current_path().string();
+			
+			if (curStr == absStr) {
+				str = ".";
+			} else if (curStr.size() < absStr.size() && absStr.substr(0, curStr.size()) == curStr) {
+				str = absStr.substr(curStr.size()+1);
+			} else {
+				str = absStr;
+			}
+		});
+		
+		return "<a href=\"javascript:onFileClick('"+p.string()+"')\">"+escapeHTML(str)+"</a>";
 	});
 	
 	////////////////////////////
