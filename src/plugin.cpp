@@ -68,11 +68,12 @@ void iconus::Plugin::initGlobalScope(GlobalScope& scope) {
 }
 
 void iconus::Plugin::initSession(Session& session) {
-	auto fn = (void(*)(Session&)) dlsym(handle, "iconus_initSession");
+	auto fn = (void(*)(Execution&)) dlsym(handle, "iconus_initSession");
 	if (!fn) {
 		string error(dlerror());
 		throw Error("Unable to call iconus_initSession in plugin "+name+": "+error);
 	}
 	
-	fn(session);
+	Execution exe{session};
+	fn(exe);
 }
