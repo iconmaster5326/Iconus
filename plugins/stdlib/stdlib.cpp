@@ -166,6 +166,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	scope.vars["<error>"] = ClassClass::create(&ClassError::INSTANCE);
 	scope.vars["<class>"] = ClassClass::create(&ClassClass::INSTANCE);
 	scope.vars["<map>"] = ClassClass::create(&ClassMap::INSTANCE);
+	scope.vars["<table>"] = ClassClass::create(&ClassTable::INSTANCE);
 	
 	scope.vars["PI"] = ClassNumber::create(3.14159265358979323846);
 	scope.vars["E"] = ClassNumber::create(2.71828182845904523536);
@@ -210,6 +211,31 @@ extern "C" void iconus_initSession(Execution& exe) {
 	////////////////////////////
 	// renderers
 	////////////////////////////
+	
+	exe.session.renderers.emplace_back("table", [](Execution& exe, Object* ob) {
+		return ob->clazz == &ClassTable::INSTANCE;
+	}, [](Execution& exe, Object* ob) {
+		ostringstream sb;
+		sb << "<table><tr>";
+		
+		Lock lock{ob->mutex};
+		auto& table = ClassTable::value(exe, ob);
+		for (Object* colName : table.colNames) {
+			sb << "<th>" << exe.render(colName) << "</th>";
+		}
+		sb << "</tr>";
+		
+		for (Vector<Object*>& row : table.rows) {
+			sb << "<tr>";
+			for (Object* data : row) {
+				sb << "<td>" << exe.render(data) << "</td>";
+			}
+			sb << "</tr>";
+		}
+		
+		sb << "</table>";
+		return sb.str();
+	});
 	
 	exe.session.renderers.emplace_back("map as table", [](Execution& exe, Object* ob) {
 		return ob->clazz == &ClassMap::INSTANCE;

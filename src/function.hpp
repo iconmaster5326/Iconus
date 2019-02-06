@@ -35,6 +35,9 @@ namespace iconus {
 			inline Arg(std::string name, Op* defaultValue) : name(name), defaultValue(defaultValue), role(Role::NONE) {}
 			inline Arg(std::string name, Role role) : name(name), defaultValue(nullptr), role(role) {}
 			inline Arg(std::string name, Op* defaultValue, Role role) : name(name), defaultValue(defaultValue), role(role) {}
+			
+			Arg(std::string name, Object* defaultValue);
+			Arg(std::string name, Object* defaultValue, Role role);
 		};
 		
 		Vector<Arg> args;

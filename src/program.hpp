@@ -47,6 +47,8 @@ namespace iconus {
 		inline Object(Class* clazz, double value) : clazz(clazz), value{.asDouble = value} {}
 		inline Object(Class* clazz, void* value) : clazz(clazz), value{.asPtr = value} {}
 		
+		bool truthy();
+		
 		inline std::size_t hash() const {
 			return clazz->hash(this);
 		}

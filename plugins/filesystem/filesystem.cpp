@@ -41,11 +41,10 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	// functions
 	////////////////////////////
 	scope.vars["ls"] = ClassManagedFunction::create(
-			{Arg("dir", INPUT)}, {},
+			{Arg("dir", INPUT)}, {Arg("l", &ClassBool::FALSE)},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
 		try {
-			Object* result = ClassList::create();
-			Deque<Object*>& items = ClassList::value(exe, result);
+			Object* result;
 			exe.session.user.doAsUser([&]() {
 				path p;
 				if (input == &ClassNil::NIL) {
@@ -55,8 +54,30 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					p = ClassFile::value(exe, input);
 				}
 				
-				for (directory_iterator it{p}; it != directory_iterator{}; it++) {
-					items.push_back(ClassFile::create(it->path()));
+				if (args["l"]->truthy()) {
+					result = ClassTable::create((initializer_list<string>) {"perms","hard-links","user","group","size","last-changed","name"});
+					ClassTable::Instance& table = ClassTable::value(exe, result);
+					
+					for (directory_iterator it{p}; it != directory_iterator{}; it++) {
+						table.rows.emplace_back((initializer_list<Object*>) {
+								&ClassNil::NIL,
+								ClassNumber::create((double) hard_link_count(it->path())),
+								&ClassNil::NIL,
+								&ClassNil::NIL,
+								is_regular_file(it->path()) ?
+										ClassNumber::create((double) file_size(it->path())) :
+										&ClassNil::NIL,
+								&ClassNil::NIL,
+								ClassFile::create(it->path())
+						});
+					}
+				} else {
+					result = ClassList::create();
+					Deque<Object*>& items = ClassList::value(exe, result);
+					
+					for (directory_iterator it{p}; it != directory_iterator{}; it++) {
+						items.push_back(ClassFile::create(it->path()));
+					}
 				}
 			});
 			return result;

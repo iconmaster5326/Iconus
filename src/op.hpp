@@ -13,8 +13,9 @@
 
 #include <string>
 
-
 namespace iconus {
+	class Function;
+	
 	class Op : public gc {
 	public:
 		virtual Object* evaluate(Execution& exe, Scope& scope, Object* input) = 0;

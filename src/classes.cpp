@@ -432,3 +432,36 @@ void iconus::ClassMap::setField(Object* self, Execution& exe, Object* name,
 	auto& map = ClassMap::value(exe, self);
 	map[name] = value;
 }
+
+iconus::ClassTable iconus::ClassTable::INSTANCE{};
+
+std::string iconus::ClassTable::name() {
+	return "table";
+}
+
+std::size_t iconus::ClassTable::hash(const Object* self) const {
+	return Class::hash(self);
+}
+
+bool iconus::ClassTable::equals(const Object* self, const Object* other) const {
+	return Class::equals(self, other);
+}
+
+Vector<Object*> iconus::ClassTable::fieldNames(Object* self, Execution& exe) {
+	return Class::fieldNames(self, exe);
+}
+
+Object* iconus::ClassTable::getField(Object* self, Execution& exe,
+		Object* name) {
+	return Class::getField(self, exe, name);
+}
+
+bool iconus::ClassTable::canSetField(Object* self, Execution& exe,
+		Object* name) {
+	return Class::canSetField(self, exe, name);
+}
+
+void iconus::ClassTable::setField(Object* self, Execution& exe, Object* name,
+		Object* value) {
+	return Class::setField(self, exe, name, value);
+}

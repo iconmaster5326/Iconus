@@ -153,3 +153,7 @@ bool iconus::Class::equals(const Object* self, const Object* other) const {
 std::string iconus::Object::toString(Execution& exe) {
 	return ClassString::value(exe, this);
 }
+
+bool iconus::Object::truthy() {
+	return this != &ClassBool::FALSE && this != &ClassNil::NIL;
+}

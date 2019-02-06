@@ -12,6 +12,7 @@
 #include "op.hpp"
 #include "function.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 #include <initializer_list>
@@ -190,6 +191,45 @@ namespace iconus {
 		}
 		static inline Map<Object*,Object*>& value(Execution& exe, Object* ob) {
 			return *(Map<Object*,Object*>*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
+		
+		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
+		Object* getField(Object* self, Execution& exe, Object* name) override;
+		bool canSetField(Object* self, Execution& exe, Object* name) override;
+		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
+	};
+	
+	class ClassTable : public Class {
+	public:
+		class Instance {
+		public:
+			Vector<Object*> colNames;
+			Vector<Vector<Object*>> rows;
+			
+			inline Instance() {}
+			inline Instance(std::initializer_list<std::string> colStrings) : colNames(colStrings.size()) {
+				std::transform(colStrings.begin(), colStrings.end(), colNames.begin(), [](const std::string& s) {
+					return ClassString::create(s);
+				});
+			}
+		};
+		
+		static ClassTable INSTANCE;
+		static inline Object* create(Instance* args) {
+			return new Object(&INSTANCE, args);
+		}
+		template<typename... Args> static Object* create(Args... args) {
+			return create(gcAlloc<Instance>(args...));
+		}
+		static inline Instance& value(const Object* ob) {
+			return *(Instance*)ob->value.asPtr;
+		}
+		static inline Instance& value(Execution& exe, Object* ob) {
+			return *(Instance*)ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
 		
 		std::string name() override;
