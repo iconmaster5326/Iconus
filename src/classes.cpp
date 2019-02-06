@@ -25,7 +25,7 @@ std::string iconus::ClassNil::name() {
 iconus::ClassString iconus::ClassString::INSTANCE{};
 
 std::string iconus::ClassString::name() {
-	return "string";
+	return "str";
 }
 
 iconus::ClassSystemFunction iconus::ClassSystemFunction::INSTANCE{};
@@ -252,7 +252,7 @@ std::string iconus::ClassBool::name() {
 iconus::ClassNumber iconus::ClassNumber::INSTANCE{};
 
 std::string iconus::ClassNumber::name() {
-	return "number";
+	return "num";
 }
 
 iconus::ClassUserFunction iconus::ClassUserFunction::INSTANCE{};

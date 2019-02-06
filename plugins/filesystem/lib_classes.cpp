@@ -34,7 +34,7 @@ bool iconus::ClassImage::equals(const Object* self, const Object* other) const {
 iconus::ClassRawString iconus::ClassRawString::INSTANCE{};
 
 std::string iconus::ClassRawString::name() {
-	return "raw-string";
+	return "str/raw";
 }
 
 iconus::ClassFile iconus::ClassFile::INSTANCE{};

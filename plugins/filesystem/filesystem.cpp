@@ -111,7 +111,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// constants
 	////////////////////////////
-	scope.vars["<raw-string>"] = ClassClass::create(&ClassRawString::INSTANCE);
+	scope.vars["<str/raw>"] = ClassClass::create(&ClassRawString::INSTANCE);
 	scope.vars["<image>"] = ClassClass::create(&ClassImage::INSTANCE);
 	scope.vars["<file>"] = ClassClass::create(&ClassFile::INSTANCE);
 }

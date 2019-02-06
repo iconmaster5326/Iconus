@@ -212,8 +212,8 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	scope.vars["<nil>"] = ClassClass::create(&ClassNil::INSTANCE);
 	scope.vars["<bool>"] = ClassClass::create(&ClassBool::INSTANCE);
-	scope.vars["<number>"] = ClassClass::create(&ClassNumber::INSTANCE);
-	scope.vars["<string>"] = ClassClass::create(&ClassString::INSTANCE);
+	scope.vars["<num>"] = ClassClass::create(&ClassNumber::INSTANCE);
+	scope.vars["<str>"] = ClassClass::create(&ClassString::INSTANCE);
 	scope.vars["<list>"] = ClassClass::create(&ClassList::INSTANCE);
 	scope.vars["<error>"] = ClassClass::create(&ClassError::INSTANCE);
 	scope.vars["<class>"] = ClassClass::create(&ClassClass::INSTANCE);
