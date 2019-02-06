@@ -32,15 +32,8 @@ namespace iconus {
 	    return new(gcMem) T(args...);
 	}
 	
-#ifdef __ECLIPSE__ // __ECLIPSE__, so my IDE's indexer stops tripping over <shared_mutex>
-	using Mutex = std::mutex;
-	using ReadLock = std::unique_lock<Mutex>;
-	using WriteLock = std::unique_lock<Mutex>;
-#else
-	using Mutex = std::shared_timed_mutex;
-	using ReadLock = std::shared_lock<Mutex>;
-	using WriteLock = std::unique_lock<Mutex>;
-#endif
+	using Mutex = std::recursive_mutex;
+	using Lock = std::lock_guard<Mutex>;
 }
 
 #endif /* SRC_GC_HPP_ */

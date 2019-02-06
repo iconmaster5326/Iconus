@@ -34,7 +34,7 @@ Object* iconus::Class::execute(Object* self, Execution& exe, Scope& scope, Objec
 }
 
 Object* iconus::Scope::get(const std::string& name) {
-	ReadLock lock(mutex);
+	Lock lock(mutex);
 	
 	auto it = vars.find(name);
 	if (it == vars.end()) {
@@ -49,29 +49,29 @@ Object* iconus::Scope::get(const std::string& name) {
 }
 
 void iconus::Scope::set(const std::string& name, Object* value) {
-	ReadLock lock(mutex);
+	bool inScope; {
+		Lock lock(mutex);
+		inScope = vars.find(name) == vars.end();
+	}
 	
-	if (vars.find(name) == vars.end()) {
+	if (inScope) {
 		if (parent) {
 			if (parent->canSet(name) && parent->get(name)) {
 				parent->set(name, value);
 			} else {
-				lock.unlock();
 				setLocal(name, value);
 			}
 		} else {
-			lock.unlock();
 			setLocal(name, value);
 		}
 	} else {
-		lock.unlock();
 		setLocal(name, value);
 	}
 }
 
 void iconus::Scope::setLocal(const std::string& name, Object* value) {
 	if (canSet(name)) {
-		WriteLock lock(mutex);
+		Lock lock(mutex);
 		vars[name] = value;
 	} else {
 		throw Error("Field '"+name+"' of this scope cannot be set");
