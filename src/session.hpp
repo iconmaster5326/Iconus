@@ -10,6 +10,7 @@
 
 #include "program.hpp"
 #include "user.hpp"
+#include "op.hpp"
 
 #include <string>
 #include <functional>
@@ -84,14 +85,22 @@ namespace iconus {
 		Set<boost::uuids::uuid*> idsRendered;
 	};
 	
+	class HistoryItem {
+	public:
+		std::string input;
+		Object* output;
+		
+		inline HistoryItem(std::string input, Object* output) : input{input}, output{output} {}
+	};
+	
 	class Session { // TODO: inherit gc; it seems there's a bug in libgc causing all Sessions to get garbage collected early
 	public:
 		Session();
 		Session(const Session&) = delete;
 		
 		Object* evaluate(const std::string& input, Execution& exe);
+		void addHistory(const std::string& input, Object* output);
 		
-		Execution defaultExecution;
 		User user;
 		Scope sessionScope;
 		Vector<Renderer> renderers;
@@ -99,6 +108,8 @@ namespace iconus {
 		Map<Class*, Map<Class*, Adaptor>> adaptors;
 		Vector<CatHandler> catHandlers;
 		bool closed;
+		unsigned maxHistory = 100;
+		Vector<HistoryItem> history;
 	};
 }
 

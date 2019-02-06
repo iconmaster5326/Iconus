@@ -98,13 +98,16 @@ namespace iconus {
 						};
 					};
 					
+					Object* result = session->evaluate(message["command"].get<string>(), *exe);
+					
 					nlohmann::json response = {
 							{"type", "result"},
 							{"tag", tag},
-							{"result", exe->render(session->evaluate(message["command"].get<string>(), *exe))},
+							{"result", exe->render(result)},
 					};
 					connection->send(response.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace));
 					
+					session->addHistory(message["command"].get<string>(), result);
 					exe->completed = true;
 				} else if (type == "message") {
 					string tag = message["tag"].get<string>();

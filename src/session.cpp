@@ -18,7 +18,7 @@
 using namespace std;
 using namespace iconus;
 
-iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), defaultExecution(*this), closed(false) {
+iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), closed(false) {
 	for (Plugin& p : Plugin::plugins) {
 		try {
 			p.initSession(*this);
@@ -115,4 +115,17 @@ Object* iconus::Execution::cat(const std::string& file) {
 	}
 	
 	throw runtime_error("no catter defined for file!");
+}
+
+void iconus::Session::addHistory(const string& input, Object* output) {
+	if (maxHistory == 0) {
+		history.clear();
+		return;
+	}
+	
+	if (history.size() >= maxHistory) {
+		history.erase(history.begin()+maxHistory-1, history.end());
+	}
+	
+	history.emplace_back(input, output);
 }
