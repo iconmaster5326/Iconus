@@ -420,7 +420,6 @@ extern "C" void iconus_initSession(Execution& exe) {
 		}
 		return ClassString::create(s.empty() ? "0" : s);
 	};
-	
 	exe.session.adaptors[&ClassNumber::INSTANCE][&ClassBool::INSTANCE] = [](Execution& exe, Object* from) {
 		double value = ClassNumber::value(exe, from);
 		if (value == 0.0) return &ClassBool::FALSE; else return &ClassBool::TRUE;
@@ -436,5 +435,29 @@ extern "C" void iconus_initSession(Execution& exe) {
 		} catch (const out_of_range& e) {
 			throw Error("Cannot adapt string to number: Number is out of range");
 		}
+	};
+	
+	exe.session.adaptors[&ClassList::INSTANCE][&ClassMap::INSTANCE] = [](Execution& exe, Object* from) {
+		Object* result = ClassMap::create();
+		auto& map = ClassMap::value(result);
+		
+		Lock lock{from->mutex};
+		for (auto& pair : from->fields(exe)) {
+			map[pair.first] = pair.second;
+		}
+		
+		return result;
+	};
+	
+	exe.session.adaptors[&ClassMap::INSTANCE][&ClassList::INSTANCE] = [](Execution& exe, Object* from) {
+		Object* result = ClassList::create();
+		auto& list = ClassList::value(result);
+		
+		Lock lock{from->mutex};
+		for (Object* val : from->fieldValues(exe)) {
+			list.push_back(val);
+		}
+		
+		return result;
 	};
 }
