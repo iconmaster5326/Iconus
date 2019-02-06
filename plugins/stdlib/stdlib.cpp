@@ -71,6 +71,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	scope.vars["local"] = ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("v")}, {},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		Lock lock{args["v"]->mutex};
 		string name = ClassString::value(exe, args["v"]);
 		scope.setLocal(name, input);
 		return input;
@@ -80,6 +81,8 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	scope.vars["=="] = ClassManagedFunction::create(
 			{Arg("a", INPUT), Arg("b")}, {},
 			[](auto& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		Lock lockA{args["a"]->mutex};
+		Lock lockB{args["b"]->mutex};
 		return ClassBool::create(args["a"]->equals(args["b"]));
 			}
 	);
@@ -143,6 +146,9 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},
 				[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+			Lock lockA{args["user"]->mutex};
+			Lock lockB{args["pass"]->mutex};
+			
 			exe.session.user = User(ClassString::value(exe, args["user"]), ClassString::value(exe, args["pass"]));
 			return &ClassNil::NIL;
 				}
@@ -211,6 +217,7 @@ extern "C" void iconus_initSession(Execution& exe) {
 		ostringstream sb;
 		sb << "<table>";
 		
+		Lock lock{ob->mutex};
 		auto& map = ClassMap::value(exe, ob);
 		for (auto& pair : map) {
 			sb << "<tr><td>" << exe.render(pair.first) << "</td><td>" << exe.render(pair.second) << "</td></tr>";
@@ -226,6 +233,7 @@ extern "C" void iconus_initSession(Execution& exe) {
 		ostringstream sb;
 		sb << "<ol>";
 		
+		Lock lock{ob->mutex};
 		Deque<Object*>& items = *((Deque<Object*>*)ob->value.asPtr);
 		for (Object* item : items) {
 			sb << "<li>" << exe.render(item) << "</li>";
@@ -241,6 +249,7 @@ extern "C" void iconus_initSession(Execution& exe) {
 		ostringstream sb;
 		sb << "<div style=\"color: red;\"><b>error:</b> ";
 		
+		Lock lock{ob->mutex};
 		Object* what = (Object*) ob->value.asPtr;
 		sb << exe.render(what);
 		
@@ -298,6 +307,7 @@ extern "C" void iconus_initSession(Execution& exe) {
 	
 	exe.session.adaptors[&ClassString::INSTANCE][&ClassNumber::INSTANCE] = [](Execution& exe, Object* from) {
 		try {
+			Lock lock{from->mutex};
 			const string& value = ClassString::value(exe, from);
 			return ClassNumber::create(stod(value));
 		} catch (const invalid_argument& e) {

@@ -211,6 +211,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 						if (status < 0) continue;
 						
 						if (fds[0].revents & POLLIN) { // stdoutLink
+							Lock lock{result->mutex};
 							int readLineRet;
 							do {
 								readLineRet = readLine(stdoutLink[0], outS);
@@ -223,6 +224,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 								}
 							} while (readLineRet == readLineFull);
 						} else if (fds[1].revents & POLLIN) { // stderrLink
+							Lock lock{result->mutex};
 							int readLineRet;
 							do {
 								readLineRet = readLine(stderrLink[0], errS);
@@ -235,6 +237,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 								}
 							} while (readLineRet == readLineFull);
 						} else if (fds[2].revents & POLLIN) { // errorLink
+							Lock lock{result->mutex};
 							string s;
 							int readLineRet;
 							do {
@@ -250,6 +253,8 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 							if (isDone > 0) break;
 						}
 					}
+					
+					Lock lock{result->mutex};
 					
 					output->retCode = retCode;
 					output->done = true;
@@ -277,6 +282,7 @@ extern "C" void iconus_initSession(Execution& exe) {
 	exe.session.renderers.emplace_back("system output", [](Execution& exe, Object* ob) {
 			return ob->clazz == &ClassSystemOutput::INSTANCE;
 		}, [](Execution& exe, Object* ob) {
+			Lock lock{ob->mutex};
 			ClassSystemOutput::Instance& value = ClassSystemOutput::value(exe, ob);
 			exe.idsRendered.insert(&value.id);
 			

@@ -87,12 +87,33 @@ namespace iconus {
 		Object* adapt(Execution& exe, Class* clazz);
 		std::string toString(Execution& exe);
 		
+		template<typename T> inline T get() {
+			Lock lock{mutex};
+			return (T) value.asPtr;
+		}
+		template<typename T> inline void set(T t) {
+			Lock lock{mutex};
+			value.asPtr = (void*) t;
+		}
+		template<typename Fn> inline void update(Fn fn) {
+			Lock lock{mutex};
+			value.asPtr = (void*) fn(value.asPtr);
+		}
+		
+		Mutex mutex;
 		Class* clazz;
 		union {
 			double asDouble;
 			void* asPtr;
 		} value;
 	};
+	
+	template<> inline double Object::get<double>() {
+		return value.asDouble;
+	}
+	template<> inline void Object::set<double>(double d) {
+		value.asDouble = d;
+	}
 	
 	class Scope : public gc {
 	public:

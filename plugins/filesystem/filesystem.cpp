@@ -51,6 +51,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				if (input == &ClassNil::NIL) {
 					p = current_path();
 				} else {
+					Lock lock{input->mutex};
 					p = ClassFile::value(exe, input);
 				}
 				
@@ -71,6 +72,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		try {
 			Object* result;
 			exe.session.user.doAsUser([&]() {
+				Lock lock{input->mutex};
 				path& p = ClassFile::value(exe, input);
 				if (exists(status(p))) {
 					result = exe.cat(p.string());
@@ -104,18 +106,21 @@ extern "C" void iconus_initSession(Execution& exe) {
 	exe.session.renderers.emplace_back("cat result", [](Execution& exe, Object* ob) {
 		return ob->clazz == &ClassRawString::INSTANCE;
 	}, [](Execution& exe, Object* ob) {
+		Lock lock{ob->mutex};
 		return "<pre>" + escapeHTML(ClassRawString::value(exe, ob)) + "</pre>";
 	});
 	
 	exe.session.renderers.emplace_back("image", [](Execution& exe, Object* ob) {
 		return ob->clazz == &ClassImage::INSTANCE;
 	}, [](Execution& exe, Object* ob) {
+		Lock lock{ob->mutex};
 		return "<img src=\""+ClassImage::value(exe, ob)+"\">";
 	});
 	
 	exe.session.renderers.emplace_back("filename", [](Execution& exe, Object* ob) {
 		return ob->clazz == &ClassFile::INSTANCE;
 	}, [](Execution& exe, Object* ob) {
+		Lock lock{ob->mutex};
 		path& p = ClassFile::value(exe, ob);
 		return "<a href=\"javascript:onFileClick('"+p.string()+"')\">"+escapeHTML(p.string())+"</a>";
 	});
@@ -129,17 +134,21 @@ extern "C" void iconus_initSession(Execution& exe) {
 	exe.session.adaptors[&ClassFile::INSTANCE] = {};
 	
 	exe.session.adaptors[&ClassString::INSTANCE][&ClassRawString::INSTANCE] = [](Execution& exe, Object* from) {
+		Lock lock{from->mutex};
 		return new Object(&ClassRawString::INSTANCE, from->value.asPtr);
 	};
 	exe.session.adaptors[&ClassRawString::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		Lock lock{from->mutex};
 		return new Object(&ClassString::INSTANCE, from->value.asPtr);
 	};
 	
 	exe.session.adaptors[&ClassFile::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		Lock lock{from->mutex};
 		path& p = ClassFile::value(exe, from);
 		return ClassString::create(p.string());
 	};
 	exe.session.adaptors[&ClassString::INSTANCE][&ClassFile::INSTANCE] = [](Execution& exe, Object* from) {
+		Lock lock{from->mutex};
 		path p{from->toString(exe)};
 		return ClassFile::create(p);
 	};

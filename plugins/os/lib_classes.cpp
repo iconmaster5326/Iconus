@@ -47,6 +47,7 @@ bool iconus::ClassSystemOutput::equals(const Object* self,
 }
 
 Vector<Object*> iconus::ClassSystemOutput::fieldNames(Object* self, Execution& exe) {
+	Lock lock{self->mutex};
 	Instance& a = *(Instance*)self->value.asPtr;
 	if (a.done) {
 		return Vector<Object*>{ClassString::create("done"), ClassString::create("output"), ClassString::create("stderr"), ClassString::create("stdout"), ClassString::create("code")};
@@ -56,6 +57,7 @@ Vector<Object*> iconus::ClassSystemOutput::fieldNames(Object* self, Execution& e
 }
 
 Object* iconus::ClassSystemOutput::getField(Object* self, Execution& exe, Object* name) {
+	Lock lock{self->mutex};
 	Instance& a = *(Instance*)self->value.asPtr;
 	string field = ClassString::value(exe, name);
 	

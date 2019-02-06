@@ -69,6 +69,7 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 	// Flags go to args before args do.
 	// Required args fill up left to right before optional ones, but arg order is maintained.
 	
+	Lock lock{self->mutex};
 	Instance* instance = (Instance*) self->value.asPtr;
 	Map<std::string, Object*> mappedArgs;
 	Map<std::string, Object*> varflags;
@@ -102,6 +103,8 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 			if (arg.role == Role::INPUT) {
 				input = it->second;
 			} else if (arg.role == Role::VARARG) {
+				Lock listLock{it->second->mutex};
+				
 				explicitVarargs = true;
 				auto& value = ClassList::value(exe, it->second);
 				varargs.insert(varargs.end(), value.begin(), value.end());
@@ -115,6 +118,8 @@ Object* iconus::ClassManagedFunction::execute(Object* self, Execution& exe,
 			mappedArgs[arg.name] = it->second;
 			
 			if (arg.role == Role::VARFLAG) {
+				Lock listLock{it->second->mutex};
+				
 				explicitVarflags = true;
 				auto& value = ClassMap::value(exe, it->second);
 				givenVarflags.insert(value.begin(), value.end());
@@ -264,6 +269,7 @@ Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& 
 }
 
 Vector<Object*> iconus::ClassList::fieldNames(Object* self, Execution& exe) {
+	Lock lock{self->mutex};
 	Deque<Object*>& list = ClassList::value(exe, self);
 	Vector<Object*> result;
 	
@@ -275,6 +281,7 @@ Vector<Object*> iconus::ClassList::fieldNames(Object* self, Execution& exe) {
 }
 
 bool iconus::ClassList::hasField(Object* self, Execution& exe, Object* name) {
+	Lock lock{self->mutex};
 	Deque<Object*>& list = ClassList::value(exe, self);
 	int i = (int) ClassNumber::value(exe, name);
 	
@@ -282,6 +289,7 @@ bool iconus::ClassList::hasField(Object* self, Execution& exe, Object* name) {
 }
 
 Object* iconus::ClassList::getField(Object* self, Execution& exe, Object* name) {
+	Lock lock{self->mutex};
 	Deque<Object*>& list = ClassList::value(exe, self);
 	int i = (int) ClassNumber::value(exe, name);
 	
@@ -293,6 +301,7 @@ Object* iconus::ClassList::getField(Object* self, Execution& exe, Object* name) 
 }
 
 bool iconus::ClassList::canSetField(Object* self, Execution& exe, Object* name) {
+	Lock lock{self->mutex};
 	Deque<Object*>& list = ClassList::value(exe, self);
 	int i = (int) ClassNumber::value(exe, name);
 	
@@ -300,6 +309,7 @@ bool iconus::ClassList::canSetField(Object* self, Execution& exe, Object* name) 
 }
 
 void iconus::ClassList::setField(Object* self, Execution& exe, Object* name, Object* value) {
+	Lock lock{self->mutex};
 	Deque<Object*>& list = ClassList::value(exe, self);
 	int i = (int) ClassNumber::value(exe, name);
 	
@@ -393,6 +403,7 @@ bool iconus::ClassMap::equals(const Object* self, const Object* other) const {
 }
 
 Vector<Object*> iconus::ClassMap::fieldNames(Object* self, Execution& exe) {
+	Lock lock{self->mutex};
 	Vector<Object*> result;
 	for (auto& pair : ClassMap::value(exe, self)) {
 		result.push_back(pair.first);
@@ -401,6 +412,7 @@ Vector<Object*> iconus::ClassMap::fieldNames(Object* self, Execution& exe) {
 }
 
 Object* iconus::ClassMap::getField(Object* self, Execution& exe, Object* name) {
+	Lock lock{self->mutex};
 	auto& map = ClassMap::value(exe, self);
 	auto it = map.find(name);
 	if (it == map.end()) {
@@ -416,6 +428,7 @@ bool iconus::ClassMap::canSetField(Object* self, Execution& exe, Object* name) {
 
 void iconus::ClassMap::setField(Object* self, Execution& exe, Object* name,
 		Object* value) {
+	Lock lock{self->mutex};
 	auto& map = ClassMap::value(exe, self);
 	map[name] = value;
 }
