@@ -477,11 +477,25 @@ Object* iconus::ClassMethod::execute(Object* self, Execution& exe, Scope& scope,
 	
 	int bestDist = numeric_limits<int>::max();
 	Object* bestHandler = nullptr;
-	for (auto& pair : method.handlers) {
-		int dist = input->adaptionDistance(exe, pair.first);
+	for (auto& handler : method.handlers) {
+		Object* selectedOb;
+		try {
+			selectedOb = handler.selector->execute(exe, scope, input, args, flags);
+		} catch (const Error& e) {
+			continue;
+		}
+		
+		Class* selected;
+		try {
+			selected = ClassClass::value(exe, selectedOb);
+		} catch (const Error& e) {
+			throw Error("Method selector returned an object of class "+selectedOb->clazz->name()+" (expected <class>)");
+		}
+		
+		int dist = exe.adaptionDistance(selected, handler.clazz);
 		if (dist != -1 && dist < bestDist) {
 			bestDist = dist;
-			bestHandler = pair.second;
+			bestHandler = handler.handler;
 		}
 	}
 	

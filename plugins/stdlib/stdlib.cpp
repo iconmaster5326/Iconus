@@ -197,6 +197,10 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	scope.addMethod("filter", &ClassList::INSTANCE, ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("fn")}, {},
 			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassClass::create(input->clazz);
+			}), ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
 		Lock lock{input->mutex};
 		
 		Object* result = ClassList::create();
@@ -216,6 +220,10 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	));
 	
 	scope.addMethod("filter", &ClassMap::INSTANCE, ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassClass::create(input->clazz);
+			}), ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("fn")}, {},
 			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
 		Lock lock{input->mutex};

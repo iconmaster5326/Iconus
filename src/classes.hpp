@@ -252,7 +252,16 @@ namespace iconus {
 	public:
 		class Instance {
 		public:
-			Deque<std::pair<Class*,Object*>> handlers;
+			class Handler {
+			public:
+				Class* clazz;
+				Object* selector;
+				Object* handler;
+				
+				inline Handler(Class* clazz, Object* selector, Object* handler) : clazz(clazz), selector(selector), handler(handler) {}
+			};
+			
+			Deque<Handler> handlers;
 			Object* defaultHandler;
 			
 			inline Instance() : defaultHandler(nullptr) {}
