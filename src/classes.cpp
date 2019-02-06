@@ -465,3 +465,25 @@ void iconus::ClassTable::setField(Object* self, Execution& exe, Object* name,
 		Object* value) {
 	return Class::setField(self, exe, name, value);
 }
+
+iconus::ClassMethod iconus::ClassMethod::INSTANCE{};
+
+Object* iconus::ClassMethod::execute(Object* self, Execution& exe, Scope& scope,
+		Object* input, Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
+	Lock lock{self->mutex};
+	Instance& method = ClassMethod::value(exe, self);
+	
+	for (auto& pair : method.handlers) {
+		Object* applicable = pair.first->execute(exe, scope, input, args, flags);
+		if (applicable->truthy()) {
+			return pair.second->execute(exe, scope, input, args, flags);
+		}
+	}
+	
+	if (method.defaultHandler) {
+		return method.defaultHandler->execute(exe, scope, input, args, flags);
+	} else {
+		throw Error("Method call not applicable for arguments");
+	}
+}

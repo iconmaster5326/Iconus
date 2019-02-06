@@ -157,3 +157,38 @@ std::string iconus::Object::toString(Execution& exe) {
 bool iconus::Object::truthy() {
 	return this != &ClassBool::FALSE && this != &ClassNil::NIL;
 }
+
+void iconus::Scope::addMethod(const std::string& name, Object* predicate, Object* handler) {
+	auto it = vars.find(name);
+	if (it == vars.end()) {
+		Object* value = ClassMethod::create();
+		ClassMethod::Instance& method = ClassMethod::value(value);
+		method.handlers[predicate] = handler;
+		vars[name] = value;
+	} else {
+		if (it->second->clazz == &ClassMethod::INSTANCE) {
+			ClassMethod::Instance& method = ClassMethod::value(it->second);
+			method.handlers[predicate] = handler;
+		} else {
+			throw runtime_error("Attempted to add method "+name+", but was already a value of type "+it->second->clazz->name());
+		}
+	}
+}
+
+void iconus::Scope::addMethod(const std::string& name, Object* handler) {
+	auto it = vars.find(name);
+	if (it == vars.end()) {
+		vars[name] = handler;
+	} else {
+		if (it->second->clazz == &ClassMethod::INSTANCE) {
+			ClassMethod::Instance& method = ClassMethod::value(it->second);
+			if (method.defaultHandler) {
+				throw runtime_error("Attempted to add default handler to method "+name+", but default handler already defined");
+			} else {
+				method.defaultHandler = handler;
+			}
+		} else {
+			throw runtime_error("Attempted to add method "+name+", but was already a value of type "+it->second->clazz->name());
+		}
+	}
+}

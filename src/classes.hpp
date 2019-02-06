@@ -79,6 +79,9 @@ namespace iconus {
 	class ClassSystemFunction : public Class {
 	public:
 		using Handler = std::function<Object*(Execution&, Scope&, Object*, Vector<Object*>&, Map<std::string,Object*>&)>;
+		static inline Object* create(Handler handler) {
+			return new Object(&INSTANCE, gcAlloc<Handler>(handler));
+		}
 		
 		static ClassSystemFunction INSTANCE;
 		std::string name() override;
@@ -240,6 +243,34 @@ namespace iconus {
 		Object* getField(Object* self, Execution& exe, Object* name) override;
 		bool canSetField(Object* self, Execution& exe, Object* name) override;
 		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
+	};
+	
+	class ClassMethod : public ClassSystemFunction {
+	public:
+		class Instance {
+		public:
+			Map<Object*,Object*> handlers;
+			Object* defaultHandler;
+			
+			inline Instance() : defaultHandler(nullptr) {}
+			inline Instance(Object* defaultHandler) : defaultHandler(defaultHandler) {}
+		};
+		
+		static inline Object* create(Instance* args) {
+			return new Object(&INSTANCE, args);
+		}
+		template<typename... Args> static Object* create(Args... args) {
+			return create(gcAlloc<Instance>(args...));
+		}
+		static inline Instance& value(const Object* ob) {
+			return *(Instance*)ob->value.asPtr;
+		}
+		static inline Instance& value(Execution& exe, Object* ob) {
+			return *(Instance*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
+		static ClassMethod INSTANCE;
+		Object* execute(Object* self, Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
 	};
 }
 

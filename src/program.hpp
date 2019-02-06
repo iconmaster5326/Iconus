@@ -134,6 +134,10 @@ namespace iconus {
 		virtual void set(const std::string& name, Object* value);
 		virtual void setLocal(const std::string& name, Object* value);
 		virtual bool canSet(const std::string& name);
+		
+		// addMethod intended for plugin writers and not users!
+		void addMethod(const std::string& name, Object* predicate, Object* handler);
+		void addMethod(const std::string& name, Object* handler);
 	};
 }
 
