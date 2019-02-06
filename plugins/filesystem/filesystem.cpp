@@ -164,10 +164,6 @@ extern "C" void iconus_initSession(Execution& exe) {
 	////////////////////////////
 	// adaptors
 	////////////////////////////
-	if (exe.session.adaptors.find(&ClassString::INSTANCE) == exe.session.adaptors.end())
-		exe.session.adaptors[&ClassString::INSTANCE] = {};
-	exe.session.adaptors[&ClassRawString::INSTANCE] = {};
-	exe.session.adaptors[&ClassFile::INSTANCE] = {};
 	
 	exe.session.adaptors[&ClassString::INSTANCE][&ClassRawString::INSTANCE] = [](Execution& exe, Object* from) {
 		Lock lock{from->mutex};
