@@ -142,6 +142,46 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	);
 	
+	scope.vars["select"] = ClassManagedFunction::create(
+			{Arg("cols", VARARG)}, {},
+			[](auto& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Lock lock{input->mutex};
+		ClassTable::Instance& inputTable = ClassTable::value(exe, input);
+		
+		Object* result = ClassTable::create();
+		ClassTable::Instance& outputTable = ClassTable::value(result);
+		
+		Map<int,int> colMapping;
+		int i = 0;
+		for (Object* col : varargs) {
+			outputTable.colNames.push_back(col);
+			
+			auto it = find_if(inputTable.colNames.begin(), inputTable.colNames.end(), [col](Object* col2) {
+				return col->equals(col2);
+			});
+			
+			if (it == inputTable.colNames.end()) {
+				throw Error("select: Column name does not appear in input table: "+col->toString(exe));
+			} else {
+				colMapping[i] = it - inputTable.colNames.begin();
+			}
+			
+			i++;
+		}
+		
+		for (Vector<Object*>& inRow : inputTable.rows) {
+			outputTable.rows.emplace_back();
+			Vector<Object*>& outRow = outputTable.rows.back();
+			
+			for (int i = 0; i < outputTable.colNames.size(); i++) {
+				outRow.push_back(inRow[colMapping[i]]);
+			}
+		}
+		
+		return result;
+			}
+	);
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},
