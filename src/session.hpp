@@ -90,7 +90,7 @@ namespace iconus {
 		std::string input;
 		Object* output;
 		
-		inline HistoryItem(std::string input, Object* output) : input{input}, output{output} {}
+		inline HistoryItem(const std::string& input, Object* output) : input{input}, output{output} {}
 	};
 	
 	class Session { // TODO: inherit gc; it seems there's a bug in libgc causing all Sessions to get garbage collected early
