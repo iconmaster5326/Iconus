@@ -194,11 +194,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	);
 	
-	scope.addMethod("filter", ClassManagedFunction::create(
-			{Arg("i", INPUT), Arg("fn")}, {},
-			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
-		return ClassBool::create(input->adaptableTo(exe, &ClassList::INSTANCE));
-			}), ClassManagedFunction::create(
+	scope.addMethod("filter", &ClassList::INSTANCE, ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("fn")}, {},
 			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
 		Lock lock{input->mutex};
@@ -219,11 +215,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
-	scope.addMethod("filter", ClassManagedFunction::create(
-			{Arg("i", INPUT), Arg("fn")}, {},
-			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
-		return ClassBool::create(input->adaptableTo(exe, &ClassMap::INSTANCE));
-			}), ClassManagedFunction::create(
+	scope.addMethod("filter", &ClassMap::INSTANCE, ClassManagedFunction::create(
 			{Arg("i", INPUT), Arg("fn")}, {},
 			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
 		Lock lock{input->mutex};

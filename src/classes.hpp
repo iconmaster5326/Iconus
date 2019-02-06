@@ -252,7 +252,7 @@ namespace iconus {
 	public:
 		class Instance {
 		public:
-			Map<Object*,Object*> handlers;
+			Deque<std::pair<Class*,Object*>> handlers;
 			Object* defaultHandler;
 			
 			inline Instance() : defaultHandler(nullptr) {}

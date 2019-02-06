@@ -138,7 +138,7 @@ namespace iconus {
 		virtual bool canSet(const std::string& name);
 		
 		// addMethod intended for plugin writers and not users!
-		void addMethod(const std::string& name, Object* predicate, Object* handler);
+		void addMethod(const std::string& name, Class* clazz, Object* handler, bool front = false);
 		void addMethod(const std::string& name, Object* handler);
 	};
 }

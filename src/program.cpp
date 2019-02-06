@@ -162,17 +162,23 @@ bool iconus::Object::truthy() {
 	return this != &ClassBool::FALSE && this != &ClassNil::NIL;
 }
 
-void iconus::Scope::addMethod(const std::string& name, Object* predicate, Object* handler) {
+void iconus::Scope::addMethod(const std::string& name, Class* clazz, Object* handler, bool front) {
 	auto it = vars.find(name);
 	if (it == vars.end()) {
 		Object* value = ClassMethod::create();
 		ClassMethod::Instance& method = ClassMethod::value(value);
-		method.handlers[predicate] = handler;
+		if (front)
+			method.handlers.emplace_front(clazz, handler);
+		else
+			method.handlers.emplace_back(clazz, handler);
 		vars[name] = value;
 	} else {
 		if (it->second->clazz == &ClassMethod::INSTANCE) {
 			ClassMethod::Instance& method = ClassMethod::value(it->second);
-			method.handlers[predicate] = handler;
+			if (front)
+				method.handlers.emplace_front(clazz, handler);
+			else
+				method.handlers.emplace_back(clazz, handler);
 		} else {
 			throw runtime_error("Attempted to add method "+name+", but was already a value of type "+it->second->clazz->name());
 		}

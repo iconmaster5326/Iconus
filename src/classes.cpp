@@ -11,6 +11,7 @@
 
 #include <sstream>
 #include <iostream>
+#include <limits>
 
 using namespace std;
 using namespace iconus;
@@ -474,16 +475,21 @@ Object* iconus::ClassMethod::execute(Object* self, Execution& exe, Scope& scope,
 	Lock lock{self->mutex};
 	Instance& method = ClassMethod::value(exe, self);
 	
+	int bestDist = numeric_limits<int>::max();
+	Object* bestHandler = nullptr;
 	for (auto& pair : method.handlers) {
-		Object* applicable = pair.first->execute(exe, scope, input, args, flags);
-		if (applicable->truthy()) {
-			return pair.second->execute(exe, scope, input, args, flags);
+		int dist = input->adaptionDistance(exe, pair.first);
+		if (dist != -1 && dist < bestDist) {
+			bestDist = dist;
+			bestHandler = pair.second;
 		}
 	}
 	
-	if (method.defaultHandler) {
+	if (bestHandler) {
+		return bestHandler->execute(exe, scope, input, args, flags);
+	} else if (method.defaultHandler) {
 		return method.defaultHandler->execute(exe, scope, input, args, flags);
 	} else {
-		throw Error("Method call not applicable for arguments");
+		throw Error("Method call not applicable for input of type "+input->clazz->name());
 	}
 }
