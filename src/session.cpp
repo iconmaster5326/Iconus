@@ -19,7 +19,6 @@ using namespace std;
 using namespace iconus;
 
 iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), closed(false) {
-	maxHistory = 10;
 	for (Plugin& p : Plugin::plugins) {
 		try {
 			p.initSession(*this);
