@@ -19,6 +19,7 @@ using namespace std;
 using namespace iconus;
 
 iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), closed(false) {
+	maxHistory = 10;
 	for (Plugin& p : Plugin::plugins) {
 		try {
 			p.initSession(*this);
@@ -124,7 +125,7 @@ void iconus::Session::addHistory(const string& input, Object* output) {
 	}
 	
 	if (history.size() >= maxHistory) {
-		history.erase(history.begin()+maxHistory-1, history.end());
+		history.erase(history.begin(), history.end()-maxHistory+1);
 	}
 	
 	history.emplace_back(input, output);

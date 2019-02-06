@@ -182,6 +182,18 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	);
 	
+	scope.vars["ans"] = ClassManagedFunction::create(
+			{Arg("n", ClassNumber::create(1.0))}, {},
+			[](auto& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		int n = (int) ClassNumber::value(exe, args["n"]);
+		if (n <= 0 || n > exe.session.history.size()) {
+			throw Error("ans: Argument outside of history range: "+to_string(n));
+		}
+		
+		return exe.session.history[exe.session.history.size()-n].output;
+			}
+	);
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},
