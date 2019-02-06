@@ -194,6 +194,56 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	);
 	
+	scope.addMethod("filter", ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassBool::create(input->adaptableTo(exe, &ClassList::INSTANCE));
+			}), ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Lock lock{input->mutex};
+		
+		Object* result = ClassList::create();
+		auto& list = ClassList::value(result);
+		
+		for (Object* val : input->fieldValues(exe)) {
+			Vector<Object*> predArgs;
+			Map<string,Object*> predFlags;
+			Object* predicate = args["fn"]->execute(exe, scope, val, predArgs, predFlags);
+			if (predicate->truthy()) {
+				list.push_back(val);
+			}
+		}
+		
+		return result;
+			}
+	));
+	
+	scope.addMethod("filter", ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassBool::create(input->adaptableTo(exe, &ClassMap::INSTANCE));
+			}), ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Lock lock{input->mutex};
+		
+		Object* result = ClassMap::create();
+		auto& map = ClassMap::value(result);
+		
+		for (auto& pair : input->fields(exe)) {
+			Vector<Object*> predArgs;
+			Map<string,Object*> predFlags;
+			Object* predicate = args["fn"]->execute(exe, scope, pair.second, predArgs, predFlags);
+			if (predicate->truthy()) {
+				map[pair.first] = pair.second;
+			}
+		}
+		
+		return result;
+			}
+	));
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},

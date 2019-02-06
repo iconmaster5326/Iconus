@@ -144,6 +144,9 @@ namespace iconus {
 		template<typename... Args> static Object* create(Args... args) {
 			return create(gcAlloc<Deque<Object*>>(args...));
 		}
+		static inline Deque<Object*>& value(const Object* ob) {
+			return *(Deque<Object*>*)ob->value.asPtr;
+		}
 		static inline Deque<Object*>& value(Execution& exe, Object* ob) {
 			return *(Deque<Object*>*)ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
