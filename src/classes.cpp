@@ -504,6 +504,6 @@ Object* iconus::ClassMethod::execute(Object* self, Execution& exe, Scope& scope,
 	} else if (method.defaultHandler) {
 		return method.defaultHandler->execute(exe, scope, input, args, flags);
 	} else {
-		throw Error("Method call not applicable for input of type "+input->clazz->name());
+		throw Error("Method call not applicable");
 	}
 }

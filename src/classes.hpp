@@ -261,6 +261,7 @@ namespace iconus {
 				inline Handler(Class* clazz, Object* selector, Object* handler) : clazz(clazz), selector(selector), handler(handler) {}
 			};
 			
+			bool mutableByUser = false;
 			Deque<Handler> handlers;
 			Object* defaultHandler;
 			

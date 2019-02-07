@@ -244,6 +244,40 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
+	scope.vars["method"] = ClassManagedFunction::create(
+			{Arg("default", &ClassNil::NIL)}, {},
+			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		Object* result = ClassMethod::create();
+		ClassMethod::Instance& method = ClassMethod::value(result);
+		method.mutableByUser = true;
+		if (args["default"] != &ClassNil::NIL) {
+			method.defaultHandler = args["default"];
+		}
+		return result;
+			}
+	);
+	
+	scope.vars["override!"] = ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("class"), Arg("selector", &ClassNil::NIL), Arg("handler")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Lock lock{input->mutex};
+		ClassMethod::Instance& method = ClassMethod::value(input);
+		if (!method.mutableByUser)
+			throw Error("override!: Cannot override immutable method");
+		
+		if (args["selector"] == &ClassNil::NIL) {
+			args["selector"] = ClassSystemFunction::create([](Execution& exe, Scope& scope, auto input, auto& args, auto& flags) {
+				return ClassClass::create(input->clazz);
+			});
+		}
+		Class* clazz = ClassClass::value(exe, args["class"]);;
+		
+		method.handlers.emplace_back(clazz, args["selector"], args["handler"]);
+		
+		return input;
+			}
+	);
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},
