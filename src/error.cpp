@@ -23,12 +23,10 @@ const char* iconus::Error::what() const noexcept {
 
 thread_local Vector<StackTrace> iconus::StackTrace::callStack;
 
-void iconus::StackTrace::enter(Type type, const std::string& where, int line) {
-	callStack.emplace_back(type, where, line);
+void iconus::StackTrace::enter(const std::string& name, const std::string& file, int line) {
+	callStack.emplace_back(name, file, line);
 }
 
 void iconus::StackTrace::exit() {
 	callStack.pop_back();
 }
-
-

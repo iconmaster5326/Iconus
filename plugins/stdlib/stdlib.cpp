@@ -49,7 +49,10 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	scope.vars["apply"] = ClassManagedFunction::create(
 			{Arg("fn"), Arg("args", VARARG)}, {Arg("flags", VARFLAG)},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		return args["fn"]->execute(exe, scope, input, varargs, varflags);
+		StackTrace::enter("", "input", 1);
+		Object* result = args["fn"]->execute(exe, scope, input, varargs, varflags);
+		StackTrace::exit();
+		return result;
 			}
 	);
 	
@@ -209,7 +212,11 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		for (Object* val : input->fieldValues(exe)) {
 			Vector<Object*> predArgs;
 			Map<string,Object*> predFlags;
+			
+			StackTrace::enter("", "input", 1);
 			Object* predicate = args["fn"]->execute(exe, scope, val, predArgs, predFlags);
+			StackTrace::exit();
+			
 			if (predicate->truthy()) {
 				list.push_back(val);
 			}
@@ -234,7 +241,11 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		for (auto& pair : input->fields(exe)) {
 			Vector<Object*> predArgs;
 			Map<string,Object*> predFlags;
+			
+			StackTrace::enter("", "input", 1);
 			Object* predicate = args["fn"]->execute(exe, scope, pair.second, predArgs, predFlags);
+			StackTrace::exit();
+			
 			if (predicate->truthy()) {
 				map[pair.first] = pair.second;
 			}
@@ -417,16 +428,22 @@ extern "C" void iconus_initSession(Execution& exe) {
 		
 		for (auto it = error.stackTrace.rbegin(); it != error.stackTrace.rend(); it++) {
 			StackTrace& stackTrace = *it;
-			
 			sb << "<p class=\"stack-trace\">at ";
-			switch (stackTrace.type) {
-			case StackTrace::Type::INPUT: sb << "input"; break;
-			case StackTrace::Type::FILE: sb << "file " << stackTrace.where; break;
-			case StackTrace::Type::FUNCTION: sb << "function " << stackTrace.where; break;
+			
+			if (stackTrace.name.empty()) {
+				sb << "anonymous function";
+			} else {
+				sb << "function " << stackTrace.name;
 			}
-			if (stackTrace.line != -1) {
-				sb << "; line " << stackTrace.line;
+			
+			if (!stackTrace.file.empty()) {
+				sb << " (" << stackTrace.file;
+				if (stackTrace.line != -1) {
+					sb << " line " << stackTrace.line;
+				}
+				sb << ")";
 			}
+			
 			sb << "</p>";
 		}
 		

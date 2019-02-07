@@ -18,20 +18,14 @@ namespace iconus {
 	
 	class StackTrace {
 	public:
-		enum class Type {
-			FILE,
-			FUNCTION,
-			INPUT
-		};
-		
-		Type type;
-		std::string where;
+		std::string name;
+		std::string file;
 		int line;
 		
-		inline StackTrace(Type type, const std::string& where, int line = -1) : type(type), where(where), line(line) {}
+		inline StackTrace(const std::string& name = "", const std::string& file = "", int line = -1) : name(name), file(file), line(line) {}
 		
 		static thread_local Vector<StackTrace> callStack;
-		static void enter(Type type, const std::string& where, int line = -1);
+		static void enter(const std::string& name = "", const std::string& file = "", int line = -1);
 		static void exit();
 	};
 	

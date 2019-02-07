@@ -28,7 +28,7 @@ Object* iconus::OpCall::evaluate(Execution& exe, Scope& scope, Object* input) {
 		throw Error("command not executable: "+cmd);
 	}
 	
-	StackTrace::enter(StackTrace::Type::FUNCTION, cmd);
+	StackTrace::enter(cmd, "input", 1);
 	Vector<Object*> argObs;
 	Map<string,Object*> flagObs;
 	

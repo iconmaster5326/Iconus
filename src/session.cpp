@@ -30,16 +30,10 @@ iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), closed(false)
 
 Object* iconus::Session::evaluate(const std::string& input, Execution& exe) {
 	try {
-		StackTrace::enter(StackTrace::Type::INPUT, input);
-		
 		Lexer lexer(input);
 		Op* op = parse(exe, lexer);
-		Object* result = op->evaluate(exe, sessionScope, &ClassNil::NIL);
-		
-		StackTrace::exit();
-		return result;
+		return op->evaluate(exe, sessionScope, &ClassNil::NIL);
 	} catch (const Error& e) {
-		StackTrace::exit();
 		return ClassError::create(e);
 	}
 }
