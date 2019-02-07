@@ -412,8 +412,23 @@ extern "C" void iconus_initSession(Execution& exe) {
 		sb << "<div style=\"color: red;\"><b>error:</b> ";
 		
 		Lock lock{ob->mutex};
-		Object* what = (Object*) ob->value.asPtr;
-		sb << exe.render(what);
+		Error& error = ClassError::value(exe, ob);
+		sb << exe.render(error.value);
+		
+		for (auto it = error.stackTrace.rbegin(); it != error.stackTrace.rend(); it++) {
+			StackTrace& stackTrace = *it;
+			
+			sb << "<p class=\"stack-trace\">at ";
+			switch (stackTrace.type) {
+			case StackTrace::Type::INPUT: sb << "input"; break;
+			case StackTrace::Type::FILE: sb << "file " << stackTrace.where; break;
+			case StackTrace::Type::FUNCTION: sb << "function " << stackTrace.where; break;
+			}
+			if (stackTrace.line != -1) {
+				sb << "; line " << stackTrace.line;
+			}
+			sb << "</p>";
+		}
 		
 		sb << "</div>";
 		return sb.str();

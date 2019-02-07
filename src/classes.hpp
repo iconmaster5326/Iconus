@@ -11,6 +11,7 @@
 #include "program.hpp"
 #include "op.hpp"
 #include "function.hpp"
+#include "error.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -164,6 +165,19 @@ namespace iconus {
 	
 	class ClassError : public Class {
 	public:
+		static inline Object* create(Error* args) {
+			return new Object(&INSTANCE, args);
+		}
+		template<typename... Args> static Object* create(Args... args) {
+			return create(gcAlloc<Error>(args...));
+		}
+		static inline Error& value(const Object* ob) {
+			return *(Error*)ob->value.asPtr;
+		}
+		static inline Error& value(Execution& exe, Object* ob) {
+			return *(Error*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
 		static ClassError INSTANCE;
 		std::string name() override;
 	};
