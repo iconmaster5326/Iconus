@@ -16,9 +16,9 @@
 namespace iconus {
 	class ClassSystemOutput : public Class {
 	public:
-		class Instance : public gc {
+		class Instance {
 		public:
-			class Line : public gc {
+			class Line {
 			public:
 				bool isErr;
 				std::string text;

@@ -16,7 +16,7 @@
 namespace iconus {
 	class Function;
 	
-	class Op : public gc {
+	class Op {
 	public:
 		virtual Object* evaluate(Execution& exe, Scope& scope, Object* input) = 0;
 		virtual operator std::string() = 0;

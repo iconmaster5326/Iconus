@@ -17,7 +17,7 @@ namespace iconus {
 	public:
 		static ClassImage INSTANCE;
 		static inline Object* create(const std::string& s) {
-			return new Object(&INSTANCE, gcAlloc<std::string>(s));
+			return new Object(&INSTANCE, new std::string(s));
 		}
 		static inline std::string& value(Execution& exe, Object* ob) {
 			return *(std::string*)ob->adapt(exe, &INSTANCE)->value.asPtr;
@@ -32,7 +32,7 @@ namespace iconus {
 	public:
 		static ClassRawString INSTANCE;
 		static inline Object* create(const std::string& s) {
-			return new Object(&INSTANCE, gcAlloc<std::string>(s));
+			return new Object(&INSTANCE, new std::string(s));
 		}
 		static inline std::string& value(Execution& exe, Object* ob) {
 			return *(std::string*)ob->adapt(exe, &INSTANCE)->value.asPtr;
@@ -45,10 +45,10 @@ namespace iconus {
 	public:
 		static ClassFile INSTANCE;
 		static inline Object* create(const std::string& s) {
-			return new Object(&INSTANCE, gcAlloc<boost::filesystem::path>(boost::filesystem::absolute(boost::filesystem::path(s))));
+			return new Object(&INSTANCE, new boost::filesystem::path(boost::filesystem::absolute(boost::filesystem::path(s))));
 		}
 		static inline Object* create(const boost::filesystem::path& s) {
-			return new Object(&INSTANCE, gcAlloc<boost::filesystem::path>(boost::filesystem::absolute(s)));
+			return new Object(&INSTANCE, new boost::filesystem::path(boost::filesystem::absolute(s)));
 		}
 		static inline boost::filesystem::path& value(const Object* ob) {
 			return *(boost::filesystem::path*)ob->value.asPtr;

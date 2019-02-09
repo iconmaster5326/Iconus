@@ -8,7 +8,7 @@
 #ifndef SRC_ERROR_HPP_
 #define SRC_ERROR_HPP_
 
-#include "gc.hpp"
+#include "types.hpp"
 
 #include <stdexcept>
 #include <string>

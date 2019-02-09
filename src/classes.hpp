@@ -66,7 +66,7 @@ namespace iconus {
 	public:
 		static ClassString INSTANCE;
 		static inline Object* create(const std::string& s) {
-			return new Object(&INSTANCE, gcAlloc<std::string>(s));
+			return new Object(&INSTANCE, new std::string(s));
 		}
 		static inline std::string& value(Execution& exe, Object* ob) {
 			return *(std::string*)ob->adapt(exe, &INSTANCE)->value.asPtr;
@@ -81,7 +81,7 @@ namespace iconus {
 	public:
 		using Handler = std::function<Object*(Execution&, Scope&, Object*, Vector<Object*>&, Map<std::string,Object*>&)>;
 		static inline Object* create(Handler handler) {
-			return new Object(&INSTANCE, gcAlloc<Handler>(handler));
+			return new Object(&INSTANCE, new Handler(handler));
 		}
 		
 		static ClassSystemFunction INSTANCE;
@@ -94,7 +94,7 @@ namespace iconus {
 	public:
 		using Handler = std::function<Object*(Execution&, Scope&, Object*, Map<std::string,Object*>&, Vector<Object*>&, Map<std::string,Object*>&)>;
 		
-		class Instance : public gc {
+		class Instance {
 		public:
 			inline Instance(const Function& fn, Handler handler) : handler(handler), fn(fn) {}
 			
@@ -143,7 +143,7 @@ namespace iconus {
 			return new Object(&INSTANCE, args);
 		}
 		template<typename... Args> static Object* create(Args... args) {
-			return create(gcAlloc<Deque<Object*>>(args...));
+			return create(new Deque<Object*>(args...));
 		}
 		static inline Deque<Object*>& value(const Object* ob) {
 			return *(Deque<Object*>*)ob->value.asPtr;
@@ -169,7 +169,7 @@ namespace iconus {
 			return new Object(&INSTANCE, args);
 		}
 		template<typename... Args> static Object* create(Args... args) {
-			return create(gcAlloc<Error>(args...));
+			return create(new Error(args...));
 		}
 		static inline Error& value(const Object* ob) {
 			return *(Error*)ob->value.asPtr;
@@ -204,7 +204,7 @@ namespace iconus {
 			return new Object(&INSTANCE, args);
 		}
 		template<typename... Args> static Object* create(Args... args) {
-			return create(gcAlloc<Map<Object*,Object*>>(args...));
+			return create(new Map<Object*,Object*>(args...));
 		}
 		static inline Map<Object*,Object*>& value(const Object* ob) {
 			return *(Map<Object*,Object*>*)ob->value.asPtr;
@@ -243,7 +243,7 @@ namespace iconus {
 			return new Object(&INSTANCE, args);
 		}
 		template<typename... Args> static Object* create(Args... args) {
-			return create(gcAlloc<Instance>(args...));
+			return create(new Instance(args...));
 		}
 		static inline Instance& value(const Object* ob) {
 			return *(Instance*)ob->value.asPtr;
@@ -287,7 +287,7 @@ namespace iconus {
 			return new Object(&INSTANCE, args);
 		}
 		template<typename... Args> static Object* create(Args... args) {
-			return create(gcAlloc<Instance>(args...));
+			return create(new Instance(args...));
 		}
 		static inline Instance& value(const Object* ob) {
 			return *(Instance*)ob->value.asPtr;

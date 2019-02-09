@@ -63,7 +63,7 @@ namespace iconus {
 		bool canSet(const std::string& name) override;
 	};
 	
-	class Execution : public gc {
+	class Execution {
 	public:
 		using MessageHandler = std::function<void(boost::uuids::uuid&, Map<std::string, std::string>&)>;
 		

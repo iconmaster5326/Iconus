@@ -11,12 +11,12 @@
 #include <string>
 #include <functional>
 
-#include "gc.hpp"
+#include "types.hpp"
 
 namespace iconus {
 	class Object; class Scope; class Session; class Execution;
 	
-	class Class : public gc {
+	class Class {
 	public:
 		virtual ~Class();
 		virtual std::string name();
@@ -41,7 +41,7 @@ namespace iconus {
 		virtual Vector<std::pair<Object*,Object*> > fields(Object* self, Execution& exe);
 	};
 	
-	class Object : public gc {
+	class Object {
 	public:
 		inline Object(Class* clazz) : clazz(clazz) {}
 		inline Object(Class* clazz, double value) : clazz(clazz), value{.asDouble = value} {}
@@ -119,7 +119,7 @@ namespace iconus {
 		value.asDouble = d;
 	}
 	
-	class Scope : public gc {
+	class Scope {
 	public:
 		Map<std::string, Object*> vars;
 		Scope* parent;
