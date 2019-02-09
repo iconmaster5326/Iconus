@@ -108,6 +108,23 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	);
 	
+	scope.vars["file?"] = ClassManagedFunction::create(
+			{Arg("file", INPUT)}, {},
+			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
+		try {
+			Object* result;
+			exe.session.user.doAsUser([&]() {
+				Lock lock{input->mutex};
+				path& p = ClassFile::value(exe, input);
+				result = ClassBool::create(is_regular_file(p));
+			});
+			return result;
+		} catch (const filesystem_error& e) {
+			throw Error(e.what());
+		}
+			}
+	);
+	
 	////////////////////////////
 	// constants
 	////////////////////////////

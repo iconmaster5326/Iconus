@@ -255,6 +255,46 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
+	scope.addMethod("filter", &ClassTable::INSTANCE, ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassClass::create(input->clazz);
+			}), ClassManagedFunction::create(
+			{Arg("i", INPUT), Arg("fn")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Lock lock{input->mutex};
+		auto& oldTable = ClassTable::value(exe, input);
+		
+		Object* result = ClassTable::create();
+		auto& newTable = ClassTable::value(result);
+		
+		newTable.colNames = oldTable.colNames;
+		
+		for (auto& row : oldTable.rows) {
+			Vector<Object*> predArgs;
+			Map<string,Object*> predFlags;
+			
+			Object* newInput = ClassMap::create();
+			auto& map = ClassMap::value(newInput);
+			int i = 0;
+			for (Object* name : oldTable.colNames) {
+				map[name] = row[i];
+				i++;
+			}
+			
+			StackTrace::enter("", "input", 1);
+			Object* predicate = args["fn"]->execute(exe, scope, newInput, predArgs, predFlags);
+			StackTrace::exit();
+			
+			if (predicate->truthy()) {
+				newTable.rows.push_back(row);
+			}
+		}
+		
+		return result;
+			}
+	));
+	
 	scope.vars["method"] = ClassManagedFunction::create(
 			{Arg("default", &ClassNil::NIL)}, {},
 			[](Execution& exe, Scope& scope, auto input, auto& args, auto& varargs, auto& varflags) {
