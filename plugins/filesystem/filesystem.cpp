@@ -5,11 +5,13 @@
  *      Author: iconmaster
  */
 
+#include "lib_classes.hpp"
+
 #include "session.hpp"
 #include "error.hpp"
 #include "base64.hpp"
 #include "util.hpp"
-#include "lib_classes.hpp"
+#include "parser.hpp"
 
 #include <string>
 #include <iostream>
@@ -122,6 +124,22 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		} catch (const filesystem_error& e) {
 			throw Error(e.what());
 		}
+			}
+	);
+	
+	scope.vars["include"] = ClassManagedFunction::create(
+			{Arg("file")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Op* result;
+		exe.session.user.doAsUser([&]() {
+			Lock lock{args["file"]->mutex};
+			path& p = ClassFile::value(exe, args["file"]);
+			string* location = new string("file "+p.string());
+			std::ifstream ifs{p.string()};
+			Lexer lexer{*location, ifs};
+			result = parse(exe, lexer);
+		});
+		return result->evaluate(exe, scope, input);
 			}
 	);
 	

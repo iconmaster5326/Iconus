@@ -9,6 +9,7 @@
 #include "session.hpp"
 #include "error.hpp"
 #include "util.hpp"
+#include "parser.hpp"
 
 #include <string>
 #include <iostream>
@@ -326,6 +327,22 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		method.handlers.emplace_back(clazz, args["selector"], args["handler"]);
 		
 		return input;
+			}
+	);
+	
+	scope.vars["eval"] = ClassManagedFunction::create(
+			{Arg("s")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		static const string LOCATION = "eval";
+		
+		Op* op; {
+			Lock lock{args["s"]->mutex};
+			string& s = ClassString::value(exe, args["s"]);
+			Lexer lexer{LOCATION, s};
+			op = parse(exe, lexer);
+		}
+		
+		return op->evaluate(exe, scope, input);
 			}
 	);
 	
