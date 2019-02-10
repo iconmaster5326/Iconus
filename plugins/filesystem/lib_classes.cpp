@@ -54,3 +54,17 @@ bool iconus::ClassFile::equals(const Object* self, const Object* other) const {
 	
 	return a == b;
 }
+
+iconus::ClassPerms iconus::ClassPerms::INSTANCE{};
+
+std::string iconus::ClassPerms::name() {
+	return "perms";
+}
+
+std::size_t iconus::ClassPerms::hash(const Object* self) const {
+	return (std::size_t) ClassPerms::value(self);
+}
+
+bool iconus::ClassPerms::equals(const Object* self, const Object* other) const {
+	return ClassPerms::value(self) == ClassPerms::value(other);
+}

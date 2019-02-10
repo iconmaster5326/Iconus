@@ -61,6 +61,24 @@ namespace iconus {
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
 	};
+	
+	class ClassPerms : public Class {
+	public:
+		static ClassPerms INSTANCE;
+		static inline Object* create(boost::filesystem::perms perms) {
+			return new Object(&INSTANCE, (uint64_t) perms);
+		}
+		static inline boost::filesystem::perms value(const Object* ob) {
+			return (boost::filesystem::perms) ob->value.asInt;
+		}
+		static inline boost::filesystem::perms value(Execution& exe, Object* ob) {
+			return (boost::filesystem::perms) ob->adapt(exe, &INSTANCE)->value.asInt;
+		}
+		
+		std::string name() override;
+		std::size_t hash(const Object* self) const override;
+		bool equals(const Object* self, const Object* other) const override;
+	};
 }
 
 #endif /* PLUGINS_FILESYSTEM_LIB_CLASSES_HPP_ */

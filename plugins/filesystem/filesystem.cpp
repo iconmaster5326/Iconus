@@ -90,20 +90,23 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				}
 				
 				if (args["l"]->truthy()) {
-					result = ClassTable::create((initializer_list<string>) {"perms","hard-links","user","group","size","last-changed","name"});
+					result = ClassTable::create((initializer_list<string>) {"type","perms","hard-links","user","group","size","last-changed","name"});
 					ClassTable::Instance& table = ClassTable::value(exe, result);
 					
 					for (directory_iterator it{p}; it != directory_iterator{}; it++) {
+						path p = it->path();
+						
 						table.rows.emplace_back((initializer_list<Object*>) {
 								&ClassNil::NIL,
-								ClassNumber::create((double) hard_link_count(it->path())),
+								ClassPerms::create(status(p).permissions()),
+								ClassNumber::create((double) hard_link_count(p)),
 								&ClassNil::NIL,
 								&ClassNil::NIL,
-								is_regular_file(it->path()) ?
-										ClassNumber::create((double) file_size(it->path())) :
+								is_regular_file(p) ?
+										ClassNumber::create((double) file_size(p)) :
 										&ClassNil::NIL,
 								&ClassNil::NIL,
-								ClassFile::create(it->path())
+								ClassFile::create(p)
 						});
 					}
 				} else {
@@ -249,6 +252,23 @@ extern "C" void iconus_initSession(Execution& exe) {
 		Lock lock{from->mutex};
 		path p{from->toString(exe)};
 		return ClassFile::create(p);
+	};
+	
+	exe.session.adaptors[&ClassPerms::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		perms p = ClassPerms::value(exe, from);
+		ostringstream sb;
+		
+		if (p & perms::owner_read) sb << "r"; else sb << "-";
+		if (p & perms::owner_write) sb << "w"; else sb << "-";
+		if (p & perms::owner_exe) sb << "x"; else sb << "-";
+		if (p & perms::group_read) sb << "r"; else sb << "-";
+		if (p & perms::group_write) sb << "w"; else sb << "-";
+		if (p & perms::group_exe) sb << "x"; else sb << "-";
+		if (p & perms::others_read) sb << "r"; else sb << "-";
+		if (p & perms::others_write) sb << "w"; else sb << "-";
+		if (p & perms::others_exe) sb << "x"; else sb << "-";
+		
+		return ClassString::create(sb.str());
 	};
 	
 	////////////////////////////

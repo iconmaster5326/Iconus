@@ -10,6 +10,7 @@
 
 #include <string>
 #include <functional>
+#include <cstdint>
 
 #include "types.hpp"
 
@@ -44,6 +45,7 @@ namespace iconus {
 	class Object {
 	public:
 		inline Object(Class* clazz) : clazz(clazz) {}
+		inline Object(Class* clazz, uint64_t value) : clazz(clazz), value{.asInt = value} {}
 		inline Object(Class* clazz, double value) : clazz(clazz), value{.asDouble = value} {}
 		inline Object(Class* clazz, void* value) : clazz(clazz), value{.asPtr = value} {}
 		
@@ -107,10 +109,18 @@ namespace iconus {
 		Mutex mutex;
 		Class* clazz;
 		union {
+			uint64_t asInt;
 			double asDouble;
 			void* asPtr;
 		} value;
 	};
+	
+	template<> inline uint64_t Object::get<uint64_t>() {
+		return value.asInt;
+	}
+	template<> inline void Object::set<uint64_t>(uint64_t d) {
+		value.asInt = d;
+	}
 	
 	template<> inline double Object::get<double>() {
 		return value.asDouble;
