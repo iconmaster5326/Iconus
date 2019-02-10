@@ -38,6 +38,39 @@ constexpr Function::Role INPUT = Function::Role::INPUT;
 constexpr Function::Role VARARG = Function::Role::VARARG;
 constexpr Function::Role VARFLAG = Function::Role::VARFLAG;
 
+#if BOOST_VERSION < 106000
+static path relative(path to, path from = current_path()) {
+   // Start at the root path and while they are the same then do nothing then when they first
+   // diverge take the entire from path, swap it with '..' segments, and then append the remainder of the to path.
+   path::const_iterator fromIter = from.begin();
+   path::const_iterator toIter = to.begin();
+
+   // Loop through both while they are the same to find nearest common directory
+   while (fromIter != from.end() && toIter != to.end() && (*toIter) == (*fromIter))
+   {
+      ++toIter;
+      ++fromIter;
+   }
+
+   // Replace from path segments with '..' (from => nearest common directory)
+   path finalPath;
+   while (fromIter != from.end())
+   {
+      finalPath /= "..";
+      ++fromIter;
+   }
+
+   // Append the remainder of the to path (nearest common directory => to)
+   while (toIter != to.end())
+   {
+      finalPath /= *toIter;
+      ++toIter;
+   }
+
+   return finalPath;
+}
+#endif
+
 extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
@@ -182,14 +215,12 @@ extern "C" void iconus_initSession(Execution& exe) {
 		
 		exe.session.user.doAsUser([&]() {
 			string absStr = p.string();
-			string curStr = current_path().string();
+			string relStr = relative(p).string();
 			
-			if (curStr == absStr) {
-				str = ".";
-			} else if (curStr.size() < absStr.size() && absStr.substr(0, curStr.size()) == curStr) {
-				str = absStr.substr(curStr.size()+1);
-			} else {
+			if (absStr.size() < relStr.size()) {
 				str = absStr;
+			} else {
+				str = relStr;
 			}
 		});
 		
