@@ -87,6 +87,15 @@ namespace iconus {
 		Function fn;
 		Op* code;
 	};
+	
+	class OpExString : public Op {
+	public:
+		inline OpExString(const std::string& str) : str{str} {}
+		Object* evaluate(Execution& exe, Scope& scope, Object* input) override;
+		operator std::string() override;
+		
+		std::string str;
+	};
 }
 
 

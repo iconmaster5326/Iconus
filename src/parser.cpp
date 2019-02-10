@@ -206,6 +206,10 @@ namespace iconus {
 			tokens.pop_front();
 			return new OpConst(ClassString::create(value));
 		} break;
+		case Token::Type::EX_STRING: {
+			tokens.pop_front();
+			return new OpExString(value);
+		} break;
 		case Token::Type::VAR: {
 			tokens.pop_front();
 			return new OpVar(value);
@@ -296,6 +300,11 @@ namespace iconus {
 		} break;
 		case Token::Type::STRING: {
 			Op* op = new OpConst(ClassString::create(tokens.front().value));
+			tokens.pop_front();
+			return parsePostConst(exe, op, tokens);
+		} break;
+		case Token::Type::EX_STRING: {
+			Op* op = new OpExString(tokens.front().value);
 			tokens.pop_front();
 			return parsePostConst(exe, op, tokens);
 		} break;

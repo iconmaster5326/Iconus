@@ -10,7 +10,7 @@
 #include "classes.hpp"
 
 #include <sstream>
-
+#include <cctype>
 
 using namespace std;
 using namespace iconus;
@@ -130,4 +130,83 @@ Object* iconus::OpLambda::evaluate(Execution& exe, Scope& scope, Object* input) 
 
 iconus::OpLambda::operator std::string() {
 	return "{"+code->operator string()+"}";
+}
+
+static bool invalidVarChar(char c) {
+	static const string badChars{"|&;{}()[]$\'\""};
+	return isspace(c) || badChars.find(c) != string::npos;
+}
+
+Object* iconus::OpExString::evaluate(Execution& exe, Scope& scope,
+		Object* input) {
+	Object* resultObject =  ClassString::create("");
+	string& result = ClassString::value(resultObject);
+	
+	bool dollar = false;
+	bool dollarExt = false;
+	string varname;
+	for (char c : str) {
+		if (dollar) {
+			if (!dollarExt && c == '{' && varname.empty()) {
+				dollarExt = true;
+			} else if (!dollarExt && invalidVarChar(c)) {
+				if (varname.empty()) {
+					result += '$';
+				} else {
+					Object* lookup = scope.get(varname);
+					if (lookup) {
+						result += lookup->toString(exe);
+					}
+				}
+				
+				result += c;
+				
+				dollar = false;
+				varname = "";
+			} else if (!dollarExt && c == '$') {
+				if (varname.empty()) {
+					dollar = false;
+					result += '$';
+				} else {
+					Object* lookup = scope.get(varname);
+					if (lookup) {
+						result += lookup->toString(exe);
+					}
+					
+					varname = "";
+				}
+			} else if (dollarExt && c == '{') {
+				throw Error("in string constant: cannot have nested '{' in ${...} form");
+			} else if (dollarExt && c == '}') {
+				Object* lookup = scope.get(varname);
+				if (lookup) {
+					result += lookup->toString(exe);
+				}
+				
+				dollarExt = false;
+				dollar = false;
+				varname = "";
+			} else {
+				varname += c;
+			}
+		} else if (c == '$') {
+			dollar = true;
+		} else {
+			result += c;
+		}
+	}
+	
+	if (dollarExt) throw Error("in string constant: expected '}' at end of string");
+	if (dollar && !varname.empty()) {
+		Object* lookup = scope.get(varname);
+		if (lookup) {
+			result += lookup->toString(exe);
+		}
+	}
+	
+	return resultObject;
+}
+
+iconus::OpExString::operator std::string() {
+	return "\""+str+"\"";
 }

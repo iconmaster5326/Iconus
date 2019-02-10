@@ -68,6 +68,9 @@ namespace iconus {
 		static inline Object* create(const std::string& s) {
 			return new Object(&INSTANCE, new std::string(s));
 		}
+		static inline std::string& value(const Object* ob) {
+			return *(std::string*)ob->value.asPtr;
+		}
 		static inline std::string& value(Execution& exe, Object* ob) {
 			return *(std::string*)ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
