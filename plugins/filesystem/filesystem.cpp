@@ -71,6 +71,18 @@ static path relative(path to, path from = current_path()) {
 }
 #endif
 
+static Object* fileType(path& p) {
+	if (is_directory(p)) {
+		return ClassString::create("dir");
+	} else if (is_regular_file(p)) {
+		return ClassString::create("file");
+	} else if (!exists(p)) {
+		return &ClassNil::NIL;
+	} else {
+		return ClassString::create("?");
+	}
+}
+
 extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
@@ -97,7 +109,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 						path p = it->path();
 						
 						table.rows.emplace_back((initializer_list<Object*>) {
-								&ClassNil::NIL,
+								fileType(p),
 								ClassPerms::create(status(p).permissions()),
 								ClassNumber::create((double) hard_link_count(p)),
 								&ClassNil::NIL,
