@@ -23,30 +23,6 @@ using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
 
-static std::string getOurUsername() {
-	struct passwd entry;
-	struct passwd* entryP;
-	size_t buflen = 1024;
-	char* buffer = new char[buflen];
-	
-	while (true) {
-		int status = getpwuid_r(getuid(), &entry, buffer, buflen, &entryP);
-		if (status == ERANGE) {
-			buflen *= 2;
-			delete[] buffer;
-			buffer = new char[buflen];
-		} else if (status == 0) {
-			if (entryP) {
-				return string(entry.pw_name);
-			} else {
-				return "";
-			}
-		} else {
-			return "";
-		}
-	}
-}
-
 static bool canSetUids() {
 	bool canSetUids = false;
 	cap_t caps = cap_get_proc();
@@ -67,7 +43,7 @@ static bool canSetUids() {
 std::mutex iconus::User::MUTEX{};
 uid_t iconus::User::REAL_UID = getuid();
 gid_t iconus::User::REAL_GID = getgid();
-std::string iconus::User::GUEST_USERNAME{getOurUsername()};
+std::string iconus::User::GUEST_USERNAME{User::uidToString(getuid())};
 bool iconus::User::IS_ROOT = canSetUids();
 
 extern "C" {
@@ -233,4 +209,100 @@ void iconus::User::doAsUser(std::function<void()> f) {
 	resetCreds();
 	
 	// mutex expires here, thanks to RAII
+}
+
+std::string iconus::User::uidToString(uid_t id) {
+	struct passwd entry;
+	struct passwd* entryP;
+	size_t buflen = 1024;
+	char* buffer = new char[buflen];
+	
+	while (true) {
+		int status = getpwuid_r(id, &entry, buffer, buflen, &entryP);
+		if (status == ERANGE) {
+			buflen *= 2;
+			delete[] buffer;
+			buffer = new char[buflen];
+		} else if (status == 0) {
+			if (entryP) {
+				return string(entry.pw_name);
+			} else {
+				return "";
+			}
+		} else {
+			return "";
+		}
+	}
+}
+
+std::string iconus::User::gidToString(gid_t id) {
+	struct group entry;
+	struct group* entryP;
+	size_t buflen = 1024;
+	char* buffer = new char[buflen];
+	
+	while (true) {
+		int status = getgrgid_r(id, &entry, buffer, buflen, &entryP);
+		if (status == ERANGE) {
+			buflen *= 2;
+			delete[] buffer;
+			buffer = new char[buflen];
+		} else if (status == 0) {
+			if (entryP) {
+				return string(entry.gr_name);
+			} else {
+				return "";
+			}
+		} else {
+			return "";
+		}
+	}
+}
+
+uid_t iconus::User::stringToUid(std::string name) {
+	struct passwd entry;
+	struct passwd* entryP;
+	size_t buflen = 1024;
+	char* buffer = new char[buflen];
+	
+	while (true) {
+		int status = getpwnam_r(name.c_str(), &entry, buffer, buflen, &entryP);
+		if (status == ERANGE) {
+			buflen *= 2;
+			delete[] buffer;
+			buffer = new char[buflen];
+		} else if (status == 0) {
+			if (entryP) {
+				return entry.pw_uid;
+			} else {
+				return -1;
+			}
+		} else {
+			return -1;
+		}
+	}
+}
+
+gid_t iconus::User::stringToGid(std::string name) {
+	struct group entry;
+	struct group* entryP;
+	size_t buflen = 1024;
+	char* buffer = new char[buflen];
+	
+	while (true) {
+		int status = getgrnam_r(name.c_str(), &entry, buffer, buflen, &entryP);
+		if (status == ERANGE) {
+			buflen *= 2;
+			delete[] buffer;
+			buffer = new char[buflen];
+		} else if (status == 0) {
+			if (entryP) {
+				return entry.gr_gid;
+			} else {
+				return -1;
+			}
+		} else {
+			return -1;
+		}
+	}
 }

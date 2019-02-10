@@ -18,6 +18,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <sys/stat.h>
+
 using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
@@ -107,13 +109,15 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 					
 					for (directory_iterator it{p}; it != directory_iterator{}; it++) {
 						path p = it->path();
+						struct stat stats;
+						stat(p.string().c_str(), &stats);
 						
 						table.rows.emplace_back((initializer_list<Object*>) {
 								fileType(p),
 								ClassPerms::create(status(p).permissions()),
 								ClassNumber::create((double) hard_link_count(p)),
-								&ClassNil::NIL,
-								&ClassNil::NIL,
+								ClassString::create(User::uidToString(stats.st_uid)),
+								ClassString::create(User::gidToString(stats.st_gid)),
 								is_regular_file(p) ?
 										ClassNumber::create((double) file_size(p)) :
 										&ClassNil::NIL,

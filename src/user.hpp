@@ -22,6 +22,11 @@ namespace iconus {
 		static std::string GUEST_USERNAME;
 		static bool IS_ROOT;
 		
+		static std::string uidToString(uid_t id);
+		static std::string gidToString(gid_t id);
+		static uid_t stringToUid(std::string name);
+		static gid_t stringToGid(std::string name);
+		
 		// TODO: use encrypted challenge-response method instead of sending password over the wire
 		// TODO: (we should do this even when we switch to HTTPS and WSS)
 		// TODO: Does PAM even support challenge-response instead of asking for passwords via prompt?
