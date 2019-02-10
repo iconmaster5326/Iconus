@@ -68,7 +68,7 @@ namespace iconus {
 		List<Token>& restTokens = tokens;
 		{
 			List<Token>& tokens = subTokens;
-			OpLambda* lambda = new OpLambda();
+			OpLambda* lambda = new OpLambda(tokens.front().source);
 			
 			while (!tokens.empty()) {
 				switch (tokens.front().type) {
@@ -170,6 +170,7 @@ namespace iconus {
 	
 	static Op* parseArg(Execution& exe, List<Token>& tokens) {
 		string value = tokens.front().value;
+		Source source = tokens.front().source;
 		
 		switch (tokens.front().type) {
 		case Token::Type::WORD: {
@@ -177,9 +178,9 @@ namespace iconus {
 			
 			Object* parsedConst = exe.parseWord(value);
 			if (parsedConst) {
-				return new OpConst(parsedConst);
+				return new OpConst(parsedConst, source);
 			} else {
-				return new OpConst(ClassString::create(value));
+				return new OpConst(ClassString::create(value), source);
 			}
 		} break;
 		case Token::Type::LPAREN: {
@@ -204,18 +205,18 @@ namespace iconus {
 		} break;
 		case Token::Type::STRING: {
 			tokens.pop_front();
-			return new OpConst(ClassString::create(value));
+			return new OpConst(ClassString::create(value), source);
 		} break;
 		case Token::Type::EX_STRING: {
 			tokens.pop_front();
-			return new OpExString(value);
+			return new OpExString(value, source);
 		} break;
 		case Token::Type::VAR: {
 			tokens.pop_front();
-			return new OpVar(value);
+			return new OpVar(value, source);
 		} break;
 		case Token::Type::LBRACE: {
-			return parseBraces(exe, tokens, new OpLambda());
+			return parseBraces(exe, tokens, new OpLambda(source));
 		} break;
 		case Token::Type::LBRACKET: {
 			return parseBrackets(exe, tokens);
@@ -234,11 +235,11 @@ namespace iconus {
 		case Token::Type::WORD: {
 			Object* parsedConst = exe.parseWord(tokens.front().value);
 			if (parsedConst) {
-				Op* op = new OpConst(parsedConst);
+				Op* op = new OpConst(parsedConst, tokens.front().source);
 				tokens.pop_front();
 				return parsePostConst(exe, op, tokens);
 			} else {
-				OpCall* call = new OpCall(tokens.front().value);
+				OpCall* call = new OpCall(tokens.front().value, tokens.front().source);
 				tokens.pop_front();
 				
 				while (true) {
@@ -299,22 +300,22 @@ namespace iconus {
 			return parsePostConst(exe, parse(exe, subTokens), tokens);
 		} break;
 		case Token::Type::STRING: {
-			Op* op = new OpConst(ClassString::create(tokens.front().value));
+			Op* op = new OpConst(ClassString::create(tokens.front().value), tokens.front().source);
 			tokens.pop_front();
 			return parsePostConst(exe, op, tokens);
 		} break;
 		case Token::Type::EX_STRING: {
-			Op* op = new OpExString(tokens.front().value);
+			Op* op = new OpExString(tokens.front().value, tokens.front().source);
 			tokens.pop_front();
 			return parsePostConst(exe, op, tokens);
 		} break;
 		case Token::Type::VAR: {
-			Op* op = new OpVar(tokens.front().value);
+			Op* op = new OpVar(tokens.front().value, tokens.front().source);
 			tokens.pop_front();
 			return parsePostConst(exe, op, tokens);
 		} break;
 		case Token::Type::LBRACE: {
-			return parsePostConst(exe, parseBraces(exe, tokens, new OpLambda()), tokens);
+			return parsePostConst(exe, parseBraces(exe, tokens, new OpLambda(tokens.front().source)), tokens);
 		} break;
 		case Token::Type::LBRACKET: {
 			return parsePostConst(exe, parseBrackets(exe, tokens), tokens);

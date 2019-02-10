@@ -49,7 +49,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	scope.vars["apply"] = ClassManagedFunction::create(
 			{Arg("fn"), Arg("args", VARARG)}, {Arg("flags", VARFLAG)},
 			[](auto& exe, auto& scope, auto input, auto& args, auto& varargs, auto& varflags) {
-		StackTrace::enter("", "input", 1);
+		StackTrace::enter(StackTrace::Type::FUNCTION);
 		Object* result = args["fn"]->execute(exe, scope, input, varargs, varflags);
 		StackTrace::exit();
 		return result;
@@ -213,7 +213,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			Vector<Object*> predArgs;
 			Map<string,Object*> predFlags;
 			
-			StackTrace::enter("", "input", 1);
+			StackTrace::enter(StackTrace::Type::FUNCTION);
 			Object* predicate = args["fn"]->execute(exe, scope, val, predArgs, predFlags);
 			StackTrace::exit();
 			
@@ -242,7 +242,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			Vector<Object*> predArgs;
 			Map<string,Object*> predFlags;
 			
-			StackTrace::enter("", "input", 1);
+			StackTrace::enter(StackTrace::Type::FUNCTION);
 			Object* predicate = args["fn"]->execute(exe, scope, pair.second, predArgs, predFlags);
 			StackTrace::exit();
 			
@@ -282,7 +282,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 				i++;
 			}
 			
-			StackTrace::enter("", "input", 1);
+			StackTrace::enter(StackTrace::Type::FUNCTION);
 			Object* predicate = args["fn"]->execute(exe, scope, newInput, predArgs, predFlags);
 			StackTrace::exit();
 			
@@ -468,18 +468,28 @@ extern "C" void iconus_initSession(Execution& exe) {
 		
 		for (auto it = error.stackTrace.rbegin(); it != error.stackTrace.rend(); it++) {
 			StackTrace& stackTrace = *it;
-			sb << "<p class=\"stack-trace\">at ";
+			sb << "<p class=\"stack-trace\">";
 			
-			if (stackTrace.name.empty()) {
-				sb << "anonymous function";
-			} else {
-				sb << "function " << stackTrace.name;
+			switch (stackTrace.type) {
+			case (StackTrace::Type::SYNTAX): {
+				sb << "at parser";
+			} break;
+			case (StackTrace::Type::FUNCTION): {
+				if (stackTrace.name.empty()) {
+					sb << "at anonymous function";
+				} else {
+					sb << "at function " << stackTrace.name;
+				}
+			} break;
 			}
 			
-			if (!stackTrace.file.empty()) {
-				sb << " (" << stackTrace.file;
-				if (stackTrace.line != -1) {
-					sb << " line " << stackTrace.line;
+			if (stackTrace.source.location) {
+				sb << " (" << *(stackTrace.source.location);
+				if (stackTrace.source.line != -1) {
+					sb << " line " << stackTrace.source.line;
+				}
+				if (stackTrace.source.col != -1) {
+					sb << " col " << stackTrace.source.col;
 				}
 				sb << ")";
 			}

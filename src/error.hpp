@@ -16,16 +16,32 @@
 namespace iconus {
 	class Object; class Execution;
 	
+	class Source {
+	public:
+		static Source UNKNOWN;
+		
+		const std::string* location;
+		int line, col;
+		
+		inline Source() : location{nullptr}, line{-1}, col{-1} {}
+		inline Source(const std::string& location, int line = -1, int col = -1) : location{&location}, line{line}, col{col} {}
+	};
+	
 	class StackTrace {
 	public:
-		std::string name;
-		std::string file;
-		int line;
+		enum class Type {
+			SYNTAX,
+			FUNCTION
+		};
 		
-		inline StackTrace(const std::string& name = "", const std::string& file = "", int line = -1) : name(name), file(file), line(line) {}
+		Type type;
+		std::string name;
+		Source source;
+		
+		inline StackTrace(Type type, const Source& source, const std::string& name = "") : type(type), name(name), source(source) {}
 		
 		static thread_local Vector<StackTrace> callStack;
-		static void enter(const std::string& name = "", const std::string& file = "", int line = -1);
+		static void enter(Type type, const Source& source = Source::UNKNOWN, const std::string& name = "");
 		static void exit();
 	};
 	

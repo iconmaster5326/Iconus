@@ -20,6 +20,8 @@ Object* iconus::OpConst::evaluate(Execution& exe, Scope& scope, Object* input) {
 }
 
 Object* iconus::OpCall::evaluate(Execution& exe, Scope& scope, Object* input) {
+	StackTrace::enter(StackTrace::Type::FUNCTION, source, cmd);
+	
 	Object* cmdOb = scope.get(cmd);
 	if (!cmdOb) {
 		throw Error("command not in scope: "+cmd);
@@ -28,7 +30,6 @@ Object* iconus::OpCall::evaluate(Execution& exe, Scope& scope, Object* input) {
 		throw Error("command not executable: "+cmd);
 	}
 	
-	StackTrace::enter(cmd, "input", 1);
 	Vector<Object*> argObs;
 	Map<string,Object*> flagObs;
 	

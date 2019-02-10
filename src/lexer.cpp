@@ -18,24 +18,36 @@ namespace iconus {
 	iconus::Lexer::~Lexer() {
 		if (inputOwned) delete input;
 	}
+	
+	void Lexer::advance(char c) {
+		if (c == '\n') {
+			line++;
+			col = 1;
+		} else {
+			col++;
+		}
+	}
 
 	Token iconus::Lexer::next() {
 		noskipws(*input);
 		
 		char c = ' ';
-		while (!done() && isspace(c)) *input >> c;
-		if (done()) return Token{Token::Type::NONE, ""};
+		while (!done() && isspace(c)) {
+			*input >> c;
+			advance(c);
+		}
+		if (done()) return Token{Token::Type::NONE, "", {location, line, col}};
 		
 		switch (c) {
-		case '|': return Token{Token::Type::PIPE, "|"};
-		case '&': return Token{Token::Type::AND, "&"};
-		case ';': return Token{Token::Type::SEMICOLON, ";"};
-		case '(': return Token{Token::Type::LPAREN, "("};
-		case ')': return Token{Token::Type::RPAREN, ")"};
-		case '{': return Token{Token::Type::LBRACE, "{"};
-		case '}': return Token{Token::Type::RBRACE, "}"};
-		case '[': return Token{Token::Type::LBRACKET, "["};
-		case ']': return Token{Token::Type::RBRACKET, "]"};
+		case '|': return Token{Token::Type::PIPE, "|", {location, line, col}};
+		case '&': return Token{Token::Type::AND, "&", {location, line, col}};
+		case ';': return Token{Token::Type::SEMICOLON, ";", {location, line, col}};
+		case '(': return Token{Token::Type::LPAREN, "(", {location, line, col}};
+		case ')': return Token{Token::Type::RPAREN, ")", {location, line, col}};
+		case '{': return Token{Token::Type::LBRACE, "{", {location, line, col}};
+		case '}': return Token{Token::Type::RBRACE, "}", {location, line, col}};
+		case '[': return Token{Token::Type::LBRACKET, "[", {location, line, col}};
+		case ']': return Token{Token::Type::RBRACKET, "]", {location, line, col}};
 		case '-': {
 			ostringstream word;
 			char c = input->peek();
@@ -43,19 +55,19 @@ namespace iconus {
 			while (!done() && !isspace(c) && SPECIAL_CHARS.find(c) == string::npos) {
 				word << c;
 				
-				*input >> c;
+				*input >> c; advance(c);
 				c = input->peek();
 			}
 			
 			string result = word.str();
 			if (result.empty())
-				return Token{Token::Type::WORD, "-"};
+				return Token{Token::Type::WORD, "-", {location, line, col}};
 			else {
 				try {
 					stod(result);
-					return Token{Token::Type::WORD, "-"+result}; // really back hack for negative number constants
+					return Token{Token::Type::WORD, "-"+result, {location, line, col}}; // really bad hack for negative number constants
 				} catch (const invalid_argument& ex) {
-					return Token{Token::Type::FLAG, result};
+					return Token{Token::Type::FLAG, result, {location, line, col}};
 				} catch (const out_of_range& ex) {
 					throw Error("Numeric constant out of range: "+result);
 				}
@@ -68,15 +80,15 @@ namespace iconus {
 			while (!done() && !isspace(c) && SPECIAL_CHARS.find(c) == string::npos) {
 				word << c;
 				
-				*input >> c;
+				*input >> c; advance(c);
 				c = input->peek();
 			}
 			
 			string result = word.str();
 			if (result.empty())
-				return Token{Token::Type::WORD, "$"};
+				return Token{Token::Type::WORD, "$", {location, line, col}};
 			else
-				return Token{Token::Type::VAR, result};
+				return Token{Token::Type::VAR, result, {location, line, col}};
 		}
 		case '\'': {
 			ostringstream word;
@@ -99,12 +111,12 @@ namespace iconus {
 					word << c;
 				}
 				
-				*input >> c;
+				*input >> c; advance(c);
 				c = input->peek();
 			}
 			
-			*input >> c;
-			return Token{Token::Type::STRING, word.str()};
+			*input >> c; advance(c);
+			return Token{Token::Type::STRING, word.str(), {location, line, col}};
 		}
 		case '\"': {
 			ostringstream word;
@@ -127,12 +139,12 @@ namespace iconus {
 					word << c;
 				}
 				
-				*input >> c;
+				*input >> c; advance(c);
 				c = input->peek();
 			}
 			
-			*input >> c;
-			return Token{Token::Type::EX_STRING, word.str()};
+			*input >> c; advance(c);
+			return Token{Token::Type::EX_STRING, word.str(), {location, line, col}};
 		}
 		default:
 			ostringstream word; word << c;
@@ -141,15 +153,15 @@ namespace iconus {
 			while (!done() && !isspace(c) && SPECIAL_CHARS.find(c) == string::npos) {
 				word << c;
 				
-				*input >> c;
+				*input >> c; advance(c);
 				c = input->peek();
 			}
 			
 			string s = word.str();
 			if (s == "...")
-				return Token{Token::Type::ELLIPSES, s};
+				return Token{Token::Type::ELLIPSES, s, {location, line, col}};
 			else
-				return Token{Token::Type::WORD, s};
+				return Token{Token::Type::WORD, s, {location, line, col}};
 		}
 	}
 

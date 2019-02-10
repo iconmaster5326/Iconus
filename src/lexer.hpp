@@ -12,6 +12,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "error.hpp"
+
 namespace iconus {
 	class Token {
 	public:
@@ -36,19 +38,25 @@ namespace iconus {
 		
 		Type type;
 		std::string value;
+		Source source;
 	};
 	
 	class Lexer {
 	public:
-		inline Lexer(std::istream& input) : inputOwned(false), input(&input) {}
-		inline Lexer(const std::string& input) : inputOwned(true), input(new std::istringstream(input)) {}
+		inline Lexer(const std::string& location, std::istream& input) : location{location}, inputOwned(false), input(&input) {}
+		inline Lexer(const std::string& location, const std::string& input) : location{location}, inputOwned(true), input(new std::istringstream(input)) {}
 		~Lexer();
 		
 		Token next();
 		bool done();
 	private:
+		const std::string& location;
 		bool inputOwned;
 		std::istream* input;
+		int line = 1;
+		int col = 1;
+		
+		void advance(char c);
 	};
 }
 

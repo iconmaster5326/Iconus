@@ -29,8 +29,10 @@ iconus::Session::Session() : sessionScope(&GlobalScope::INSTANCE), closed(false)
 }
 
 Object* iconus::Session::evaluate(const std::string& input, Execution& exe) {
+	static const string LOCATION{"input"};
+	
 	try {
-		Lexer lexer(input);
+		Lexer lexer(LOCATION, input);
 		Op* op = parse(exe, lexer);
 		return op->evaluate(exe, sessionScope, &ClassNil::NIL);
 	} catch (const Error& e) {
