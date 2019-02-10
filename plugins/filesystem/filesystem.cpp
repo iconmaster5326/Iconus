@@ -105,7 +105,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 								is_regular_file(p) ?
 										ClassNumber::create((double) file_size(p)) :
 										&ClassNil::NIL,
-								&ClassNil::NIL,
+								ClassTime::create(last_write_time(p)),
 								ClassFile::create(p)
 						});
 					}

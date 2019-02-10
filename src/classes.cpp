@@ -440,33 +440,6 @@ std::string iconus::ClassTable::name() {
 	return "table";
 }
 
-std::size_t iconus::ClassTable::hash(const Object* self) const {
-	return Class::hash(self);
-}
-
-bool iconus::ClassTable::equals(const Object* self, const Object* other) const {
-	return Class::equals(self, other);
-}
-
-Vector<Object*> iconus::ClassTable::fieldNames(Object* self, Execution& exe) {
-	return Class::fieldNames(self, exe);
-}
-
-Object* iconus::ClassTable::getField(Object* self, Execution& exe,
-		Object* name) {
-	return Class::getField(self, exe, name);
-}
-
-bool iconus::ClassTable::canSetField(Object* self, Execution& exe,
-		Object* name) {
-	return Class::canSetField(self, exe, name);
-}
-
-void iconus::ClassTable::setField(Object* self, Execution& exe, Object* name,
-		Object* value) {
-	return Class::setField(self, exe, name, value);
-}
-
 iconus::ClassMethod iconus::ClassMethod::INSTANCE{};
 
 Object* iconus::ClassMethod::execute(Object* self, Execution& exe, Scope& scope,
@@ -506,4 +479,10 @@ Object* iconus::ClassMethod::execute(Object* self, Execution& exe, Scope& scope,
 	} else {
 		throw Error("Method call not applicable");
 	}
+}
+
+iconus::ClassTime iconus::ClassTime::INSTANCE{};
+
+std::string iconus::ClassTime::name() {
+	return "time";
 }

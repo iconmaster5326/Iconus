@@ -18,6 +18,7 @@
 
 using namespace std;
 using namespace iconus;
+using namespace boost::posix_time;
 
 extern "C" string iconus_getName() {
 	return "Standard Library";
@@ -592,5 +593,10 @@ extern "C" void iconus_initSession(Execution& exe) {
 		}
 		
 		return result;
+	};
+	
+	exe.session.adaptors[&ClassTime::INSTANCE][&ClassString::INSTANCE] = [](Execution& exe, Object* from) {
+		ptime time = ClassTime::value(exe, from);
+		return ClassString::create(to_simple_string(time));
 	};
 }

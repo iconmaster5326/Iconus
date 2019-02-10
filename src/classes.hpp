@@ -18,6 +18,10 @@
 #include <stdexcept>
 #include <initializer_list>
 
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
+
 namespace iconus {
 	class ClassNil : public Class {
 	public:
@@ -256,13 +260,6 @@ namespace iconus {
 		}
 		
 		std::string name() override;
-		std::size_t hash(const Object* self) const override;
-		bool equals(const Object* self, const Object* other) const override;
-		
-		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
-		Object* getField(Object* self, Execution& exe, Object* name) override;
-		bool canSetField(Object* self, Execution& exe, Object* name) override;
-		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
 	};
 	
 	class ClassMethod : public ClassSystemFunction {
@@ -301,6 +298,25 @@ namespace iconus {
 		
 		static ClassMethod INSTANCE;
 		Object* execute(Object* self, Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
+	};
+	
+	class ClassTime : public Class {
+	public:
+		static ClassTime INSTANCE;
+		static inline Object* create(const boost::posix_time::ptime& time) {
+			return new Object(&INSTANCE, new boost::posix_time::ptime(time));
+		}
+		static inline Object* create(time_t time) {
+			return new Object(&INSTANCE, new boost::posix_time::ptime(boost::posix_time::from_time_t(time)));
+		}
+		static inline boost::posix_time::ptime& value(const Object* ob) {
+			return *(boost::posix_time::ptime*)ob->value.asPtr;
+		}
+		static inline boost::posix_time::ptime& value(Execution& exe, Object* ob) {
+			return *(boost::posix_time::ptime*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
 	};
 }
 
