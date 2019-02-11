@@ -134,16 +134,6 @@ Object* iconus::ClassFile::getField(Object* self, Execution& exe,
 	}
 }
 
-bool iconus::ClassFile::canSetField(Object* self, Execution& exe,
-		Object* name) {
-	return false;
-}
-
-void iconus::ClassFile::setField(Object* self, Execution& exe, Object* name,
-		Object* value) {
-	Class::setField(self, exe, name, value);
-}
-
 Object* iconus::ClassFile::fileType(boost::filesystem::path& p)  {
 	switch (status(p).type()) {
 	case file_type::file_not_found: return &ClassNil::NIL;
@@ -170,5 +160,51 @@ boost::filesystem::path iconus::ClassFile::makeAbsolute(boost::filesystem::path 
 		}
 	} else {
 		return canonical(p, base);
+	}
+}
+
+DEF_FIELD("user-read?", PERMS_FIELD_UR);
+DEF_FIELD("user-write?", PERMS_FIELD_UW);
+DEF_FIELD("user-run?", PERMS_FIELD_UX);
+DEF_FIELD("group-read?", PERMS_FIELD_GR);
+DEF_FIELD("group-write?", PERMS_FIELD_GW);
+DEF_FIELD("group-run?", PERMS_FIELD_GX);
+DEF_FIELD("all-read?", PERMS_FIELD_OR);
+DEF_FIELD("all-write?", PERMS_FIELD_OW);
+DEF_FIELD("all-run?", PERMS_FIELD_OX);
+static Vector<Object*> PERMS_FIELDS{{
+	&PERMS_FIELD_UR, &PERMS_FIELD_UW, &PERMS_FIELD_UX,
+	&PERMS_FIELD_GR, &PERMS_FIELD_GW, &PERMS_FIELD_GX,
+	&PERMS_FIELD_OR, &PERMS_FIELD_OW, &PERMS_FIELD_OX
+}};
+
+Vector<Object*> iconus::ClassPerms::fieldNames(Object* self, Execution& exe) {
+	return PERMS_FIELDS;
+}
+
+Object* iconus::ClassPerms::getField(Object* self, Execution& exe,
+		Object* name) {
+	perms p = ClassPerms::value(self);
+	
+	if (name->equals(&PERMS_FIELD_UR)) {
+		return ClassBool::create(p & perms::owner_read);
+	} else if (name->equals(&PERMS_FIELD_UW)) {
+		return ClassBool::create(p & perms::owner_write);
+	} else if (name->equals(&PERMS_FIELD_UX)) {
+		return ClassBool::create(p & perms::owner_exe);
+	} else if (name->equals(&PERMS_FIELD_GR)) {
+		return ClassBool::create(p & perms::group_read);
+	} else if (name->equals(&PERMS_FIELD_GW)) {
+		return ClassBool::create(p & perms::group_write);
+	} else if (name->equals(&PERMS_FIELD_GX)) {
+		return ClassBool::create(p & perms::group_exe);
+	} else if (name->equals(&PERMS_FIELD_OR)) {
+		return ClassBool::create(p & perms::others_read);
+	} else if (name->equals(&PERMS_FIELD_OW)) {
+		return ClassBool::create(p & perms::others_write);
+	} else if (name->equals(&PERMS_FIELD_OX)) {
+		return ClassBool::create(p & perms::others_exe);
+	} else {
+		return Class::getField(self, exe, name);
 	}
 }

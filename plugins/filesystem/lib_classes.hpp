@@ -66,8 +66,6 @@ namespace iconus {
 		
 		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
 		Object* getField(Object* self, Execution& exe, Object* name) override;
-		bool canSetField(Object* self, Execution& exe, Object* name) override;
-		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
 	};
 	
 	class ClassPerms : public Class {
@@ -86,6 +84,9 @@ namespace iconus {
 		std::string name() override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
+		
+		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
+		Object* getField(Object* self, Execution& exe, Object* name) override;
 	};
 }
 
