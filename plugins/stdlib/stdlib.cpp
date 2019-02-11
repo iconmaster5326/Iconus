@@ -347,6 +347,41 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	);
 	
+	scope.addMethod(">table", &ClassList::INSTANCE, ClassManagedFunction::create(
+			{Arg("i", INPUT)}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassClass::create(input->clazz);
+			}), ClassManagedFunction::create(
+			{Arg("i", INPUT)}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		Object* result = ClassTable::create();
+		auto& newTable = ClassTable::value(result);
+		
+		for (auto& map : input->fieldValues(exe)) {
+			newTable.rows.emplace_back(newTable.colNames.size(), &ClassNil::NIL);
+			Vector<Object*>& newRow = newTable.rows.back();
+			
+			for (auto& pair : map->fields(exe)) {
+				auto it = find_if(newTable.colNames.begin(), newTable.colNames.end(), [&](Object* colName) {
+					return colName->equals(pair.first);
+				});
+				if (it == newTable.colNames.end()) {
+					newTable.colNames.push_back(pair.first);
+					for (Vector<Object*>& row : newTable.rows) {
+						row.push_back(&ClassNil::NIL);
+					}
+					newRow.back() = pair.second;
+				} else {
+					ptrdiff_t i = it - newTable.colNames.begin();
+					newRow[i] = pair.second;
+				}
+			}
+		}
+		
+		return result;
+			}
+	));
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},
