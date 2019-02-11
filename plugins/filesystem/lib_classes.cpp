@@ -83,20 +83,28 @@ DEF_FIELD("name", FILE_FIELD_NAME);
 DEF_FIELD("..", FILE_FIELD_PARENT);
 
 Vector<Object*> iconus::ClassFile::fieldNames(Object* self, Execution& exe) {
-	Vector<Object*> v{{&FILE_FIELD_NAME, &FILE_FIELD_PARENT}};
-	path& p = ClassFile::value(self);
-	if (exists(p)) {
-		v.push_back(&FILE_FIELD_TYPE);
-		v.push_back(&FILE_FIELD_LINK);
-		v.push_back(&FILE_FIELD_PERM);
-		v.push_back(&FILE_FIELD_USER);
-		v.push_back(&FILE_FIELD_GROUP);
-		v.push_back(&FILE_FIELD_MTIME);
+	if (self) {
+		Vector<Object*> v{{&FILE_FIELD_NAME, &FILE_FIELD_PARENT}};
+		path& p = ClassFile::value(self);
+		if (exists(p)) {
+			v.push_back(&FILE_FIELD_TYPE);
+			v.push_back(&FILE_FIELD_LINK);
+			v.push_back(&FILE_FIELD_PERM);
+			v.push_back(&FILE_FIELD_USER);
+			v.push_back(&FILE_FIELD_GROUP);
+			v.push_back(&FILE_FIELD_MTIME);
+		}
+		if (is_regular_file(p)) {
+			v.push_back(&FILE_FIELD_SIZE);
+		}
+		return v;
+	} else {
+		return Vector<Object*>({
+			&FILE_FIELD_NAME, &FILE_FIELD_PARENT, &FILE_FIELD_TYPE, 
+			&FILE_FIELD_LINK, &FILE_FIELD_PERM, &FILE_FIELD_USER,
+			&FILE_FIELD_GROUP, &FILE_FIELD_MTIME, &FILE_FIELD_SIZE
+		});
 	}
-	if (is_regular_file(p)) {
-		v.push_back(&FILE_FIELD_SIZE);
-	}
-	return v;
 }
 
 Object* iconus::ClassFile::getField(Object* self, Execution& exe,

@@ -272,6 +272,8 @@ Object* iconus::ClassUserFunction::create(Scope& scope, Op* op, const Function& 
 }
 
 Vector<Object*> iconus::ClassList::fieldNames(Object* self, Execution& exe) {
+	if (!self) return Class::fieldNames(self, exe);
+	
 	Lock lock{self->mutex};
 	Deque<Object*>& list = ClassList::value(exe, self);
 	Vector<Object*> result;
@@ -406,6 +408,8 @@ bool iconus::ClassMap::equals(const Object* self, const Object* other) const {
 }
 
 Vector<Object*> iconus::ClassMap::fieldNames(Object* self, Execution& exe) {
+	if (!self) return Class::fieldNames(self, exe);
+	
 	Lock lock{self->mutex};
 	Vector<Object*> result;
 	for (auto& pair : ClassMap::value(exe, self)) {
@@ -601,13 +605,18 @@ void iconus::ClassUserDefined::setStaticField(Execution& exe, Object* name,
 }
 
 DEF_FIELD("name",CLASS_FIELD_NAME);
+DEF_FIELD("fields",CLASS_FIELD_FIELDS);
 
 Vector<Object*> iconus::ClassClass::fieldNames(Object* self, Execution& exe) {
-	Class* clazz = ClassClass::value(self);
-	Vector<Object*> v{{&CLASS_FIELD_NAME}};
-	auto v2 = clazz->staticFieldNames(exe);
-	v.insert(v.begin(), v2.begin(), v2.end());
-	return v;
+	if (self) {
+		Class* clazz = ClassClass::value(self);
+		Vector<Object*> v{{&CLASS_FIELD_NAME, &CLASS_FIELD_FIELDS}};
+		auto v2 = clazz->staticFieldNames(exe);
+		v.insert(v.begin(), v2.begin(), v2.end());
+		return v;
+	} else {
+		return Vector<Object*>({&CLASS_FIELD_NAME, &CLASS_FIELD_FIELDS});
+	}
 }
 
 Object* iconus::ClassClass::getField(Object* self, Execution& exe,
@@ -616,6 +625,9 @@ Object* iconus::ClassClass::getField(Object* self, Execution& exe,
 	
 	if (name->equals(&CLASS_FIELD_NAME)) {
 		return ClassString::create(clazz->name());
+	} else if (name->equals(&CLASS_FIELD_FIELDS)) {
+		Vector<Object*> fs = clazz->fieldNames(nullptr, exe);
+		return ClassList::create(fs.begin(), fs.end());
 	} else {
 		return clazz->getStaticField(exe, name);
 	}
@@ -627,6 +639,8 @@ bool iconus::ClassClass::canSetField(Object* self, Execution& exe,
 	
 	if (name->equals(&CLASS_FIELD_NAME)) {
 		return false;
+	} else if (name->equals(&CLASS_FIELD_FIELDS)) {
+		return false;
 	} else {
 		return clazz->canSetStaticField(exe, name);
 	}
@@ -637,6 +651,8 @@ void iconus::ClassClass::setField(Object* self, Execution& exe, Object* name,
 	Class* clazz = ClassClass::value(self);
 	
 	if (name->equals(&CLASS_FIELD_NAME)) {
+		Class::setField(self, exe, name, value);
+	} else if (name->equals(&CLASS_FIELD_FIELDS)) {
 		Class::setField(self, exe, name, value);
 	} else {
 		clazz->setStaticField(exe, name, value);

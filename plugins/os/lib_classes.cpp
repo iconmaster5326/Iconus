@@ -47,12 +47,16 @@ bool iconus::ClassSystemOutput::equals(const Object* self,
 }
 
 Vector<Object*> iconus::ClassSystemOutput::fieldNames(Object* self, Execution& exe) {
-	Lock lock{self->mutex};
-	Instance& a = *(Instance*)self->value.asPtr;
-	if (a.done) {
+	if (!self) {
 		return Vector<Object*>{ClassString::create("done"), ClassString::create("output"), ClassString::create("stderr"), ClassString::create("stdout"), ClassString::create("code")};
 	} else {
-		return Vector<Object*>{ClassString::create("done"), ClassString::create("output"), ClassString::create("stderr"), ClassString::create("stdout")};
+		Lock lock{self->mutex};
+		Instance& a = *(Instance*)self->value.asPtr;
+		if (a.done) {
+			return Vector<Object*>{ClassString::create("done"), ClassString::create("output"), ClassString::create("stderr"), ClassString::create("stdout"), ClassString::create("code")};
+		} else {
+			return Vector<Object*>{ClassString::create("done"), ClassString::create("output"), ClassString::create("stderr"), ClassString::create("stdout")};
+		}
 	}
 }
 
