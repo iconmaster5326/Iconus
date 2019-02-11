@@ -83,13 +83,18 @@ DEF_FIELD("name", FILE_FIELD_NAME);
 DEF_FIELD("..", FILE_FIELD_PARENT);
 
 Vector<Object*> iconus::ClassFile::fieldNames(Object* self, Execution& exe) {
-	Vector<Object*> v{{&FILE_FIELD_TYPE, &FILE_FIELD_PERM, &FILE_FIELD_LINK, &FILE_FIELD_USER, &FILE_FIELD_GROUP, &FILE_FIELD_MTIME, &FILE_FIELD_NAME}};
+	Vector<Object*> v{{&FILE_FIELD_NAME, &FILE_FIELD_PARENT}};
 	path& p = ClassFile::value(self);
+	if (exists(p)) {
+		v.push_back(&FILE_FIELD_TYPE);
+		v.push_back(&FILE_FIELD_LINK);
+		v.push_back(&FILE_FIELD_PERM);
+		v.push_back(&FILE_FIELD_USER);
+		v.push_back(&FILE_FIELD_GROUP);
+		v.push_back(&FILE_FIELD_MTIME);
+	}
 	if (is_regular_file(p)) {
 		v.push_back(&FILE_FIELD_SIZE);
-	}
-	if (p.parent_path() != p) {
-		v.push_back(&FILE_FIELD_PARENT);
 	}
 	return v;
 }
@@ -102,27 +107,27 @@ Object* iconus::ClassFile::getField(Object* self, Execution& exe,
 		return ClassFile::fileType(p);
 	} else if (name->equals(&FILE_FIELD_SIZE) && is_regular_file(p)) {
 		return  ClassNumber::create((double) file_size(p));
-	} else if (name->equals(&FILE_FIELD_PERM)) {
+	} else if (name->equals(&FILE_FIELD_PERM) && exists(p)) {
 		return ClassPerms::create(status(p).permissions());
-	} else if (name->equals(&FILE_FIELD_LINK)) {
+	} else if (name->equals(&FILE_FIELD_LINK) && exists(p)) {
 		return ClassNumber::create((double) hard_link_count(p));
-	} else if (name->equals(&FILE_FIELD_USER)) {
+	} else if (name->equals(&FILE_FIELD_USER) && exists(p)) {
 		struct stat stats;
 		stat(p.string().c_str(), &stats);
 		
 		return ClassString::create(User::uidToString(stats.st_uid));
-	} else if (name->equals(&FILE_FIELD_GROUP)) {
+	} else if (name->equals(&FILE_FIELD_GROUP) && exists(p)) {
 		struct stat stats;
 		stat(p.string().c_str(), &stats);
 		
 		return ClassString::create(User::gidToString(stats.st_gid));
-	} else if (name->equals(&FILE_FIELD_MTIME)) {
+	} else if (name->equals(&FILE_FIELD_MTIME) && exists(p)) {
 		return ClassTime::create(last_write_time(p));
 	} else if (name->equals(&FILE_FIELD_NAME)) {
 		return ClassString::create(p.filename().string());
 	} else if (name->equals(&FILE_FIELD_PARENT)) {
 		path temp = p;
-		temp.remove_filename();
+		if (temp.parent_path() != path()) temp.remove_filename();
 		return ClassFile::create(temp);
 	} else {
 		return Class::getField(self, exe, name);
@@ -140,14 +145,16 @@ void iconus::ClassFile::setField(Object* self, Execution& exe, Object* name,
 }
 
 Object* iconus::ClassFile::fileType(boost::filesystem::path& p)  {
-	if (is_directory(p)) {
-		return ClassString::create("dir");
-	} else if (is_regular_file(p)) {
-		return ClassString::create("file");
-	} else if (!exists(p)) {
-		return &ClassNil::NIL;
-	} else {
-		return ClassString::create("?");
+	switch (status(p).type()) {
+	case file_type::file_not_found: return &ClassNil::NIL;
+	case file_type::directory_file: return ClassString::create("dir");
+	case file_type::regular_file: return ClassString::create("file");
+	case file_type::symlink_file: return ClassString::create("link");
+	case file_type::block_file: return ClassString::create("block");
+	case file_type::character_file: return ClassString::create("char");
+	case file_type::fifo_file: return ClassString::create("fifo");
+	case file_type::socket_file: return ClassString::create("socket");
+	default: return ClassString::create("?");
 	}
 }
 
