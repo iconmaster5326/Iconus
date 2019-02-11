@@ -571,3 +571,52 @@ Object* iconus::ClassUserDefined::construct(Execution& exe, Scope& scope,
 	
 	return result;
 }
+
+Vector<Object*> iconus::ClassUserDefined::staticFieldNames(Execution& exe) {
+	Vector<Object*> result;
+	for (auto& pair : classStaticFields) {
+		result.push_back(pair.first);
+	}
+	return result;
+}
+
+Object* iconus::ClassUserDefined::getStaticField(Execution& exe, Object* name) {
+	auto it = classStaticFields.find(name);
+	if (it == classStaticFields.end()) {
+		return Class::getStaticField(exe, name);
+	} else {
+		return it->second;
+	}
+}
+
+bool iconus::ClassUserDefined::canSetStaticField(Execution& exe, Object* name) {
+	return true;
+}
+
+void iconus::ClassUserDefined::setStaticField(Execution& exe, Object* name,
+		Object* value) {
+	classStaticFields[name] = value;
+}
+
+Vector<Object*> iconus::ClassClass::fieldNames(Object* self, Execution& exe) {
+	Class* clazz = ClassClass::value(self);
+	return clazz->staticFieldNames(exe);
+}
+
+Object* iconus::ClassClass::getField(Object* self, Execution& exe,
+		Object* name) {
+	Class* clazz = ClassClass::value(self);
+	return clazz->getStaticField(exe, name);
+}
+
+bool iconus::ClassClass::canSetField(Object* self, Execution& exe,
+		Object* name) {
+	Class* clazz = ClassClass::value(self);
+	return clazz->canSetStaticField(exe, name);
+}
+
+void iconus::ClassClass::setField(Object* self, Execution& exe, Object* name,
+		Object* value) {
+	Class* clazz = ClassClass::value(self);
+	clazz->setStaticField(exe, name, value);
+}

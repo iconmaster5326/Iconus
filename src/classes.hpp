@@ -208,6 +208,11 @@ namespace iconus {
 		
 		bool executable(Object* self, Execution& exe) override;
 		Object* execute(Object* self, Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
+		
+		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
+		Object* getField(Object* self, Execution& exe, Object* name) override;
+		bool canSetField(Object* self, Execution& exe, Object* name) override;
+		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
 	};
 	
 	class ClassMap : public Class {
@@ -352,8 +357,14 @@ namespace iconus {
 		bool constructible(Execution& exe) override;
 		Object* construct(Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
 		
+		Vector<Object*> staticFieldNames(Execution& exe) override;
+		Object* getStaticField(Execution& exe, Object* name) override;
+		bool canSetStaticField(Execution& exe, Object* name) override;
+		void setStaticField(Execution& exe, Object* name, Object* value) override;
+		
 		std::string className;
 		Vector<Object*> classFields;
+		Map<Object*,Object*> classStaticFields;
 	};
 }
 
