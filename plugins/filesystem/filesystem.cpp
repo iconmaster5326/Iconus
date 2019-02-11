@@ -73,18 +73,6 @@ static path relative(path to, path from = current_path()) {
 }
 #endif
 
-static Object* fileType(path& p) {
-	if (is_directory(p)) {
-		return ClassString::create("dir");
-	} else if (is_regular_file(p)) {
-		return ClassString::create("file");
-	} else if (!exists(p)) {
-		return &ClassNil::NIL;
-	} else {
-		return ClassString::create("?");
-	}
-}
-
 extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	////////////////////////////
 	// functions
@@ -113,7 +101,7 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 						stat(p.string().c_str(), &stats);
 						
 						table.rows.emplace_back((initializer_list<Object*>) {
-								fileType(p),
+								ClassFile::fileType(p),
 								ClassPerms::create(status(p).permissions()),
 								ClassNumber::create((double) hard_link_count(p)),
 								ClassString::create(User::uidToString(stats.st_uid)),
@@ -241,6 +229,8 @@ extern "C" void iconus_initSession(Execution& exe) {
 			} else {
 				str = relStr;
 			}
+			
+			if (str.empty()) str = ".";
 		});
 		
 		return "<a href=\"javascript:onFileClick('"+p.string()+"')\">"+escapeHTML(str)+"</a>";

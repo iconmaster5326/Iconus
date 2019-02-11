@@ -43,12 +43,15 @@ namespace iconus {
 	
 	class ClassFile : public Class {
 	public:
+		static Object* fileType(boost::filesystem::path& p);
+		static boost::filesystem::path makeAbsolute(boost::filesystem::path p, boost::filesystem::path base = boost::filesystem::current_path());
+		
 		static ClassFile INSTANCE;
 		static inline Object* create(const std::string& s) {
-			return new Object(&INSTANCE, new boost::filesystem::path(boost::filesystem::absolute(boost::filesystem::path(s))));
+			return new Object(&INSTANCE, new boost::filesystem::path(makeAbsolute(boost::filesystem::path(s))));
 		}
 		static inline Object* create(const boost::filesystem::path& s) {
-			return new Object(&INSTANCE, new boost::filesystem::path(boost::filesystem::absolute(s)));
+			return new Object(&INSTANCE, new boost::filesystem::path(makeAbsolute(s)));
 		}
 		static inline boost::filesystem::path& value(const Object* ob) {
 			return *(boost::filesystem::path*)ob->value.asPtr;
@@ -60,6 +63,11 @@ namespace iconus {
 		std::string name() override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
+		
+		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
+		Object* getField(Object* self, Execution& exe, Object* name) override;
+		bool canSetField(Object* self, Execution& exe, Object* name) override;
+		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
 	};
 	
 	class ClassPerms : public Class {
