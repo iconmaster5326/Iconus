@@ -19,6 +19,8 @@ using namespace iconus;
 iconus::ClassNil iconus::ClassNil::INSTANCE{};
 iconus::Object iconus::ClassNil::NIL(&ClassNil::INSTANCE);
 
+#define DEF_FIELD(str,name) static string name##_S{str}; static Object name{&ClassString::INSTANCE, &name##_S}
+
 std::string iconus::ClassNil::name() {
 	return "nil";
 }
@@ -598,25 +600,45 @@ void iconus::ClassUserDefined::setStaticField(Execution& exe, Object* name,
 	classStaticFields[name] = value;
 }
 
+DEF_FIELD("name",CLASS_FIELD_NAME);
+
 Vector<Object*> iconus::ClassClass::fieldNames(Object* self, Execution& exe) {
 	Class* clazz = ClassClass::value(self);
-	return clazz->staticFieldNames(exe);
+	Vector<Object*> v{{&CLASS_FIELD_NAME}};
+	auto v2 = clazz->staticFieldNames(exe);
+	v.insert(v.begin(), v2.begin(), v2.end());
+	return v;
 }
 
 Object* iconus::ClassClass::getField(Object* self, Execution& exe,
 		Object* name) {
 	Class* clazz = ClassClass::value(self);
-	return clazz->getStaticField(exe, name);
+	
+	if (name->equals(&CLASS_FIELD_NAME)) {
+		return ClassString::create(clazz->name());
+	} else {
+		return clazz->getStaticField(exe, name);
+	}
 }
 
 bool iconus::ClassClass::canSetField(Object* self, Execution& exe,
 		Object* name) {
 	Class* clazz = ClassClass::value(self);
-	return clazz->canSetStaticField(exe, name);
+	
+	if (name->equals(&CLASS_FIELD_NAME)) {
+		return false;
+	} else {
+		return clazz->canSetStaticField(exe, name);
+	}
 }
 
 void iconus::ClassClass::setField(Object* self, Execution& exe, Object* name,
 		Object* value) {
 	Class* clazz = ClassClass::value(self);
-	clazz->setStaticField(exe, name, value);
+	
+	if (name->equals(&CLASS_FIELD_NAME)) {
+		Class::setField(self, exe, name, value);
+	} else {
+		clazz->setStaticField(exe, name, value);
+	}
 }
