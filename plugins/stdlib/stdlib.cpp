@@ -382,6 +382,17 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	));
 	
+	scope.vars["class"] = ClassManagedFunction::create(
+			{Arg("name"), Arg("fields")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		ClassUserDefined* newClass = new ClassUserDefined();
+		newClass->className = ClassString::value(exe, args["name"]);
+		auto& fs = ClassList::value(exe, args["fields"]);
+		newClass->classFields.insert(newClass->classFields.begin(), fs.begin(), fs.end());
+		return ClassClass::create(newClass);
+			}
+	);
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},

@@ -195,6 +195,9 @@ namespace iconus {
 		static inline Object* create(Class* clazz) {
 			return new Object(&INSTANCE, clazz);
 		}
+		static inline Class* value(const Object* ob) {
+			return (Class*) ob->value.asPtr;
+		}
 		static inline Class* value(Execution& exe, Object* ob) {
 			return (Class*) ob->adapt(exe, &INSTANCE)->value.asPtr;
 		}
@@ -202,6 +205,9 @@ namespace iconus {
 		std::string name() override;
 		std::size_t hash(const Object* self) const override;
 		bool equals(const Object* self, const Object* other) const override;
+		
+		bool executable(Object* self, Execution& exe) override;
+		Object* execute(Object* self, Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
 	};
 	
 	class ClassMap : public Class {
@@ -317,6 +323,37 @@ namespace iconus {
 		}
 		
 		std::string name() override;
+	};
+	
+	class ClassUserDefined : public Class {
+	public:
+		using Instance = Map<Object*,Object*>;
+		
+		inline Object* create(Instance* args) {
+			return new Object(this, args);
+		}
+		template<typename... Args> Object* create(Args... args) {
+			return create(new Instance(args...));
+		}
+		inline Instance& value(const Object* ob) const {
+			return *(Instance*)ob->value.asPtr;
+		}
+		inline Instance& value(Execution& exe, Object* ob) {
+			return *(Instance*)ob->adapt(exe, this)->value.asPtr;
+		}
+		
+		std::string name() override;
+		
+		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
+		Object* getField(Object* self, Execution& exe, Object* name) override;
+		bool canSetField(Object* self, Execution& exe, Object* name) override;
+		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
+		
+		bool constructible(Execution& exe) override;
+		Object* construct(Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags) override;
+		
+		std::string className;
+		Vector<Object*> classFields;
 	};
 }
 

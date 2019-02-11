@@ -202,3 +202,55 @@ void iconus::Scope::addMethod(const std::string& name, Object* handler) {
 		}
 	}
 }
+
+bool iconus::Class::constructible(Execution& exe) {
+	return false;
+}
+
+Object* iconus::Class::construct(Execution& exe, Scope& scope,
+		Object* input, Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
+	throw Error("cannot directly construct an object of class "+name());
+}
+
+Vector<Object*> iconus::Class::staticFieldNames(Execution& exe) {
+	return Vector<Object*>();
+}
+
+Object* iconus::Class::getStaticField(Execution& exe, Object* name) {
+	return &ClassNil::NIL;
+}
+
+bool iconus::Class::canSetStaticField(Execution& exe, Object* name) {
+	return false;
+}
+
+void iconus::Class::setStaticField(Execution& exe, Object* name, Object* value) {
+	throw Error("Cannot set static field '"+name->toString(exe)+"' on class "+this->name());
+}
+
+bool iconus::Class::hasStaticField(Execution& exe, Object* name) {
+	Vector<Object*> names = staticFieldNames(exe);
+	for (Object* ob : names) {
+		if (ob->equals(name)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+Vector<Object*> iconus::Class::staticFieldValues(Execution& exe) {
+	Vector<Object*> result;
+	for (Object* name : staticFieldValues(exe)) {
+		result.push_back(getStaticField(exe, name));
+	}
+	return result;
+}
+
+Vector<std::pair<Object*, Object*> > iconus::Class::staticFields(Execution& exe) {
+	Vector<pair<Object*, Object*> > result;
+	for (Object* name : staticFieldNames(exe)) {
+		result.push_back(make_pair(name, getStaticField(exe, name)));
+	}
+	return result;
+}

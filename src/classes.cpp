@@ -486,3 +486,88 @@ iconus::ClassTime iconus::ClassTime::INSTANCE{};
 std::string iconus::ClassTime::name() {
 	return "time";
 }
+
+std::string iconus::ClassUserDefined::name() {
+	return className;
+}
+
+Vector<Object*> iconus::ClassUserDefined::fieldNames(Object* self,
+		Execution& exe) {
+	return classFields;
+}
+
+Object* iconus::ClassUserDefined::getField(Object* self, Execution& exe,
+		Object* name) {
+	Lock lock{self->mutex};
+	Instance& map = value(self);
+	auto it = map.find(name);
+	return it != map.end() ? it->second : Class::getField(self, exe, name);
+}
+
+bool iconus::ClassUserDefined::canSetField(Object* self, Execution& exe,
+		Object* name) {
+	auto it = find_if(classFields.begin(), classFields.end(), [&](Object* val) {
+		return name->equals(val);
+	});
+	return it != classFields.end();
+}
+
+void iconus::ClassUserDefined::setField(Object* self, Execution& exe,
+		Object* name, Object* value) {
+	if (canSetField(self,exe,name)) {
+		Lock lock{self->mutex};
+		Instance& map = this->value(self);
+		map[name] = value;
+	} else {
+		return Class::setField(self, exe, name, value);
+	}
+}
+
+bool iconus::ClassClass::executable(Object* self, Execution& exe) {
+	return true;
+}
+
+Object* iconus::ClassClass::execute(Object* self, Execution& exe, Scope& scope,
+		Object* input, Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
+	Class* clazz = ClassClass::value(self);
+	return clazz->construct(exe, scope, input, args, flags);
+}
+
+bool iconus::ClassUserDefined::constructible(Execution& exe) {
+	return true;
+}
+
+Object* iconus::ClassUserDefined::construct(Execution& exe, Scope& scope,
+		Object* input, Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
+	Object* result = create();
+	auto& map = value(result);
+	
+	for (auto& pair : flags) {
+		Object* key = ClassString::create(pair.first);
+		auto it = find_if(classFields.begin(), classFields.end(), [&](Object* val) {
+			return key->equals(val);
+		});
+		if (it == classFields.end()) {
+			throw Error("Flag does not correspond to a field in class "+className+": -"+pair.first);
+		} else {
+			map[key] = pair.second;
+		}
+	}
+	
+	int i = 0; while (i < classFields.size() && map.find(classFields[i]) != map.end()) i++;
+	for (Object* arg : args) {
+		if (i >= classFields.size()) throw Error("Too many arguments given to constructor of class "+className);
+		map[classFields[i]] = arg;
+		while (i < classFields.size() && map.find(classFields[i]) != map.end()) i++;
+	}
+	
+	for (Object* field : classFields) {
+		if (map.find(field) == map.end()) {
+			map[field] = &ClassNil::NIL;
+		}
+	}
+	
+	return result;
+}

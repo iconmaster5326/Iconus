@@ -40,6 +40,19 @@ namespace iconus {
 		virtual bool hasField(Object* self, Execution& exe, Object* name);
 		virtual Vector<Object*> fieldValues(Object* self, Execution& exe);
 		virtual Vector<std::pair<Object*,Object*> > fields(Object* self, Execution& exe);
+		
+		// for user defined classes, but can be used by any class
+		virtual bool constructible(Execution& exe);
+		virtual Object* construct(Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags);
+		
+		virtual Vector<Object*> staticFieldNames(Execution& exe);
+		virtual Object* getStaticField(Execution& exe, Object* name);
+		virtual bool canSetStaticField(Execution& exe, Object* name);
+		virtual void setStaticField(Execution& exe, Object* name, Object* value);
+		
+		virtual bool hasStaticField(Execution& exe, Object* name);
+		virtual Vector<Object*> staticFieldValues(Execution& exe);
+		virtual Vector<std::pair<Object*,Object*> > staticFields(Execution& exe);
 	};
 	
 	class Object {
