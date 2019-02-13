@@ -366,6 +366,55 @@ namespace iconus {
 		Vector<Object*> classFields;
 		Map<Object*,Object*> classStaticFields;
 	};
+	
+	class ClassEvent : public Class {
+	public:
+		static ClassEvent INSTANCE;
+		
+		static inline Object* create(Object* args) {
+			return new Object(&INSTANCE, args);
+		}
+		static inline Object* value(const Object* ob) {
+			return (Object*)ob->value.asPtr;
+		}
+		static inline Object* value(Execution& exe, Object* ob) {
+			return (Object*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
+		static void fire(Object* self, Execution& exe, Scope& scope, Object* input, Vector<Object*>& args, Map<std::string,Object*>& flags);
+		static Object* connect(Object* event, Object* handler);
+		
+		std::string name() override;
+	};
+	
+	class ClassEventConnection : public Class {
+	public:
+		class Instance {
+		public:
+			Object* event;
+			Object* handler;
+			inline Instance(Object* event, Object* handler) : event{event}, handler{handler} {}
+		};
+		
+		static ClassEventConnection INSTANCE;
+		
+		static inline Object* create(Instance* args) {
+			return new Object(&INSTANCE, args);
+		}
+		template<typename... Args> static Object* create(Args... args) {
+			return create(new Instance(args...));
+		}
+		static inline Instance& value(const Object* ob) {
+			return *(Instance*)ob->value.asPtr;
+		}
+		static inline Instance& value(Execution& exe, Object* ob) {
+			return *(Instance*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
+		static void disconnect(Object* self);
+		
+		std::string name() override;
+	};
 }
 
 #endif /* SRC_CLASSES_HPP_ */

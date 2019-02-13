@@ -393,6 +393,36 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			}
 	);
 	
+	scope.vars["event"] = ClassManagedFunction::create(
+			{}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassEvent::create(ClassList::create());
+			}
+	);
+	
+	scope.vars["connect"] = ClassManagedFunction::create(
+			{Arg("event", INPUT), Arg("handler")}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		return ClassEvent::connect(input->adapt(exe, &ClassEvent::INSTANCE), args["handler"]);
+			}
+	);
+	
+	scope.vars["disconnect"] = ClassManagedFunction::create(
+			{Arg("conn", INPUT)}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		ClassEventConnection::disconnect(input->adapt(exe, &ClassEventConnection::INSTANCE));
+		return &ClassNil::NIL;
+			}
+	);
+	
+	scope.vars["fire"] = ClassManagedFunction::create(
+			{Arg("args", VARARG)}, {Arg("flags", VARFLAG)},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		ClassEvent::fire(input->adapt(exe, &ClassEvent::INSTANCE), exe, scope, input, varargs, varflags);
+		return &ClassNil::NIL;
+			}
+	);
+	
 	if (User::IS_ROOT) { // some commands, like login, are useless if we're not root
 		scope.vars["login"] = ClassManagedFunction::create(
 				{Arg("user"),Arg("pass")}, {},

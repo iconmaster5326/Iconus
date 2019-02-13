@@ -658,3 +658,62 @@ void iconus::ClassClass::setField(Object* self, Execution& exe, Object* name,
 		clazz->setStaticField(exe, name, value);
 	}
 }
+
+iconus::ClassEvent iconus::ClassEvent::INSTANCE{};
+
+void iconus::ClassEvent::fire(Object* self, Execution& exe, Scope& scope,
+		Object* input, Vector<Object*>& args,
+		Map<std::string, Object*>& flags) {
+	Object* conns; {
+		Lock lock{self->mutex};
+		conns = ClassEvent::value(self);
+	}
+	
+	Lock lock{conns->mutex};
+	for (Object* value : conns->fieldValues(exe)) {
+		auto& conn = ClassEventConnection::value(value);
+		conn.handler->execute(exe, scope, input, args, flags);
+	}
+}
+
+Object* iconus::ClassEvent::connect(Object* event, Object* handler) {
+	Lock lock{event->mutex};
+	Object* conns = ClassEvent::value(event);
+	Object* conn = ClassEventConnection::create(event, handler);
+	
+	// TODO don't assume the connections is stored as a list
+	Lock lock2{conns->mutex};
+	auto& list = ClassList::value(conns);
+	list.emplace_back(conn);
+	
+	// end of TODO
+	return conn;
+}
+
+std::string iconus::ClassEvent::name() {
+	return "event";
+}
+
+iconus::ClassEventConnection iconus::ClassEventConnection::INSTANCE{};
+
+void iconus::ClassEventConnection::disconnect(Object* self) {
+	Lock lock{self->mutex};
+	auto& conn = ClassEventConnection::value(self);
+	
+	// TODO don't assume the connections is stored as a list
+	Object* conns = ClassEvent::value(conn.event);
+	Lock lock2{conns->mutex};
+	auto& list = ClassList::value(conns);
+	
+	// end of TODO
+	auto it = find_if(list.begin(), list.end(), [&](Object* x) {
+		return x->equals(self);
+	});
+	if (it != list.end()) {
+		list.erase(it);
+	}
+}
+
+std::string iconus::ClassEventConnection::name() {
+	return "event-connection";
+}
