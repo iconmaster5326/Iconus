@@ -565,6 +565,17 @@ extern "C" void iconus_initSession(Execution& exe) {
 		return sb.str();
 	});
 	
+	exe.session.renderers.emplace_back("user defined renderer", [](Execution& exe, Object* ob) {
+		Object* methodName = ClassString::create("__render__");
+		return ob->clazz->hasStaticField(exe, methodName) && ob->clazz->getStaticField(exe, methodName)->truthy();
+	}, [](Execution& exe, Object* ob) {
+		Object* methodName = ClassString::create("__render__");
+		Object* method = ob->clazz->getStaticField(exe, methodName);
+		Vector<Object*> args; Map<string,Object*> flags;
+		Object* result = method->execute(exe, exe.session.sessionScope, ob, args, flags);
+		return exe.render(result);
+	});
+	
 	////////////////////////////
 	// adaptors
 	////////////////////////////
