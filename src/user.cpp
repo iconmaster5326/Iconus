@@ -23,8 +23,6 @@ using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
 
-extern char** environ;
-
 static bool canSetUids() {
 	bool canSetUids = false;
 	cap_t caps = cap_get_proc();

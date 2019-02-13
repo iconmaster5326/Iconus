@@ -273,6 +273,31 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 	// constants
 	////////////////////////////
 	scope.vars["<system-output>"] = ClassClass::create(&ClassSystemOutput::INSTANCE);
+	
+	scope.vars["ENV"] = ClassSpecialMap::create([](Execution& exe, Scope& scope, Object* input, auto& out) {
+		exe.session.user.doAsUser([&]() {
+			for (char** envp = environ; *envp; envp++) {
+				string pair{*envp};
+				size_t i = pair.find('=');
+				if (i != string::npos) {
+					out.emplace_back(ClassString::create(pair.substr(0, i)));
+				}
+			}
+		});
+	}, [](Execution& exe, Scope& scope, Object* input, Object* name) {
+		const char* v;
+		exe.session.user.doAsUser([&]() {
+			string s = name->toString(exe);
+			v = getenv(s.c_str());
+		});
+		return v ? ClassString::create(string(v)) : &ClassNil::NIL;
+	}, [](Execution& exe, Scope& scope, Object* input, Object* name) {
+		return true;
+	}, [](Execution& exe, Scope& scope, Object* input, Object* name, Object* value) {
+		exe.session.user.doAsUser([&]() {
+			setenv(name->toString(exe).c_str(), value->toString(exe).c_str(), true);
+		});
+	});
 }
 
 extern "C" void iconus_initSession(Execution& exe) {
