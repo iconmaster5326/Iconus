@@ -606,16 +606,17 @@ void iconus::ClassUserDefined::setStaticField(Execution& exe, Object* name,
 
 DEF_FIELD("name",CLASS_FIELD_NAME);
 DEF_FIELD("fields",CLASS_FIELD_FIELDS);
+DEF_FIELD("adaptors",CLASS_FIELD_ADAPTS);
 
 Vector<Object*> iconus::ClassClass::fieldNames(Object* self, Execution& exe) {
 	if (self) {
 		Class* clazz = ClassClass::value(self);
-		Vector<Object*> v{{&CLASS_FIELD_NAME, &CLASS_FIELD_FIELDS}};
+		Vector<Object*> v{{&CLASS_FIELD_NAME, &CLASS_FIELD_FIELDS, &CLASS_FIELD_ADAPTS}};
 		auto v2 = clazz->staticFieldNames(exe);
 		v.insert(v.begin(), v2.begin(), v2.end());
 		return v;
 	} else {
-		return Vector<Object*>({&CLASS_FIELD_NAME, &CLASS_FIELD_FIELDS});
+		return Vector<Object*>({&CLASS_FIELD_NAME, &CLASS_FIELD_FIELDS, &CLASS_FIELD_ADAPTS});
 	}
 }
 
@@ -628,6 +629,35 @@ Object* iconus::ClassClass::getField(Object* self, Execution& exe,
 	} else if (name->equals(&CLASS_FIELD_FIELDS)) {
 		Vector<Object*> fs = clazz->fieldNames(nullptr, exe);
 		return ClassList::create(fs.begin(), fs.end());
+	} else if (name->equals(&CLASS_FIELD_ADAPTS)) {
+		return ClassSpecialMap::create([clazz](Execution& exe, Scope& scope, Object* input, auto& out) {
+			for (auto& adaptor : exe.session.adaptors[clazz]) {
+				out.emplace_back(ClassClass::create(adaptor.first));
+			}
+		}, [clazz](Execution& exe, Scope& scope, Object* input, Object* name) {
+			if (!name->adaptableTo(exe, &ClassClass::INSTANCE)) return &ClassNil::NIL;
+			Class* otherClass = ClassClass::value(exe, name);
+			
+			auto& classes = exe.session.adaptors[clazz];
+			auto it = classes.find(otherClass);
+			
+			if (it == classes.end()) {
+				return &ClassNil::NIL;
+			} else {
+				return ClassSystemFunction::create([it](Execution& exe, Scope& scope, Object* input, auto& args, auto& flags) {
+					return it->second(exe, input);
+				});
+			}
+		}, [clazz](Execution& exe, Scope& scope, Object* input, Object* name) {
+			return name->adaptableTo(exe, &ClassClass::INSTANCE);
+		}, [clazz](Execution& exe, Scope& scope, Object* input, Object* name, Object* value) {
+			Class* otherClass = ClassClass::value(exe, name);
+			
+			exe.session.adaptors[clazz][otherClass] = [&scope, value](Execution& exe, Object* from) {
+				Vector<Object*> args; Map<string,Object*> flags;
+				return value->execute(exe, scope, from, args, flags);
+			};
+		});
 	} else {
 		return clazz->getStaticField(exe, name);
 	}
@@ -641,6 +671,8 @@ bool iconus::ClassClass::canSetField(Object* self, Execution& exe,
 		return false;
 	} else if (name->equals(&CLASS_FIELD_FIELDS)) {
 		return false;
+	} else if (name->equals(&CLASS_FIELD_ADAPTS)) {
+		return false;
 	} else {
 		return clazz->canSetStaticField(exe, name);
 	}
@@ -653,6 +685,8 @@ void iconus::ClassClass::setField(Object* self, Execution& exe, Object* name,
 	if (name->equals(&CLASS_FIELD_NAME)) {
 		Class::setField(self, exe, name, value);
 	} else if (name->equals(&CLASS_FIELD_FIELDS)) {
+		Class::setField(self, exe, name, value);
+	} else if (name->equals(&CLASS_FIELD_ADAPTS)) {
 		Class::setField(self, exe, name, value);
 	} else {
 		clazz->setStaticField(exe, name, value);
