@@ -653,9 +653,9 @@ Object* iconus::ClassClass::getField(Object* self, Execution& exe,
 		}, [clazz](Execution& exe, Scope& scope, Object* input, Object* name, Object* value) {
 			Class* otherClass = ClassClass::value(exe, name);
 			
-			exe.session.adaptors[clazz][otherClass] = [&scope, value](Execution& exe, Object* from) {
+			exe.session.adaptors[clazz][otherClass] = [&scope, value, otherClass](Execution& exe, Object* from) {
 				Vector<Object*> args; Map<string,Object*> flags;
-				return value->execute(exe, scope, from, args, flags);
+				return value->execute(exe, scope, from, args, flags)->adapt(exe, otherClass);
 			};
 		});
 	} else {
