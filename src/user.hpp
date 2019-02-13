@@ -8,6 +8,8 @@
 #ifndef SRC_USER_HPP_
 #define SRC_USER_HPP_
 
+#include "types.hpp"
+
 #include <string>
 #include <functional>
 #include <mutex>
@@ -38,6 +40,7 @@ namespace iconus {
 		std::string name;
 		std::string home;
 		std::string cwd;
+		Map<std::string,std::string> env;
 		uid_t uid;
 		gid_t gid;
 	};

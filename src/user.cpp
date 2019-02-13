@@ -23,6 +23,8 @@ using namespace std;
 using namespace iconus;
 using namespace boost::filesystem;
 
+extern char** environ;
+
 static bool canSetUids() {
 	bool canSetUids = false;
 	cap_t caps = cap_get_proc();
@@ -172,6 +174,21 @@ void iconus::User::doAsUser(std::function<void()> f) {
 		exit(1);
 	}
 	
+	Map<string,string> oldEnv;
+	for (char** envp = environ; *envp; envp++) {
+		string pair{*envp};
+		size_t i = pair.find('=');
+		if (i != string::npos) {
+			oldEnv[pair.substr(0, i)] = pair.substr(i+1);
+		}
+	}
+	for (auto& pair : oldEnv) {
+		unsetenv(pair.first.c_str());
+	}
+	for (auto& pair : env) {
+		setenv(pair.first.c_str(), pair.second.c_str(), true);
+	}
+	
 	path oldPath{current_path()};
 	current_path(path{cwd});
 	
@@ -195,6 +212,21 @@ void iconus::User::doAsUser(std::function<void()> f) {
 		}
 		
 		current_path(oldPath);
+		
+		Map<string,string> newEnv;
+		for (char** envp = environ; *envp; envp++) {
+			string pair{*envp};
+			size_t i = pair.find('=');
+			if (i != string::npos) {
+				newEnv[pair.substr(0, i)] = pair.substr(i+1);
+			}
+		}
+		for (auto& pair : newEnv) {
+			unsetenv(pair.first.c_str());
+		}
+		for (auto& pair : oldEnv) {
+			setenv(pair.first.c_str(), pair.second.c_str(), true);
+		}
 	};
 	
 	// run f
