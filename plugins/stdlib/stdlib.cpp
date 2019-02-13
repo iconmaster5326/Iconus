@@ -641,6 +641,12 @@ extern "C" void iconus_initSession(Execution& exe) {
 		return exe.render(result);
 	});
 	
+	exe.session.renderers.emplace_back("map*", [](Execution& exe, Object* ob) {
+		return ob->clazz == &ClassSpecialMap::INSTANCE;
+	}, [](Execution& exe, Object* ob) {
+		return exe.render(ob->adapt(exe, &ClassMap::INSTANCE));
+	});
+	
 	////////////////////////////
 	// adaptors
 	////////////////////////////
