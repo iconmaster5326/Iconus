@@ -786,6 +786,8 @@ std::string iconus::ClassSpecialMap::name() {
 
 Vector<Object*> iconus::ClassSpecialMap::fieldNames(Object* self,
 		Execution& exe) {
+	if (!self) return Vector<Object*>();
+	
 	auto& handler = ClassSpecialMap::value(self);
 	Vector<Object*> args; Map<string,Object*> flags;
 	Object* result = handler.fieldNames->execute(exe, exe.session.sessionScope, self, args, flags);
