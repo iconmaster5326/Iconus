@@ -717,3 +717,65 @@ void iconus::ClassEventConnection::disconnect(Object* self) {
 std::string iconus::ClassEventConnection::name() {
 	return "event-connection";
 }
+
+iconus::ClassSpecialMap iconus::ClassSpecialMap::INSTANCE{};
+
+iconus::ClassSpecialMap::Instance::Instance(
+		std::function<void(Execution&, Scope&, Object*, Deque<Object*>&)> fieldNames,
+		std::function<Object*(Execution&, Scope&, Object*, Object*)> getField,
+		std::function<bool(Execution&, Scope&, Object*, Object*)> canSetField,
+		std::function<void(Execution&, Scope&, Object*, Object*, Object*)> setField) {
+	this->fieldNames = ClassSystemFunction::create([fieldNames](Execution& exe, Scope& scope, Object* input, auto& args, auto& flags) {
+		Object* result = ClassList::create();
+		auto& list = ClassList::value(result);
+		fieldNames(exe, scope, input, list);
+		return result;
+	});
+	
+	this->getField = ClassSystemFunction::create([getField](Execution& exe, Scope& scope, Object* input, auto& args, auto& flags) {
+		return getField(exe, scope, input, args[0]);
+	});
+	
+	this->canSetField = ClassSystemFunction::create([canSetField](Execution& exe, Scope& scope, Object* input, auto& args, auto& flags) {
+		return ClassBool::create(canSetField(exe, scope, input, args[0]));
+	});
+	
+	this->setField = ClassSystemFunction::create([setField](Execution& exe, Scope& scope, Object* input, auto& args, auto& flags) {
+		setField(exe, scope, input, args[0], args[1]);
+		return &ClassNil::NIL;
+	});
+}
+
+std::string iconus::ClassSpecialMap::name() {
+	return "map*";
+}
+
+Vector<Object*> iconus::ClassSpecialMap::fieldNames(Object* self,
+		Execution& exe) {
+	auto& handler = ClassSpecialMap::value(self);
+	Vector<Object*> args; Map<string,Object*> flags;
+	Object* result = handler.fieldNames->execute(exe, exe.session.sessionScope, self, args, flags);
+	auto& list = ClassList::value(exe, result);
+	return Vector<Object*>(list.begin(), list.end());
+}
+
+Object* iconus::ClassSpecialMap::getField(Object* self, Execution& exe,
+		Object* name) {
+	auto& handler = ClassSpecialMap::value(self);
+	Vector<Object*> args{{name}}; Map<string,Object*> flags;
+	return handler.getField->execute(exe, exe.session.sessionScope, self, args, flags);
+}
+
+bool iconus::ClassSpecialMap::canSetField(Object* self, Execution& exe,
+		Object* name) {
+	auto& handler = ClassSpecialMap::value(self);
+	Vector<Object*> args{{name}}; Map<string,Object*> flags;
+	return handler.canSetField->execute(exe, exe.session.sessionScope, self, args, flags)->truthy();
+}
+
+void iconus::ClassSpecialMap::setField(Object* self, Execution& exe,
+		Object* name, Object* value) {
+	auto& handler = ClassSpecialMap::value(self);
+	Vector<Object*> args{{name, value}}; Map<string,Object*> flags;
+	handler.setField->execute(exe, exe.session.sessionScope, self, args, flags);
+}

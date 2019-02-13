@@ -415,6 +415,45 @@ namespace iconus {
 		
 		std::string name() override;
 	};
+	
+	class ClassSpecialMap : public Class {
+	public:
+		class Instance {
+		public:
+			Object *fieldNames, *getField, *canSetField, *setField;
+			inline Instance(Object* fieldNames, Object* getField, Object* canSetField, Object* setField) :
+				fieldNames{fieldNames}, getField{getField}, canSetField{canSetField}, setField{setField}
+			{}
+			
+			Instance(
+					std::function<void(Execution&, Scope&, Object*, Deque<Object*>&)> fieldNames,
+					std::function<Object*(Execution&, Scope&, Object*, Object*)> getField,
+					std::function<bool(Execution&, Scope&, Object*, Object*)> canSetField,
+					std::function<void(Execution&, Scope&, Object*, Object*, Object*)> setField
+			);
+		};
+		
+		static ClassSpecialMap INSTANCE;
+		static inline Object* create(Instance* args) {
+			return new Object(&INSTANCE, args);
+		}
+		template<typename... Args> static Object* create(Args... args) {
+			return create(new Instance(args...));
+		}
+		static inline Instance& value(const Object* ob) {
+			return *(Instance*)ob->value.asPtr;
+		}
+		static inline Instance& value(Execution& exe, Object* ob) {
+			return *(Instance*)ob->adapt(exe, &INSTANCE)->value.asPtr;
+		}
+		
+		std::string name() override;
+		
+		Vector<Object*> fieldNames(Object* self, Execution& exe) override;
+		Object* getField(Object* self, Execution& exe, Object* name) override;
+		bool canSetField(Object* self, Execution& exe, Object* name) override;
+		void setField(Object* self, Execution& exe, Object* name, Object* value) override;
+	};
 }
 
 #endif /* SRC_CLASSES_HPP_ */

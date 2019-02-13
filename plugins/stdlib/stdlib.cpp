@@ -721,4 +721,9 @@ extern "C" void iconus_initSession(Execution& exe) {
 		ptime time = ClassTime::value(exe, from);
 		return ClassString::create(to_simple_string(time));
 	};
+	
+	exe.session.adaptors[&ClassSpecialMap::INSTANCE][&ClassMap::INSTANCE] = [](Execution& exe, Object* from) {
+		auto v = from->fields(exe);
+		return ClassMap::create(v.begin(), v.end());
+	};
 }
