@@ -15,6 +15,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <thread>
 
 using namespace std;
 using namespace iconus;
@@ -420,6 +421,40 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
 		ClassEvent::fire(input->adapt(exe, &ClassEvent::INSTANCE), exe, scope, input, varargs, varflags);
 		return &ClassNil::NIL;
+			}
+	);
+	
+	scope.vars["spawn"] = ClassManagedFunction::create(
+			{Arg("fns", VARARG)}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+		for (Object* arg : varargs) {
+			thread t{[&exe, &scope, input, arg]() {
+				Vector<Object*> args; Map<string,Object*> flags;
+				arg->execute(exe, scope, input, args, flags);
+			}};
+			t.detach();
+		}
+		return &ClassNil::NIL;
+			}
+	);
+	
+	scope.vars["wait"] = ClassManagedFunction::create(
+			{Arg("event", INPUT), Arg("handler", &ClassNil::NIL)}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& margs, auto& varargs, auto& varflags) {
+		Object* result = nullptr;
+		Object* conn = ClassEvent::connect(input->adapt(exe, &ClassEvent::INSTANCE), ClassSystemFunction::create(
+		[&](Execution& exe, Scope& scope, Object* input, auto& args, auto& flags) {
+			if (margs["handler"]->truthy()) {
+				result = margs["handler"]->execute(exe, scope, input, args, flags);
+			} else {
+				result = input;
+			}
+			return result;
+		}));
+		
+		while (!result) this_thread::yield();
+		ClassEventConnection::disconnect(conn);
+		return result;
 			}
 	);
 	
