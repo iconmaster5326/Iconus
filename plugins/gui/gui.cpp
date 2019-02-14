@@ -15,9 +15,12 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <thread>
+#include <boost/uuid/uuid_io.hpp>
 
 using namespace std;
 using namespace iconus;
+using namespace boost::uuids;
 
 #include "build/gui/header.cxx"
 static string header((const char*)header_html, header_html_len);
@@ -50,6 +53,17 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 			{Arg("items", VARARG)}, {Arg("style", &ClassNil::NIL)},
 			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
 				return ClassHBox::create(args["items"], args["style"]->toString(exe));
+			}
+	);
+	
+	scope.vars["button"] = ClassManagedFunction::create(
+			{Arg("text"), Arg("on-click", &ClassNil::NIL)}, {},
+			[](Execution& exe, Scope& scope, Object* input, auto& args, auto& varargs, auto& varflags) {
+				Object* onClick = ClassEvent::create(ClassList::create());
+				if (args["on-click"]->truthy()) {
+					ClassEvent::connect(onClick, args["on-click"]);
+				}
+				return ClassButton::create(args["text"], onClick);
 			}
 	);
 	
@@ -98,6 +112,40 @@ extern "C" void iconus_initSession(Execution& exe) {
 		}
 		
 		sb << "</tr></table>";
+		return sb.str();
+	});
+	
+	exe.session.renderers.emplace_back("gui button", [](Execution& exe, Object* ob) {
+		return ob->clazz == &ClassButton::INSTANCE;
+	}, [](Execution& exe, Object* ob) {
+		Lock lock{ob->mutex};
+		auto& button = ClassButton::value(exe, ob);
+		
+		Object* event = button.onClick;
+		uuid& id = button.id;
+		
+		exe.idsRendered.insert(&button.id);
+		thread t{[&exe,&id,event]() {
+			Vector<Object*> args; Map<string,Object*> flags;
+			
+			while (true) {
+				Map<string,string> map;
+				exe.getMessage(id, map);
+				while (map.empty()) this_thread::yield();
+				
+				try {
+					ClassEvent::fire(event, exe, exe.session.sessionScope, &ClassNil::NIL, args, flags);
+				} catch (const Error& e) {
+					// do nothing. TODO: log it?
+				}
+			}
+		}};
+		t.detach();
+		
+		ostringstream sb;
+		sb << "<button type=\"button\" onclick=\"onGuiButtonClick('" << to_string(button.id) << "')\">";
+		sb << exe.render(button.text);
+		sb << "</input>";
 		return sb.str();
 	});
 	

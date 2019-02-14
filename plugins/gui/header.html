@@ -3,3 +3,15 @@
   border: 0px;
 }
 </style>
+
+<script>
+function onGuiButtonClick(id) {
+	var message = JSON.stringify({
+		"type": "message",
+		"tag": id,
+		"event": "click"
+	});
+	console.log("SENDING: "+message);
+	conn.send(message);
+}
+</script>
