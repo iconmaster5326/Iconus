@@ -430,7 +430,12 @@ extern "C" void iconus_initGlobalScope(GlobalScope& scope) {
 		for (Object* arg : varargs) {
 			thread t{[&exe, &scope, input, arg]() {
 				Vector<Object*> args; Map<string,Object*> flags;
-				arg->execute(exe, scope, input, args, flags);
+				
+				try {
+					arg->execute(exe, scope, input, args, flags);
+				} catch (const Error& e) {
+					// TODO: log the error?
+				}
 			}};
 			t.detach();
 		}
